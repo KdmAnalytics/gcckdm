@@ -255,71 +255,20 @@ void GccKdmPlugin::printDecl(tree decl)
             break;
         }
     }
-//
-//
-//    tree type (TREE_TYPE(decl));
-//    int declCode (TREE_CODE (decl));
-//    int tc;
-//
-//    if (type)
-//    {
-//        tc = TREE_CODE(type);
-//        if (declCode == TYPE_DECL && tc == RECORD_TYPE)
-//        {
-//            // If DECL_ARTIFICIAL is true this is a class
-//            // declaration. Otherwise this is a typedef.
-//            //
-//            if (DECL_ARTIFICIAL (decl))
-//            {
-//                //print class
-//                return;
-//            }
-//        }
-//    }
-//
-//
-//    tree id (DECL_NAME (decl));
-//    const char* name (id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-//
-//
-//    std::cerr << tree_code_name[tc] << " "
-//         << namespaceString(decl) << "::" << name;
-//
-//    if (type)
-//    {
-//        std::cerr << " type " << tree_code_name[tc];
-//    }
-//
-//    std::cerr   << " at " << DECL_SOURCE_FILE (decl) << ":"
-//                << DECL_SOURCE_LINE (decl) << std::endl;
 }
 
 
 void GccKdmPlugin::printNamespaceDecl(tree namespaceDecl)
 {
     printBasicDeclInfo(namespaceDecl);
-//    int tc(TREE_CODE(namespaceDecl));
-//    tree id(DECL_NAME (namespaceDecl));
-//    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-//    tree type (TREE_TYPE(namespaceDecl));
-//    std::cerr << tree_code_name[tc] << " " << getScopeString(namespaceDecl) << name;
-//    std::cerr << " type " << tree_code_name[TREE_CODE(type)]
-//              << " at " <<  DECL_SOURCE_FILE (namespaceDecl)  << ":" <<  DECL_SOURCE_LINE (namespaceDecl) << std::endl;
 }
 
 
 
 void GccKdmPlugin::printFunctionDecl(tree functionDecl)
 {
-//    int tc(TREE_CODE(functionDecl));
     tree id(DECL_NAME (functionDecl));
     std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-//    tree type (TREE_TYPE(functionDecl));
-//
-//    std::string indent("    ");
-//    std::cerr << tree_code_name[tc] << " " << getScopeString(functionDecl) << name;
-//    std::cerr << " type " << tree_code_name[TREE_CODE(type)]
-//              << " at " <<  DECL_SOURCE_FILE (functionDecl)  << ":" <<  DECL_SOURCE_LINE (functionDecl) << std::endl;
 
     printBasicDeclInfo(functionDecl);
 
@@ -466,156 +415,4 @@ void GccKdmPlugin::printClassDecl(tree type)
 
 }
 
-//std::string GccKdmPlugin::getScopeString(tree decl)
-//{
-//    std::string s, tmp;
-//
-//    for (tree scope (CP_DECL_CONTEXT (decl));
-//         scope != global_namespace;
-//         scope = CP_DECL_CONTEXT (scope))
-//    {
-//      tree id (DECL_NAME (scope));
-//
-//      tmp = "::";
-//      tmp += (id != 0 ? IDENTIFIER_POINTER (id) : "<unnamed>");
-//      tmp += s;
-//      s.swap (tmp);
-//    }
-//
-//    return s;
-//}
-
 } // namespace gcckdm
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//                std::cerr << indent << gimple_lineno(stmt) << ": " << gimple_code_name[gimple_code(stmt)] << std::endl;
-//           for (gimple_stmt_iterator gsi = gsi_start_bb (bb); !gsi_end_p (gsi); gsi_next (&gsi))
-//           {
-//               walk_gimple_stmt(&gsi, gimpleStatmentCallBack, gimpleOperandCallBack, NULL);
-//           }
-
-
-
-
-
-
-
-//tree gimpleStatmentCallBack(gimple_stmt_iterator * gsi, bool * val, struct walk_stmt_info * info)
-//{
-//    std::cerr << "gimpleStatementCallBack" << std::endl;
-//                    gimple stmt = gsi_stmt (*gsi);
-//                    std::cerr << "    " << gimple_lineno(stmt) << ": " << gimple_code_name[gimple_code(stmt)] << std::endl;
-//   return NULL_TREE;
-//}
-//
-//tree gimpleOperandCallBack(tree * t, int * n, void * v)
-//{
-//    std::cerr << "gimpleOperandCallBack" << std::endl;
-//    return NULL_TREE;
-//}
-
-
-
-
-
-//namespace
-//{
-//
-//unsigned int ExecuteGccToKdm()
-//{
-//    warning (0, "%p", DECL_SAVED_TREE (current_function_decl));
-//    return 0;
-//}
-//
-//
-////static struct gimple_opt_pass GccToKdmPass =
-////{
-////        {
-////                GIMPLE_PASS,
-////                "GccKdm",                     // name
-////                NULL,                         // gate
-////                ExecuteGccToKdm,              // execute
-////                NULL,                         // sub
-////                NULL,                         // next
-////                0,                            // static_pass_number
-////                TV_NONE,                      // tv_id
-////                PROP_cfg,                     // properties_required
-////                0,                            // properties_provided
-////                0,                            // properties_destroyed
-////                0,                            // todo_flags_start
-////                TODO_dump_func                // todo_flags_finish
-////        }
-////};
-//
-//
-////const std::string ArgRefPassName("ref-pass-name");
-////const std::string ArgRefPassInstanceNum("ref-pass-instance-num");
-//
-//}
-
-
-//    std::string pluginName(plugin_info->base_name);
-//    int argc(plugin_info->argc);
-//    struct plugin_argument* argv(plugin_info->argv);
-//    std::string refPassName;
-//    int refInstanceNumber(0);
-//    const std::string RefPassName("ref-pass-name");
-//    const std::string RefPassInstanceNum("ref-pass-instance-num");
-
-
-//    //Process the plugin arguments.
-//    // Supported arguments:
-//    //  ref-pass-name=<PASS_NAME>
-//    //  ref-pass-instance-num=<NUM>
-//    for (int i = 0; i < argc; ++i)
-//    {
-//        if (ArgRefPassName == argv[i].key)
-//        {
-//            if (argv[i].value)
-//            {
-//                refPassName = argv[i].value;
-//            }
-//            else
-//            {
-//                warning(0, G_("option '-fplugin-arg-%s-ref-pass-name' requires a pass name"), pluginName.c_str());
-//            }
-//        }
-//        else if (ArgRefPassInstanceNum == argv[i].key)
-//        {
-//            if (argv[i].value)
-//            {
-//                std::stringstream buff(argv[i].value);
-//                buff >> refInstanceNumber;
-//            }
-//            else
-//            {
-//                warning (0, G_("option '-fplugin-arg-%s-ref-pass-instance-num' requires an integer value"), pluginName.c_str());
-//            }
-//        }
-//    }
-//
-//    if (refPassName.empty())
-//    {
-//        error (G_("plugin %qs requires a reference pass name"), pluginName.c_str());
-//        return 1;
-//    }
-//
-//    struct register_pass_info pass_info;
-//    pass_info.pass = &GccToKdmPass.pass;
-//    pass_info.reference_pass_name = refPassName.c_str();
-//    pass_info.ref_pass_instance_number = refInstanceNumber;
-//    pass_info.pos_op = PASS_POS_INSERT_AFTER;
-
-

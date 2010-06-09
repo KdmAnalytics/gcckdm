@@ -111,6 +111,9 @@ private:
     void printDecl(tree decl);
     void printNamespaceDecl(tree namespaceDecl);
     void printFunctionDecl(tree functionDecl);
+    void printVarDecl(tree varDecl);
+    void printTypeDecl(tree typeDecl);
+    void printClassDecl(tree classDecl);
 
     //std::string getScopeString(tree decl);
 

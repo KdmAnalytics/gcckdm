@@ -22,6 +22,17 @@ int plugin_is_GPL_compatible;
 
 namespace
 {
+enum AccessSpec
+{
+  public_, protected_, private_
+};
+
+const char* AccessSpecStr[] =
+{
+  "public", "protected", "private"
+};
+
+
 
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
 {
@@ -70,6 +81,10 @@ std::string getScopeString(tree decl)
          scope != global_namespace;
          scope = CP_DECL_CONTEXT (scope))
     {
+      if (TREE_CODE (scope) == RECORD_TYPE)
+      {
+          scope= TYPE_NAME(scope);
+      }
       tree id (DECL_NAME (scope));
 
       tmp = "::";
@@ -88,7 +103,7 @@ void printBasicDeclInfo(tree decl)
     tree id(DECL_NAME (decl));
     string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
     tree type (TREE_TYPE(decl));
-    cerr << tree_code_name[tc] << " " << getScopeString(decl) << name
+    cerr << tree_code_name[tc] << " " << getScopeString(decl) << "::"<< name
          << " type " << tree_code_name[TREE_CODE(type)]
          << " at " <<  DECL_SOURCE_FILE (decl)  << ":" <<  DECL_SOURCE_LINE (decl) << endl;
 }
@@ -218,10 +233,12 @@ void GccKdmPlugin::printDecl(tree decl)
         }
         case TYPE_DECL:
         {
+            printTypeDecl(decl);
             break;
         }
         case VAR_DECL:
         {
+            printVarDecl(decl);
             break;
         }
         case CONST_DECL:
@@ -327,12 +344,127 @@ void GccKdmPlugin::printFunctionDecl(tree functionDecl)
     }
     else
     {
-        std::cerr << "function decl body: " << name <<" empty"<< std::endl;
+        std::cerr << "\t" << "<function body empty>"<< std::endl;
     }
 
 }
 
+void GccKdmPlugin::printVarDecl(tree varDecl)
+{
+    printBasicDeclInfo(varDecl);
+}
 
+void GccKdmPlugin::printTypeDecl(tree typeDecl)
+{
+    tree type (TREE_TYPE(typeDecl));
+    //int declCode(TREE_CODE(typeDecl));
+    int treeCode(TREE_CODE(type));
+
+    if (treeCode == RECORD_TYPE)
+    {
+        // if DECL_ARTIFICIAL is true this is a class
+        // declaration.  Otherwise this is a typedef
+        if (DECL_ARTIFICIAL(typeDecl))
+        {
+            printClassDecl(type);
+        }
+    }
+    else
+    {
+        printBasicDeclInfo(typeDecl);
+    }
+}
+
+void GccKdmPlugin::printClassDecl(tree type)
+{
+    type = TYPE_MAIN_VARIANT (type);
+    tree decl (TYPE_NAME (type));
+//    tree id (DECL_NAME (decl));
+    printBasicDeclInfo(decl);
+
+    // We are done if this is an incomplete
+    // class declaration.
+    //
+    if (!COMPLETE_TYPE_P (type))
+      return;
+
+
+    // Traverse base information.
+    //
+    tree biv (TYPE_BINFO (type));
+    size_t n (biv ? BINFO_N_BASE_BINFOS (biv) : 0);
+
+    for (size_t i (0); i < n; i++)
+    {
+      tree bi (BINFO_BASE_BINFO (biv, i));
+
+      // Get access specifier.
+      //
+      AccessSpec a (public_);
+
+      if (BINFO_BASE_ACCESSES (biv))
+      {
+        tree ac (BINFO_BASE_ACCESS (biv, i));
+
+        if (ac == 0 || ac == access_public_node)
+          a = public_;
+        else if (ac == access_protected_node)
+          a = protected_;
+        else
+          a = private_;
+      }
+
+      bool virt (BINFO_VIRTUAL_P (bi));
+      tree b_type (TYPE_MAIN_VARIANT (BINFO_TYPE (bi)));
+      tree b_decl (TYPE_NAME (b_type));
+      tree b_id (DECL_NAME (b_decl));
+      const char* b_name (IDENTIFIER_POINTER (b_id));
+
+      cerr << "\t" << AccessSpecStr[a] << (virt ? " virtual" : "")
+           << " base " << getScopeString(b_decl) << "::" << b_name << endl;
+    }
+
+
+    // Traverse members.
+    //
+    DeclSet set;
+
+    for (tree d (TYPE_FIELDS (type)); d != 0; d = TREE_CHAIN (d))
+    {
+      switch (TREE_CODE (d))
+      {
+      case TYPE_DECL:
+        {
+          if (!DECL_SELF_REFERENCE_P (d))
+            set.insert (d);
+          break;
+        }
+      case FIELD_DECL:
+        {
+          if (!DECL_ARTIFICIAL (d))
+            set.insert (d);
+          break;
+        }
+      default:
+        {
+          set.insert (d);
+          break;
+        }
+      }
+    }
+
+    for (tree d (TYPE_METHODS (type)); d != 0; d = TREE_CHAIN (d))
+    {
+      if (!DECL_ARTIFICIAL (d))
+        set.insert (d);
+    }
+
+    for (DeclSet::iterator i(set.begin()), e(set.end()); i != e; ++i)
+    {
+        printDecl(*i);
+    }
+
+}
 
 //std::string GccKdmPlugin::getScopeString(tree decl)
 //{

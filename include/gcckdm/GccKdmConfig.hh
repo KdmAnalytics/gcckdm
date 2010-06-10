@@ -30,6 +30,7 @@ extern "C"
 #include <diagnostic.h>
 #include <c-common.h>
 #include <c-pragma.h>
+#include <cgraph.h>
 #include <cp/cp-tree.h>
 #include <tree-iterator.h>
 #include <gimple.h>

@@ -94,6 +94,8 @@ public:
      */
     void preGeneric(void * event_data, void * data);
 
+    void finishUnit(void * event_data, void * data);
+    void finishType(void * event_data, void * data);
 
 private:
     typedef std::multiset<tree, DeclComparator> DeclSet;

@@ -24,7 +24,7 @@
 <folderInfo id="cdt.managedbuild.config.gnu.so.debug.1855077768." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.so.debug.329269663" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.so.debug">
 <targetPlatform id="cdt.managedbuild.target.gnu.platform.so.debug.1705499306" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.so.debug"/>
-<builder buildPath="${workspace_loc:/GccKdm/Debug}" id="cdt.managedbuild.target.gnu.builder.so.debug.717282492" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.so.debug"/>
+<builder arguments="-j4" buildPath="${workspace_loc:/GccKdm/Debug}" command="make" id="cdt.managedbuild.target.gnu.builder.so.debug.717282492" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.so.debug"/>
 <tool id="cdt.managedbuild.tool.gnu.archiver.base.1599869077" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 <tool command="g++-4.5" id="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug.1104155082" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.so.debug">
 <option id="gnu.cpp.compiler.so.debug.option.optimization.level.1250143760" name="Optimization Level" superClass="gnu.cpp.compiler.so.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
@@ -33,11 +33,14 @@
 <listOptionValue builtIn="false" value="/usr/lib/gcc/i486-linux-gnu/4.5/plugin/include"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/GccKdmPlugin/include}&quot;"/>
 </option>
+<option id="gnu.cpp.compiler.option.warnings.pedantic.437589115" name="Pedantic (-pedantic)" superClass="gnu.cpp.compiler.option.warnings.pedantic" value="false" valueType="boolean"/>
+<option id="gnu.cpp.compiler.option.other.other.2025344718" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0 " valueType="string"/>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1319467075" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>
 <tool command="gcc-4.5" id="cdt.managedbuild.tool.gnu.c.compiler.so.debug.1457695335" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.so.debug">
 <option defaultValue="gnu.c.optimization.level.none" id="gnu.c.compiler.so.debug.option.optimization.level.336450558" name="Optimization Level" superClass="gnu.c.compiler.so.debug.option.optimization.level" valueType="enumerated"/>
 <option id="gnu.c.compiler.so.debug.option.debugging.level.196654023" name="Debug Level" superClass="gnu.c.compiler.so.debug.option.debugging.level" value="gnu.c.debugging.level.max" valueType="enumerated"/>
+<option id="gnu.c.compiler.option.warnings.pedantic.1009113869" name="Pedantic (-pedantic)" superClass="gnu.c.compiler.option.warnings.pedantic" value="false" valueType="boolean"/>
 <inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.386249171" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 </tool>
 <tool id="cdt.managedbuild.tool.gnu.c.linker.so.debug.341210846" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.so.debug">

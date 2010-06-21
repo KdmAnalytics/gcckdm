@@ -9,6 +9,8 @@
 #define GCCKDM_GCCKDMPLUGIN_HH_
 
 #include "gcckdm/GccKdmConfig.hh"
+#include "gcckdm/GccKdmUtilities.hh"
+#include "gcckdm/utilities/Singleton.hh"
 #include <string>
 #include <set>
 
@@ -35,19 +37,6 @@ extern "C" void executePreGeneric(void *event_data, void *data);
 namespace gcckdm
 {
 
-/**
- * Functor that can be used to order decls according to their source location
- */
-struct DeclComparator
-{
-    bool operator()(tree x, tree y) const
-    {
-        location_t xl(DECL_SOURCE_LOCATION (x));
-        location_t yl(DECL_SOURCE_LOCATION (y));
-
-        return xl < yl;
-    }
-};
 
 /**
  * Singleton Class representing the GccKdmPlugin.
@@ -59,14 +48,9 @@ struct DeclComparator
  * different type of declaration.
  *
  */
-class GccKdmPlugin
+class GccKdmPlugin : public Singleton<GccKdmPlugin>
 {
 public:
-    /**
-     * Returns the only instance of this plugin
-     */
-    static GccKdmPlugin & Instance();
-
     /**
      * Returns the name of this plugin as a string
      *
@@ -97,11 +81,12 @@ public:
     void finishUnit(void * event_data, void * data);
     void finishType(void * event_data, void * data);
 
+    GccKdmPlugin(){};
+    ~GccKdmPlugin(){};
+
 private:
     typedef std::multiset<tree, DeclComparator> DeclSet;
 
-    GccKdmPlugin(){};
-    ~GccKdmPlugin(){};
     GccKdmPlugin(GccKdmPlugin const &); //undefined
     GccKdmPlugin & operator=(GccKdmPlugin const &); //undefined
 

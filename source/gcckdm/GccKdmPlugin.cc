@@ -6,22 +6,28 @@
  */
 
 #include "gcckdm/GccKdmPlugin.hh"
-#include "gcckdm/GccKdmUtilities.hh"
 
 #include <iostream>
 #include <sstream>
+#include "gcckdm/utilities/unique_ptr.hpp"
 
 using std::string;
 using std::cerr;
 using std::endl;
+
 
 /**
  * Have to define this to ensure that GCC is able to play nice with our plugin
  */
 int plugin_is_GPL_compatible = 1;
 
+
 namespace
 {
+
+boost::unique_ptr<gcckdm::GccKdmPlugin> gccKdmPlugin;
+
+
 enum AccessSpec
 {
     public_, protected_, private_
@@ -64,16 +70,17 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
     //Recommended version check
     if (plugin_default_version_check(version, &gcc_version))
     {
-        gcckdm::GccKdmPlugin & kdmPlugin = gcckdm::GccKdmPlugin::Instance();
-        kdmPlugin.name(plugin_info->base_name);
-
         // Process any plugin arguments
         // TODO
+
+        gccKdmPlugin.reset(new gcckdm::GccKdmPlugin());
+//        gcckdm::GccKdmPlugin & kdmPlugin = gcckdm::GccKdmPlugin::Instance();
+        gccKdmPlugin->name(plugin_info->base_name);
 
         // Register callbacks.
         //
         //register_callback (pluginName.c_str(), PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
-        kdmPlugin.registerCallbacks();
+        gccKdmPlugin->registerCallbacks();
     }
     else
     {
@@ -143,12 +150,6 @@ void printBasicDeclInfo(tree decl)
 namespace gcckdm
 {
 
-GccKdmPlugin& GccKdmPlugin::Instance()
-{
-    static GccKdmPlugin instance;
-    return instance;
-}
-
 std::string const & GccKdmPlugin::name() const
 {
     return mName;
@@ -161,20 +162,8 @@ void GccKdmPlugin::name(std::string const & name)
 
 void GccKdmPlugin::registerCallbacks()
 {
-    //Allows access to C++ ASTs
+    //Allows access to C/C++ ASTs... called for each function
     register_callback(name().c_str(), PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
-
-//    //Allows access to GIMPLE CFGs
-//    register_callback(name().c_str(), PLUGIN_ALL_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
-
-//    register_callback(name().c_str(), PLUGIN_ALL_IPA_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
-//    register_callback(name().c_str(), PLUGIN_EARLY_GIMPLE_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
-
-    register_callback(name().c_str(), PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func>(executeFinishType), NULL);
-
-
-//    register_callback(name().c_str(), PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func>(executeFinishUnit), NULL);
-
 
     //Attempt to get the very first gimple AST before any optimizations
     struct register_pass_info pass_info;
@@ -183,6 +172,23 @@ void GccKdmPlugin::registerCallbacks()
     pass_info.ref_pass_instance_number = 0;
     pass_info.pos_op = PASS_POS_INSERT_AFTER;
     register_callback(name().c_str(), PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+
+    //    register_callback(name().c_str(), PLUGIN_ALL_IPA_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
+
+//    register_callback(name().c_str(), PLUGIN_EARLY_GIMPLE_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
+
+
+    //    //Allows access to GIMPLE CFGs
+    //    register_callback(name().c_str(), PLUGIN_ALL_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
+
+
+    // Called whenever a type has been parsed
+    register_callback(name().c_str(), PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func>(executeFinishType), NULL);
+
+    // Called when finished with the translation unit
+    register_callback(name().c_str(), PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func>(executeFinishUnit), NULL);
+
+
 
 
     //register_callback(name().c_str(), PLUGIN_ALL_PASSES_START, &executeGccKdm, 0);
@@ -217,6 +223,22 @@ void GccKdmPlugin::generateKdm(void * event_data, void * data)
         collect((tree)event_data);
         process();
         mDeclSet.clear();
+    }
+    else if (global_namespace)
+    {
+        collect(global_namespace);
+        process();
+        mDeclSet.clear();
+    }
+    else
+    {
+        struct cgraph_node *n;
+        for (n = cgraph_nodes; n; n = n->next)
+        {
+            collect(n->decl);
+            process();
+            mDeclSet.clear();
+        }
     }
     cerr << endl << "=========GENERATE KDM STOP==========" << endl;
 }
@@ -371,7 +393,7 @@ void GccKdmPlugin::printFunctionDecl(tree functionDecl)
             struct function *fn(DECL_STRUCT_FUNCTION(functionDecl));
             FOR_EACH_BB_FN(bb, fn)
             {
-                cerr << "  basic_block" << endl;
+                cerr << "  basic_block " << endl;
                 print_gimple_seq(stderr, bb_seq(bb), 2, 0);
             }
         }

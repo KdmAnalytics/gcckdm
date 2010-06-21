@@ -8,11 +8,14 @@
 #ifndef GCCKDM_GCCKDMPLUGIN_HH_
 #define GCCKDM_GCCKDMPLUGIN_HH_
 
-#include "gcckdm/GccKdmConfig.hh"
-#include "gcckdm/GccKdmUtilities.hh"
-#include "gcckdm/utilities/Singleton.hh"
 #include <string>
 #include <set>
+#include "gcckdm/utilities/Singleton.hh"
+#include "gcckdm/utilities/unique_ptr.hpp"
+
+#include "gcckdm/GccKdmConfig.hh"
+#include "gcckdm/GccKdmUtilities.hh"
+
 
 /**
  * GCC Plugin Entry Point
@@ -36,7 +39,7 @@ extern "C" void executePreGeneric(void *event_data, void *data);
 
 namespace gcckdm
 {
-
+    class GccKdmWriter;
 
 /**
  * Singleton Class representing the GccKdmPlugin.
@@ -78,10 +81,11 @@ public:
      */
     void preGeneric(void * event_data, void * data);
 
+    void startUnit(void * event_data, void * data);
     void finishUnit(void * event_data, void * data);
     void finishType(void * event_data, void * data);
 
-    GccKdmPlugin(){};
+    GccKdmPlugin(boost::unique_ptr<GccKdmWriter> writer);
     ~GccKdmPlugin(){};
 
 private:
@@ -107,6 +111,7 @@ private:
     std::string mName;
     tree mAst;
     DeclSet mDeclSet;
+    boost::unique_ptr<GccKdmWriter> mWriter;
 };
 
 } // namespace gcckdm

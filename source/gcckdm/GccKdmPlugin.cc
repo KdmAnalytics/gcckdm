@@ -9,7 +9,10 @@
 
 #include <iostream>
 #include <sstream>
-#include "gcckdm/utilities/unique_ptr.hpp"
+//#include "gcckdm/utilities/unique_ptr.hpp"
+#include "gcckdm/GccKdmWriter.hh"
+#include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
+#include "gcckdm/utilities/null_deleter.hpp"
 
 using std::string;
 using std::cerr;
@@ -45,22 +48,23 @@ unsigned int executeKdmPass ()
 }
 
 
-struct opt_pass kdmPass =
-{
-    GIMPLE_PASS,        // type
-    "kdm",              // name
-    NULL,        // gate
-    executeKdmPass,     // execute
-    NULL,               // sub
-    NULL,               // next
-    0,                  // static_pass_number
-    TV_NONE,            // tv_id
-    PROP_gimple_any,    // properties_required
-    0,                  // properties_provided
-    0,                  // properties_destroyed
-    0,                  // todo_flags_start
-    0                   // todo_flags_finish
-};
+//struct opt_pass kdmPass =
+//{
+//    GIMPLE_PASS,        // type
+//    "kdm",              // name
+//    NULL,        // gate
+//    executeKdmPass,     // execute
+//    NULL,               // sub
+//    NULL,               // next
+//    0,                  // static_pass_number
+//    TV_NONE,            // tv_id
+//    PROP_gimple_any,    // properties_required
+//    0,                  // properties_provided
+//    0,                  // properties_destroyed
+//    0,                  // todo_flags_start
+//    0                   // todo_flags_finish
+//};
+
 
 
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
@@ -70,16 +74,60 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
     //Recommended version check
     if (plugin_default_version_check(version, &gcc_version))
     {
-        // Process any plugin arguments
-        // TODO
+        boost::unique_ptr<gcckdm::GccKdmWriter> writer;
 
-        gccKdmPlugin.reset(new gcckdm::GccKdmPlugin());
-//        gcckdm::GccKdmPlugin & kdmPlugin = gcckdm::GccKdmPlugin::Instance();
+        // Process any plugin arguments
+        int argc = plugin_info->argc;
+        struct plugin_argument *argv = plugin_info->argv;
+
+        for (int i = 0; i < argc; ++i)
+        {
+            std::string key(argv[i].key);
+            if (key == "output")
+            {
+                gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink;
+                std::string value(argv[i].value);
+                if (value == "stdout")
+                {
+                    kdmSink.reset(&std::cout, null_deleter());
+                    writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+                }
+                else if (value == "stderr")
+                {
+                    kdmSink.reset(&std::cout, null_deleter());
+                    writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+                }
+                else if (value == "file")
+                {
+                    boost::filesystem::path filename(main_input_filename);
+                    filename.replace_extension(".tkdm");
+                    writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
+                }
+                else
+                {
+                    warning (0, G_("plugin %qs: unrecognized argument %qs ignored"),plugin_info->base_name, value.c_str());
+                }
+            }
+            else
+            {
+                warning (0, G_("plugin %qs: unrecognized argument %qs ignored"),plugin_info->base_name, key.c_str());
+            }
+        }
+
+        //default to file output
+        if (!writer)
+        {
+            boost::filesystem::path filename(main_input_filename);
+            filename.replace_extension(".tkdm");
+            writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
+        }
+
+        gccKdmPlugin.reset(new gcckdm::GccKdmPlugin(boost::move(writer)));
         gccKdmPlugin->name(plugin_info->base_name);
+
 
         // Register callbacks.
         //
-        //register_callback (pluginName.c_str(), PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
         gccKdmPlugin->registerCallbacks();
     }
     else
@@ -88,6 +136,11 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
     }
 
     return retValue;
+}
+extern "C"  void executeStartUnit(void *event_data, void *data)
+{
+    gcckdm::GccKdmPlugin & kdmPlugin = gcckdm::GccKdmPlugin::Instance();
+    kdmPlugin.startUnit(event_data, data);
 }
 
 extern "C" void executeGccKdm(void *event_data, void *data)
@@ -150,6 +203,12 @@ void printBasicDeclInfo(tree decl)
 namespace gcckdm
 {
 
+GccKdmPlugin::GccKdmPlugin(boost::unique_ptr<GccKdmWriter> writer)
+: mWriter(boost::move(writer))
+{
+
+}
+
 std::string const & GccKdmPlugin::name() const
 {
     return mName;
@@ -162,34 +221,36 @@ void GccKdmPlugin::name(std::string const & name)
 
 void GccKdmPlugin::registerCallbacks()
 {
-    //Allows access to C/C++ ASTs... called for each function
-    register_callback(name().c_str(), PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
-
-    //Attempt to get the very first gimple AST before any optimizations
-    struct register_pass_info pass_info;
-    pass_info.pass = &kdmPass;
-    pass_info.reference_pass_name = all_lowering_passes->name;
-    pass_info.ref_pass_instance_number = 0;
-    pass_info.pos_op = PASS_POS_INSERT_AFTER;
-    register_callback(name().c_str(), PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
-
-    //    register_callback(name().c_str(), PLUGIN_ALL_IPA_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
-
-//    register_callback(name().c_str(), PLUGIN_EARLY_GIMPLE_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
-
-
-    //    //Allows access to GIMPLE CFGs
-    //    register_callback(name().c_str(), PLUGIN_ALL_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
-
-
-    // Called whenever a type has been parsed
-    register_callback(name().c_str(), PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func>(executeFinishType), NULL);
+    //Called at the start of a translation unit
+    register_callback(name().c_str(), PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
+//
+//
+//
+//    //Allows access to C/C++ ASTs... called for each function
+//    register_callback(name().c_str(), PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
+//
+//    //Attempt to get the very first gimple AST before any optimizations
+//    struct register_pass_info pass_info;
+//    pass_info.pass = &kdmPass;
+//    pass_info.reference_pass_name = all_lowering_passes->name;
+//    pass_info.ref_pass_instance_number = 0;
+//    pass_info.pos_op = PASS_POS_INSERT_AFTER;
+//    register_callback(name().c_str(), PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+//
+//    //    register_callback(name().c_str(), PLUGIN_ALL_IPA_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
+//
+////    register_callback(name().c_str(), PLUGIN_EARLY_GIMPLE_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
+//
+//
+//    //    //Allows access to GIMPLE CFGs
+//    //    register_callback(name().c_str(), PLUGIN_ALL_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
+//
+//
+//    // Called whenever a type has been parsed
+//    register_callback(name().c_str(), PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func>(executeFinishType), NULL);
 
     // Called when finished with the translation unit
     register_callback(name().c_str(), PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func>(executeFinishUnit), NULL);
-
-
-
 
     //register_callback(name().c_str(), PLUGIN_ALL_PASSES_START, &executeGccKdm, 0);
 }
@@ -243,25 +304,33 @@ void GccKdmPlugin::generateKdm(void * event_data, void * data)
     cerr << endl << "=========GENERATE KDM STOP==========" << endl;
 }
 
+void GccKdmPlugin::startUnit(void * event_data, void * data)
+{
+    mWriter->start();
+}
+
+
 
 void GccKdmPlugin::finishUnit(void * event_data, void * data)
 {
-    cerr << endl << "=========FINISH UNIT START==========" << endl;
-
-    if (global_namespace)
-    {
-        collect(global_namespace);
-    }
-    else
-    {
-        struct cgraph_node *n;
-        for (n = cgraph_nodes; n; n = n->next)
-        {
-            collect(n->decl);
-        }
-    }
-    process();
-    cerr << endl << "=========FINISH UNIT STOP ==========" << endl;
+    mWriter->finish();
+//
+//    cerr << endl << "=========FINISH UNIT START==========" << endl;
+//
+//    if (global_namespace)
+//    {
+//        collect(global_namespace);
+//    }
+//    else
+//    {
+//        struct cgraph_node *n;
+//        for (n = cgraph_nodes; n; n = n->next)
+//        {
+//            collect(n->decl);
+//        }
+//    }
+//    process();
+//    cerr << endl << "=========FINISH UNIT STOP ==========" << endl;
 }
 
 

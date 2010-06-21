@@ -8,7 +8,8 @@
 #ifndef GCCKDM_GCCKDMWRITER_HH_
 #define GCCKDM_GCCKDMWRITER_HH_
 
-namespace gcckdm {
+namespace gcckdm
+{
 
 class GccKdmWriter
 {
@@ -17,6 +18,6 @@ public:
     virtual void finish() = 0;
 };
 
-}  // namespace gcckdm
+} // namespace gcckdm
 
 #endif /* GCCKDM_GCCKDMWRITER_HH_ */

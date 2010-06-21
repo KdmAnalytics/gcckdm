@@ -18,7 +18,6 @@
 
 extern "C"
 {
-#include <stdlib.h>
 #include <gcc-plugin.h> //supposed to be first
 #include <coretypes.h>
 #include <tree.h>

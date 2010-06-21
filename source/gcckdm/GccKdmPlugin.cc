@@ -90,22 +90,24 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
                 if (value == "stdout")
                 {
                     kdmSink.reset(&std::cout, null_deleter());
-                    writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
                 }
                 else if (value == "stderr")
                 {
                     kdmSink.reset(&std::cout, null_deleter());
-                    writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
                 }
                 else if (value == "file")
                 {
-                    boost::filesystem::path filename(main_input_filename);
-                    filename.replace_extension(".tkdm");
-                    writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
+                    //this is the default... handled below
                 }
                 else
                 {
                     warning (0, G_("plugin %qs: unrecognized argument %qs ignored"),plugin_info->base_name, value.c_str());
+                    continue;
+                }
+
+                if (kdmSink)
+                {
+                    writer.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
                 }
             }
             else
@@ -252,7 +254,6 @@ void GccKdmPlugin::registerCallbacks()
     // Called when finished with the translation unit
     register_callback(name().c_str(), PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func>(executeFinishUnit), NULL);
 
-    //register_callback(name().c_str(), PLUGIN_ALL_PASSES_START, &executeGccKdm, 0);
 }
 
 void GccKdmPlugin::preGeneric(void * event_data, void * data)

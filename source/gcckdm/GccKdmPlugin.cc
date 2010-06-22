@@ -50,22 +50,22 @@ unsigned int executeKdmPass ()
 }
 
 
-//struct opt_pass kdmPass =
-//{
-//    GIMPLE_PASS,        // type
-//    "kdm",              // name
-//    NULL,        // gate
-//    executeKdmPass,     // execute
-//    NULL,               // sub
-//    NULL,               // next
-//    0,                  // static_pass_number
-//    TV_NONE,            // tv_id
-//    PROP_gimple_any,    // properties_required
-//    0,                  // properties_provided
-//    0,                  // properties_destroyed
-//    0,                  // todo_flags_start
-//    0                   // todo_flags_finish
-//};
+struct opt_pass kdmPass =
+{
+    GIMPLE_PASS,        // type
+    "kdm",              // name
+    NULL,        // gate
+    executeKdmPass,     // execute
+    NULL,               // sub
+    NULL,               // next
+    0,                  // static_pass_number
+    TV_NONE,            // tv_id
+    PROP_gimple_any,    // properties_required
+    0,                  // properties_provided
+    0,                  // properties_destroyed
+    0,                  // todo_flags_start
+    0                   // todo_flags_finish
+};
 
 
 
@@ -235,13 +235,13 @@ void GccKdmPlugin::registerCallbacks()
 //    //Allows access to C/C++ ASTs... called for each function
 //    register_callback(name().c_str(), PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
 //
-//    //Attempt to get the very first gimple AST before any optimizations
-//    struct register_pass_info pass_info;
-//    pass_info.pass = &kdmPass;
-//    pass_info.reference_pass_name = all_lowering_passes->name;
-//    pass_info.ref_pass_instance_number = 0;
-//    pass_info.pos_op = PASS_POS_INSERT_AFTER;
-//    register_callback(name().c_str(), PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+    //Attempt to get the very first gimple AST before any optimizations
+    struct register_pass_info pass_info;
+    pass_info.pass = &kdmPass;
+    pass_info.reference_pass_name = all_lowering_passes->name;
+    pass_info.ref_pass_instance_number = 0;
+    pass_info.pos_op = PASS_POS_INSERT_AFTER;
+    register_callback(name().c_str(), PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
 //
 //    //    register_callback(name().c_str(), PLUGIN_ALL_IPA_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
 //
@@ -449,43 +449,44 @@ void GccKdmPlugin::printNamespaceDecl(tree namespaceDecl)
 
 void GccKdmPlugin::printFunctionDecl(tree functionDecl)
 {
+    mWriter->writeCallableUnit(functionDecl);
 //    if (errorcount
 //        || DECL_CLONED_FUNCTION_P (functionDecl)
 //        || DECL_ARTIFICIAL(functionDecl)) return;
-
-
-    tree id(DECL_NAME (functionDecl));
-    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-
-    printBasicDeclInfo(functionDecl);
-
-
-    if (gimple_has_body_p(functionDecl))
-    {
-        if (!gimple_body(functionDecl))
-        {
-            basic_block bb;
-            struct function *fn(DECL_STRUCT_FUNCTION(functionDecl));
-            FOR_EACH_BB_FN(bb, fn)
-            {
-                cerr << "  basic_block " << endl;
-                print_gimple_seq(stderr, bb_seq(bb), 2, 0);
-            }
-        }
-        else
-        {
-            gimple_seq seq = gimple_body(functionDecl);
-            print_gimple_seq(stderr, seq, 0, 0);
-        }
-    }
-    else if (DECL_SAVED_TREE (functionDecl))
-    {
-        std::cerr << "function decl body: " << name << " DECL_SAVED_TREE" << std::endl;
-    }
-    else
-    {
-        std::cerr << "\t" << "<function body empty>" << std::endl;
-    }
+//
+//
+//    tree id(DECL_NAME (functionDecl));
+//    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+//
+//    printBasicDeclInfo(functionDecl);
+//
+//
+//    if (gimple_has_body_p(functionDecl))
+//    {
+//        if (!gimple_body(functionDecl))
+//        {
+//            basic_block bb;
+//            struct function *fn(DECL_STRUCT_FUNCTION(functionDecl));
+//            FOR_EACH_BB_FN(bb, fn)
+//            {
+//                cerr << "  basic_block " << endl;
+//                print_gimple_seq(stderr, bb_seq(bb), 2, 0);
+//            }
+//        }
+//        else
+//        {
+//            gimple_seq seq = gimple_body(functionDecl);
+//            print_gimple_seq(stderr, seq, 0, 0);
+//        }
+//    }
+//    else if (DECL_SAVED_TREE (functionDecl))
+//    {
+//        std::cerr << "function decl body: " << name << " DECL_SAVED_TREE" << std::endl;
+//    }
+//    else
+//    {
+//        std::cerr << "\t" << "<function body empty>" << std::endl;
+//    }
 
 }
 

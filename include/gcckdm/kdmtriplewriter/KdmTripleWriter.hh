@@ -9,9 +9,9 @@
 #define GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 
 #include <iostream>
+#include <boost/shared_ptr.hpp>
 
-#include "boost/shared_ptr.hpp"
-
+#include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/GccKdmWriter.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/KdmType.hh"
@@ -31,10 +31,14 @@ public:
     explicit KdmTripleWriter(boost::filesystem::path const & filename);
 
     virtual void start(boost::filesystem::path const & file);
+
+    virtual void writeCallableUnit(tree functionDecl);
+
     virtual void finish();
 
     static const int KdmTripleVersion = 1;
 private:
+//    typedef std::set<boost::filesystem::path> PathSet;
 
     enum
     {
@@ -50,23 +54,32 @@ private:
         SubjectId_DefaultStart
     };
 
+
+    void writeParameterUnit(tree param);
+
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();
 
-    /**
-     *
-     */
-    void writeTriple(long const & subject, KdmPredicate const & predicate, long const & object);
+    void writeKdmType(long const subject, KdmType const & object);
+    void writeName(long const subject, std::string const & name);
+    void writeContains(long const parent, long const child);
+    void writeLinkId(long const subject, std::string const & name);
+
 
     /**
      *
      */
-    void writeTriple(long const & subject, KdmPredicate const & predicate, KdmType const & object);
+    void writeTriple(long const subject, KdmPredicate const & predicate, long const object);
 
     /**
      *
      */
-    void writeTriple(long const & subject, KdmPredicate const & predicate, std::string const & object);
+    void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object);
+
+    /**
+     *
+     */
+    void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object);
 
     /**
      * Write a SourceFile kdm element to the KdmSink stream using the given file
@@ -83,8 +96,13 @@ private:
      */
     void writeSourceFile(boost::filesystem::path const & file);
 
+//    void writeDirectoryStructure();
+
+   // void addPath(boost::filesystem::path const & newPath);
+
     KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
     long mSubjectId;     /// The current unique subject, incremented for each new subject
+//    PathSet mPaths;
 
 };
 

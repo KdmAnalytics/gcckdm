@@ -28,6 +28,10 @@ private:
         KdmType_SharedUnit,
         KdmType_StoreableUnit,
         KdmType_Value,
+        KdmType_CallableUnit,
+        KdmType_ParameterUnit,
+        KdmType_PrimitiveType,
+        KdmType_Signature,
 
         //Source Group
         KdmType_InventoryModel,
@@ -55,6 +59,11 @@ public:
     static const KdmType SharedUnit() { return KdmType(KdmType_SharedUnit, "code/SharedUnit");}
     static const KdmType StoreableUnit() { return KdmType(KdmType_StoreableUnit, "code/StoreableUnit");}
     static const KdmType Value() { return KdmType(KdmType_Value, "code/Value");}
+    static const KdmType CallableUnit() { return KdmType(KdmType_CallableUnit, "code/CallableUnit");}
+    static const KdmType ParameterUnit() { return KdmType(KdmType_ParameterUnit, "code/ParameterUnit");}
+    static const KdmType PrimitiveType() { return KdmType(KdmType_PrimitiveType, "code/PrimitiveType");}
+    static const KdmType Signature() { return KdmType(KdmType_Signature, "code/Signature");}
+    //static const KdmType () { return KdmType(KdmType_, "code/");}
     //static const KdmType () { return KdmType(KdmType_, "code/");}
 
     //Source Group

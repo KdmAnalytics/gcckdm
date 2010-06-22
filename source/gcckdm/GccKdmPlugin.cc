@@ -13,6 +13,8 @@
 #include "gcckdm/GccKdmWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/utilities/null_deleter.hpp"
+#include "boost/filesystem/operations.hpp"
+#include "boost/filesystem/convenience.hpp"
 
 using std::string;
 using std::cerr;
@@ -307,7 +309,8 @@ void GccKdmPlugin::generateKdm(void * event_data, void * data)
 
 void GccKdmPlugin::startUnit(void * event_data, void * data)
 {
-    mWriter->start();
+    boost::filesystem::path filename(main_input_filename);
+    mWriter->start(boost::filesystem::complete(filename));
 }
 
 

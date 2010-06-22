@@ -107,6 +107,7 @@ void KdmTripleWriter::writeTriple(long const & subject, KdmPredicate const & pre
     *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
+
 void KdmTripleWriter::writeSourceFile(boost::filesystem::path const & file)
 {
     writeTriple(++mSubjectId, KdmPredicate::KdmType(), KdmType::SourceFile());

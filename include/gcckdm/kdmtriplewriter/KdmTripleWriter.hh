@@ -53,14 +53,38 @@ private:
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();
 
+    /**
+     *
+     */
     void writeTriple(long const & subject, KdmPredicate const & predicate, long const & object);
+
+    /**
+     *
+     */
     void writeTriple(long const & subject, KdmPredicate const & predicate, KdmType const & object);
+
+    /**
+     *
+     */
     void writeTriple(long const & subject, KdmPredicate const & predicate, std::string const & object);
 
+    /**
+     * Write a SourceFile kdm element to the KdmSink stream using the given file
+     *
+     * Sample output:
+     *
+     * <10> <kdmtype> "source/SourceFile".
+     * <10> <name> "test002.c".
+     * <10> <path> "/tmp/c-tests/test002.c".
+     * <10> <link::id> "/tmp/c-tests/test002.c".
+     * <8> <contains> <10>.
+     *
+     * @param file the file to use to populate the SourceFile kdm element
+     */
     void writeSourceFile(boost::filesystem::path const & file);
 
-    KdmSinkPtr mKdmSink;
-    long mSubjectId;
+    KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
+    long mSubjectId;     /// The current unique subject, incremented for each new subject
 
 };
 

@@ -129,6 +129,8 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
         gccKdmPlugin.reset(new gcckdm::GccKdmPlugin(boost::move(writer)));
         gccKdmPlugin->name(plugin_info->base_name);
 
+        //Disable assembly output
+        asm_file_name = HOST_BIT_BUCKET;
 
         // Register callbacks.
         //

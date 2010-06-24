@@ -34,7 +34,11 @@ void KdmTripleWriter::start(boost::filesystem::path const & file)
     writeTripleKdmHeader();
     writeDefaultKdmModelElements();
     writeSourceFile(file);
-    //    addPath(file.parent_path());
+}
+
+void KdmTripleWriter::processAst(tree ast)
+{
+
 }
 
 void KdmTripleWriter::finish()
@@ -146,45 +150,45 @@ void KdmTripleWriter::writeParameterUnit(tree param)
     writeName(mSubjectId,name );
 }
 
-void KdmTripleWriter::writeCallableUnit(tree functionDecl)
-{
-    //    int tc(TREE_CODE(functionDecl));
-    tree id(DECL_NAME (functionDecl));
-    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-    //    tree type(TREE_TYPE(functionDecl));
-    //    cerr << tree_code_name[tc] << " " << getScopeString(decl) << "::" << name << " type " << tree_code_name[TREE_CODE(type)] << " at "
-    //            << DECL_SOURCE_FILE (decl) << ":" << DECL_SOURCE_LINE (decl) << endl;
-
-    long callableUnitId = ++mSubjectId;
-    writeKdmType(callableUnitId, KdmType::CallableUnit());
-    writeName(callableUnitId, name);
-    writeLinkId(callableUnitId, name);
-    writeContains(SubjectId_ClassSharedUnit, callableUnitId);
-
-    long signatureId = ++mSubjectId;
-    writeKdmType(signatureId, KdmType::Signature());
-    writeName(signatureId, name);
-    writeContains(callableUnitId, signatureId);
-
-    //Determine return type id
-    tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
-    tree t2(TYPE_MAIN_VARIANT(t));
-
-
-    //Iterator through argument list
-    tree arg(DECL_ARGUMENTS (functionDecl));
-    tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
-    while (argType && (argType != void_list_node))
-    {
-        writeParameterUnit(arg);
-        if (arg)
-            arg = TREE_CHAIN (arg);
-        argType = TREE_CHAIN (argType);
-    }
-
-
-
-}
+//void KdmTripleWriter::writeCallableUnit(tree functionDecl)
+//{
+//    //    int tc(TREE_CODE(functionDecl));
+//    tree id(DECL_NAME (functionDecl));
+//    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+//    //    tree type(TREE_TYPE(functionDecl));
+//    //    cerr << tree_code_name[tc] << " " << getScopeString(decl) << "::" << name << " type " << tree_code_name[TREE_CODE(type)] << " at "
+//    //            << DECL_SOURCE_FILE (decl) << ":" << DECL_SOURCE_LINE (decl) << endl;
+//
+//    long callableUnitId = ++mSubjectId;
+//    writeKdmType(callableUnitId, KdmType::CallableUnit());
+//    writeName(callableUnitId, name);
+//    writeLinkId(callableUnitId, name);
+//    writeContains(SubjectId_ClassSharedUnit, callableUnitId);
+//
+//    long signatureId = ++mSubjectId;
+//    writeKdmType(signatureId, KdmType::Signature());
+//    writeName(signatureId, name);
+//    writeContains(callableUnitId, signatureId);
+//
+//    //Determine return type id
+//    tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
+//    tree t2(TYPE_MAIN_VARIANT(t));
+//
+//
+//    //Iterator through argument list
+//    tree arg(DECL_ARGUMENTS (functionDecl));
+//    tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
+//    while (argType && (argType != void_list_node))
+//    {
+//        writeParameterUnit(arg);
+//        if (arg)
+//            arg = TREE_CHAIN (arg);
+//        argType = TREE_CHAIN (argType);
+//    }
+//
+//
+//
+//}
 
 //void KdmTripleWriter::writeDirectory()
 //{

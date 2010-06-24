@@ -33,15 +33,13 @@ public:
 
     virtual void start(boost::filesystem::path const & file);
 
-    virtual void writeCallableUnit(tree functionDecl);
+    virtual void processAst(tree ast);
 
     virtual void finish();
 
     static const int KdmTripleVersion = 1;
 private:
-    typedef std::multiset<tree, DeclComparator> DeclSet;
-
-//    typedef std::set<boost::filesystem::path> PathSet;
+    //typedef std::multiset<tree, DeclComparator> DeclSet;
 
     enum
     {
@@ -68,6 +66,7 @@ private:
     void writeName(long const subject, std::string const & name);
     void writeContains(long const parent, long const child);
     void writeLinkId(long const subject, std::string const & name);
+    // virtual void writeCallableUnit(tree functionDecl);
 
 
     /**
@@ -108,7 +107,7 @@ private:
     long mSubjectId;     /// The current unique subject, incremented for each new subject
 //    PathSet mPaths;
 
-    DeclSet mReferencedNodes;
+//    DeclSet mReferencedNodes;
 
 };
 

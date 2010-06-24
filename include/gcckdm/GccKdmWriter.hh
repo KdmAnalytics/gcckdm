@@ -8,6 +8,7 @@
 #ifndef GCCKDM_GCCKDMWRITER_HH_
 #define GCCKDM_GCCKDMWRITER_HH_
 
+#include "gcckdm/GccKdmConfig.hh"
 #include <boost/filesystem/path.hpp>
 
 namespace gcckdm
@@ -18,7 +19,9 @@ class GccKdmWriter
 public:
     virtual void start(boost::filesystem::path const & filename) = 0;
 
-    virtual void writeCallableUnit(tree functionDecl) = 0;
+    //virtual void writeCallableUnit(tree functionDecl) = 0;
+
+    virtual void processAst(tree ast) = 0;
 
     virtual void finish() = 0;
 };

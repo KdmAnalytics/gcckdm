@@ -5,8 +5,6 @@
  *      Author: kgirard
  */
 
-#include "gcckdm/GccKdmPlugin.hh"
-
 #include <iostream>
 #include "gcckdm/utilities/unique_ptr.hpp"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"

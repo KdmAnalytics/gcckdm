@@ -167,14 +167,14 @@ extern "C" unsigned int executeKdmGimplePass()
 
     if (global_namespace)
     {
-        kdmWriter->processAst(global_namespace);
+        kdmWriter->processAstNode(global_namespace);
     }
     else
     {
         struct cgraph_node *n;
         for (n = cgraph_nodes; n; n = n->next)
         {
-            kdmWriter->processAst(n->decl);
+            kdmWriter->processAstNode(n->decl);
         }
     }
     return retValue;

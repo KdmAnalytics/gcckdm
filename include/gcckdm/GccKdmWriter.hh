@@ -21,7 +21,7 @@ public:
 
     //virtual void writeCallableUnit(tree functionDecl) = 0;
 
-    virtual void processAst(tree ast) = 0;
+    virtual void processAstNode(tree ast) = 0;
 
     virtual void finish() = 0;
 };

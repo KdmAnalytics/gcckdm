@@ -33,7 +33,7 @@ public:
 
     virtual void start(boost::filesystem::path const & file);
 
-    virtual void processAst(tree ast);
+    virtual void processAstNode(tree ast);
 
     virtual void finish();
 
@@ -56,17 +56,7 @@ private:
         SubjectId_DefaultStart,
     };
 
-
-    void writeParameterUnit(tree param);
-
-    void writeTripleKdmHeader();
-    void writeDefaultKdmModelElements();
-
-    void writeKdmType(long const subject, KdmType const & object);
-    void writeName(long const subject, std::string const & name);
-    void writeContains(long const parent, long const child);
-    void writeLinkId(long const subject, std::string const & name);
-    // virtual void writeCallableUnit(tree functionDecl);
+    void processFunctionDeclaration(tree functionDecl);
 
 
     /**
@@ -98,6 +88,22 @@ private:
      * @param file the file to use to populate the SourceFile kdm element
      */
     void writeSourceFile(boost::filesystem::path const & file);
+
+
+
+    void writeCallableUnit(tree functionDecl);
+    void writeParameterUnit(tree param);
+
+    void writeTripleKdmHeader();
+    void writeDefaultKdmModelElements();
+
+    void writeKdmType(long const subject, KdmType const & object);
+    void writeName(long const subject, std::string const & name);
+    void writeContains(long const parent, long const child);
+    void writeLinkId(long const subject, std::string const & name);
+
+
+
 
 //    void writeDirectoryStructure();
 

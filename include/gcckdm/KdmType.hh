@@ -31,6 +31,7 @@ private:
         KdmType_CallableUnit,
         KdmType_ParameterUnit,
         KdmType_PrimitiveType,
+        KdmType_PointerType,
         KdmType_Signature,
 
         //Source Group
@@ -63,6 +64,7 @@ public:
     static const KdmType ParameterUnit() { return KdmType(KdmType_ParameterUnit, "code/ParameterUnit");}
     static const KdmType PrimitiveType() { return KdmType(KdmType_PrimitiveType, "code/PrimitiveType");}
     static const KdmType Signature() { return KdmType(KdmType_Signature, "code/Signature");}
+    static const KdmType PointerType() { return KdmType(KdmType_PointerType, "code/PointerType");}
     //static const KdmType () { return KdmType(KdmType_, "code/");}
     //static const KdmType () { return KdmType(KdmType_, "code/");}
 

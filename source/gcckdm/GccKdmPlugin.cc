@@ -157,7 +157,7 @@ void registerCallbacks(std::string const & name)
 extern "C" void executeStartUnit(void *event_data, void *data)
 {
     boost::filesystem::path filename(main_input_filename);
-    kdmWriter->start(boost::filesystem::complete(filename));
+    kdmWriter->startTranslationUnit(boost::filesystem::complete(filename));
 }
 
 
@@ -165,6 +165,7 @@ extern "C" unsigned int executeKdmGimplePass()
 {
     int retValue(0);
 
+    kdmWriter->startKdmGimplePass();
     if (global_namespace)
     {
         kdmWriter->processAstNode(global_namespace);
@@ -177,12 +178,13 @@ extern "C" unsigned int executeKdmGimplePass()
             kdmWriter->processAstNode(n->decl);
         }
     }
+    kdmWriter->finishKdmGimplePass();
     return retValue;
 }
 
 extern "C" void executeFinishUnit(void *event_data, void *data)
 {
-    kdmWriter->finish();
+    kdmWriter->finishTranslationUnit();
 }
 
 //

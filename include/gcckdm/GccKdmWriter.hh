@@ -17,13 +17,16 @@ namespace gcckdm
 class GccKdmWriter
 {
 public:
-    virtual void start(boost::filesystem::path const & filename) = 0;
+    virtual void startTranslationUnit(boost::filesystem::path const & filename) = 0;
+
+    virtual void startKdmGimplePass() = 0;
+    virtual void finishKdmGimplePass() = 0;
 
     //virtual void writeCallableUnit(tree functionDecl) = 0;
 
     virtual void processAstNode(tree ast) = 0;
 
-    virtual void finish() = 0;
+    virtual void finishTranslationUnit() = 0;
 };
 
 } // namespace gcckdm

@@ -31,12 +31,13 @@ public:
 
     explicit KdmTripleWriter(KdmSinkPtr const & kdmSink);
     explicit KdmTripleWriter(boost::filesystem::path const & filename);
+    ~KdmTripleWriter();
 
-    virtual void start(boost::filesystem::path const & file);
-
+    virtual void startTranslationUnit(boost::filesystem::path const & file);
+    virtual void startKdmGimplePass();
     virtual void processAstNode(tree ast);
-
-    virtual void finish();
+    virtual void finishKdmGimplePass();
+    virtual void finishTranslationUnit();
 
     static const int KdmTripleVersion = 1;
 private:
@@ -96,8 +97,10 @@ private:
 
 
     void writeCallableUnit(tree functionDecl);
+    long writeReturnParameterUnit(tree param);
     void writeParameterUnit(tree param);
     void writePrimitiveType(tree type);
+    void writePointerType(tree type);
 
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();

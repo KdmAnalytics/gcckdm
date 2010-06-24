@@ -8,6 +8,7 @@
 #ifndef GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 #define GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 
+#include <tr1/unordered_map>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 
@@ -56,8 +57,11 @@ private:
         SubjectId_DefaultStart,
     };
 
-    void processFunctionDeclaration(tree functionDecl);
+    void processAstDeclarationNode(tree decl);
+    void processAstTypeNode(tree decl);
+    void processAstFunctionDeclarationNode(tree functionDecl);
 
+    long findOrAddReferencedNode(tree node);
 
     /**
      *
@@ -93,6 +97,7 @@ private:
 
     void writeCallableUnit(tree functionDecl);
     void writeParameterUnit(tree param);
+    void writePrimitiveType(tree type);
 
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();
@@ -114,7 +119,9 @@ private:
 //    PathSet mPaths;
 
 //    DeclSet mReferencedNodes;
+    typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
 
+    AstNodeReferenceMap referencedNodes;
 };
 
 } // namespace kdmtriplewriter

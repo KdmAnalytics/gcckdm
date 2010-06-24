@@ -20,6 +20,7 @@ private:
     {
         KdmPredicate_KdmType,
         KdmPredicate_Contains,
+        KdmPredicate_Type,
         KdmPredicate_Name,
         KdmPredicate_Kind,
         KdmPredicate_From,
@@ -33,6 +34,7 @@ private:
 public:
     static const KdmPredicate KdmType() { return KdmPredicate(KdmPredicate_KdmType,"kdmtype");}
     static const KdmPredicate Contains() { return KdmPredicate(KdmPredicate_Contains, "contains");}
+    static const KdmPredicate Type() { return KdmPredicate(KdmPredicate_Type, "type");}
     static const KdmPredicate Name() { return KdmPredicate(KdmPredicate_Name, "name");}
     static const KdmPredicate Kind() { return KdmPredicate(KdmPredicate_Kind, "kind");}
     static const KdmPredicate From() { return KdmPredicate(KdmPredicate_From, "from");}

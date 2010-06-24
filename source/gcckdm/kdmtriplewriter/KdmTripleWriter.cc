@@ -36,9 +36,11 @@ KdmTripleWriter::~KdmTripleWriter()
 
 void KdmTripleWriter::startTranslationUnit(boost::filesystem::path const & file)
 {
+    mCompilationFile = file;
     writeTripleKdmHeader();
     writeDefaultKdmModelElements();
-    writeSourceFile(file);
+    writeSourceFile(mCompilationFile);
+ //   writeCompilationUnit(file);
 }
 
 void KdmTripleWriter::startKdmGimplePass()
@@ -154,7 +156,16 @@ void KdmTripleWriter::writeCallableUnit(tree functionDecl)
     writeKdmType(callableUnitId, KdmType::CallableUnit());
     writeName(callableUnitId, name);
     writeLinkId(callableUnitId, name);
-    writeContains(SubjectId_ClassSharedUnit, callableUnitId);
+
+    std::string sourceFile(DECL_SOURCE_FILE(functionDecl));
+    if (sourceFile == mCompilationFile.string())
+    {
+        writeContains(SubjectId_CompilationUnit, callableUnitId);
+    }
+    else
+    {
+        writeContains(SubjectId_ClassSharedUnit, callableUnitId);
+    }
 
     long signatureId = ++mSubjectId;
     writeKdmType(signatureId, KdmType::Signature());
@@ -164,16 +175,16 @@ void KdmTripleWriter::writeCallableUnit(tree functionDecl)
     //Determine return type id
     tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
     tree t2(TYPE_MAIN_VARIANT(t));
-    long typeId = writeReturnParameterUnit(t2);
-    writeContains(signatureId, typeId);
+    long paramId = writeReturnParameterUnit(t2);
+    writeContains(signatureId, paramId);
 
     //Iterator through argument list
     tree arg(DECL_ARGUMENTS (functionDecl));
     tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
     while (argType && (argType != void_list_node))
     {
-        writeParameterUnit(arg);
-        writeContains(signatureId, mSubjectId);
+        long refId = writeParameterUnit(arg);
+        writeContains(signatureId, refId);
         if (arg)
         {
             arg = TREE_CHAIN (arg);
@@ -229,6 +240,12 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
     writeTriple(SubjectId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
     writeTriple(SubjectId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
     writeTriple(SubjectId_Segment, KdmPredicate::Contains(), SubjectId_InventoryModel);
+
+    writeKdmType(SubjectId_CompilationUnit, KdmType::CompilationUnit());
+    writeName(SubjectId_CompilationUnit, mCompilationFile.filename());
+    writeTriple(SubjectId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
+    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Contains(), SubjectId_CompilationUnit);
+
 }
 
 void KdmTripleWriter::writeKdmType(long const subject, KdmType const & object)
@@ -259,29 +276,40 @@ void KdmTripleWriter::writeSourceFile(boost::filesystem::path const & file)
     writeTriple(SubjectId_InventoryModel, KdmPredicate::Contains(), mSubjectId);
 }
 
+void KdmTripleWriter::writeCompilationUnit(boost::filesystem::path const & file)
+{
+    writeKdmType(++mSubjectId, KdmType::CompilationUnit());
+    writeName(mSubjectId, file.filename());
+    writeTriple(mSubjectId, KdmPredicate::LinkId(), file.string());
+    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Contains(), mSubjectId);
+}
+
 long KdmTripleWriter::writeReturnParameterUnit(tree param)
 {
     long ref = findOrAddReferencedNode(param);
-    writeKdmType(ref, KdmType::ParameterUnit());
-    writeTriple(ref, KdmPredicate::Name(), "__RESULT__");
-    return ref;
+    writeKdmType(++mSubjectId, KdmType::ParameterUnit());
+    writeTriple(mSubjectId, KdmPredicate::Name(), "__RESULT__");
+    writeTriple(mSubjectId, KdmPredicate::Type(), ref);
+    return mSubjectId;
 }
 
-void KdmTripleWriter::writeParameterUnit(tree param)
+long KdmTripleWriter::writeParameterUnit(tree param)
 {
     if (!DECL_ARTIFICIAL (param))
     {
+        long parameterUnitId(++mSubjectId);
+        writeKdmType(parameterUnitId, KdmType::ParameterUnit());
         tree type(TYPE_MAIN_VARIANT(TREE_TYPE(param)));
         long ref = findOrAddReferencedNode(type);
-        writeKdmType(++mSubjectId, KdmType::ParameterUnit());
 
         tree id(DECL_NAME (param));
         std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-        writeName(ref, name);
+        writeName(parameterUnitId, name);
 
         //long paramSubjectId = findOrAddReferencedNode(type);
 
-        writeTriple(mSubjectId, KdmPredicate::Type(), ref);
+        writeTriple(parameterUnitId, KdmPredicate::Type(), ref);
+        return parameterUnitId;
     }
 }
 

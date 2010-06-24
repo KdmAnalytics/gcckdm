@@ -32,7 +32,7 @@ private:
    };
 
 public:
-    static const KdmPredicate KdmType() { return KdmPredicate(KdmPredicate_KdmType,"kdmtype");}
+    static const KdmPredicate KdmType() { return KdmPredicate(KdmPredicate_KdmType,"kdmType");}
     static const KdmPredicate Contains() { return KdmPredicate(KdmPredicate_Contains, "contains");}
     static const KdmPredicate Type() { return KdmPredicate(KdmPredicate_Type, "type");}
     static const KdmPredicate Name() { return KdmPredicate(KdmPredicate_Name, "name");}

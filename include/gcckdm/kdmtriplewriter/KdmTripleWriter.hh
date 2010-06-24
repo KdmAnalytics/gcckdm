@@ -93,12 +93,12 @@ private:
      * @param file the file to use to populate the SourceFile kdm element
      */
     void writeSourceFile(boost::filesystem::path const & file);
-
+    void writeCompilationUnit(boost::filesystem::path const & file);
 
 
     void writeCallableUnit(tree functionDecl);
     long writeReturnParameterUnit(tree param);
-    void writeParameterUnit(tree param);
+    long writeParameterUnit(tree param);
     void writePrimitiveType(tree type);
     void writePointerType(tree type);
 
@@ -125,6 +125,7 @@ private:
     typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
 
     AstNodeReferenceMap referencedNodes;
+    boost::filesystem::path  mCompilationFile;
 };
 
 } // namespace kdmtriplewriter

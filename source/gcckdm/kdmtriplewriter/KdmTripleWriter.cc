@@ -166,6 +166,11 @@ void KdmTripleWriter::writeCallableUnit(tree functionDecl)
     writeName(signatureId, name);
     writeContains(callableUnitId, signatureId);
 
+    //Determine return type id
+    tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
+    tree t2(TYPE_MAIN_VARIANT(t));
+
+
     //Iterator through argument list
     tree arg(DECL_ARGUMENTS (functionDecl));
     tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));

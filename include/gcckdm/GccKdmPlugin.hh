@@ -94,17 +94,36 @@ private:
     GccKdmPlugin(GccKdmPlugin const &); //undefined
     GccKdmPlugin & operator=(GccKdmPlugin const &); //undefined
 
-    void collect(tree ns);
-    void collectNamespace(tree ns);
+    /**
+     * Traverse the given AST and collect all declarations placing
+     * them in a ordered set.  Send the ordered declarations to
+     * the GccKdmWriter instance
+     *
+     * @param ast the Gcc AST to traverse, can be the global namespace or any AST node
+     */
+    void traverse(tree ast);
 
-    void process();
 
-    void printDecl(tree decl);
-    void printNamespaceDecl(tree namespaceDecl);
-    void printFunctionDecl(tree functionDecl);
-    void printVarDecl(tree varDecl);
-    void printTypeDecl(tree typeDecl);
-    void printClassDecl(tree classDecl);
+    void collectNamespaceDeclarations(tree ns);
+    void collectDeclarations(tree decl);
+
+    void processCollectedDeclarations();
+    void processDeclaration(tree decl);
+    void processNamespaceDeclaration(tree ns);
+    void processFunctionDeclaration(tree funcDecl);
+    void processType(tree type);
+    void processRecordOrUnionType(tree type);
+//    void collect(tree ns);
+//    void collectNamespace(tree ns);
+//
+//    void process();
+
+//    void printDecl(tree decl);
+//    void printNamespaceDecl(tree namespaceDecl);
+//    void printFunctionDecl(tree functionDecl);
+//    void printVarDecl(tree varDecl);
+//    void printTypeDecl(tree typeDecl);
+//    void printClassDecl(tree classDecl);
 
     //std::string getScopeString(tree decl);
 

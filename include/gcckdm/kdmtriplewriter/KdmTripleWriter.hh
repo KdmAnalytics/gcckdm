@@ -13,6 +13,7 @@
 
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/GccKdmWriter.hh"
+#include "gcckdm/GccKdmUtilities.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/KdmType.hh"
 
@@ -38,6 +39,8 @@ public:
 
     static const int KdmTripleVersion = 1;
 private:
+    typedef std::multiset<tree, DeclComparator> DeclSet;
+
 //    typedef std::set<boost::filesystem::path> PathSet;
 
     enum
@@ -51,7 +54,8 @@ private:
         SubjectId_DerivedSharedUnit,
         SubjectId_ClassSharedUnit,
         SubjectId_InventoryModel,
-        SubjectId_DefaultStart
+        SubjectId_CompilationUnit,
+        SubjectId_DefaultStart,
     };
 
 
@@ -103,6 +107,8 @@ private:
     KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
     long mSubjectId;     /// The current unique subject, incremented for each new subject
 //    PathSet mPaths;
+
+    DeclSet mReferencedNodes;
 
 };
 

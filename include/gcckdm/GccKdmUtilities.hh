@@ -22,6 +22,12 @@ struct DeclComparator
     }
 };
 
+bool locationIsUnknown(location_t loc);
+location_t locationOf(tree t);
+std::string const locationString(location_t loc);
+std::string const declNameString(tree decl);
+std::string const typeNameString(tree type);
+
 
 
 #endif /* GCCKDM_GCCKDMUTILITIES_HH_ */

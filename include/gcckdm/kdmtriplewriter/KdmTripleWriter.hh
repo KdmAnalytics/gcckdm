@@ -9,6 +9,7 @@
 #define GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 
 #include <tr1/unordered_map>
+#include <tr1/unordered_set>
 #include <iostream>
 #include <boost/shared_ptr.hpp>
 
@@ -101,6 +102,7 @@ private:
     long writeParameterUnit(tree param);
     void writePrimitiveType(tree type);
     void writePointerType(tree type);
+    void writeRecordType(tree type);
 
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();
@@ -123,9 +125,15 @@ private:
 
 //    DeclSet mReferencedNodes;
     typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
+    typedef std::tr1::unordered_set<tree> TreeMap;
+    typedef std::tr1::unordered_set<boost::filesystem::path> PathMap;
 
     AstNodeReferenceMap referencedNodes;
     boost::filesystem::path  mCompilationFile;
+
+    TreeMap mDeclarationNodes;
+    TreeMap mTypeNodes;
+    PathMap mFiles;
 };
 
 } // namespace kdmtriplewriter

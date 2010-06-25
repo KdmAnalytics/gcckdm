@@ -229,12 +229,12 @@ extern "C" unsigned int executeKdmGimplePass()
 
 extern "C" void executeFinishUnit(void *event_data, void *data)
 {
-    kdmWriter->finishTranslationUnit();
     tree t;
     for (int i = 0; treeQueueVec && VEC_iterate (tree, treeQueueVec, i, t); ++i)
     {
         kdmWriter->processAstNode(t);
     }
+    kdmWriter->finishTranslationUnit();
     VEC_free (tree, heap, treeQueueVec);
     treeQueueVec = nullptr;
 }

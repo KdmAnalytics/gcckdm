@@ -64,6 +64,7 @@ private:
     void processAstFunctionDeclarationNode(tree functionDecl);
 
     long findOrAddReferencedNode(tree node);
+    long findOrAddReferencedSharedUnit(tree file);
 
     /**
      *
@@ -103,6 +104,7 @@ private:
     void writePrimitiveType(tree type);
     void writePointerType(tree type);
     void writeRecordType(tree type);
+    void writeSharedUnit(tree file);
 
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();
@@ -126,14 +128,16 @@ private:
 //    DeclSet mReferencedNodes;
     typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
     typedef std::tr1::unordered_set<tree> TreeMap;
-    typedef std::tr1::unordered_set<boost::filesystem::path> PathMap;
+//    typedef std::tr1::unordered_map<tree, long> PathMap;
 
     AstNodeReferenceMap referencedNodes;
+//    AstNodeReferenceMap mReferencedFiles;
+    AstNodeReferenceMap mReferencedSharedUnits;
     boost::filesystem::path  mCompilationFile;
 
     TreeMap mDeclarationNodes;
     TreeMap mTypeNodes;
-    PathMap mFiles;
+//    PathMap mFiles;
 };
 
 } // namespace kdmtriplewriter

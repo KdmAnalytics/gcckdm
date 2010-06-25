@@ -145,6 +145,15 @@ void KdmTripleWriter::processAstFunctionDeclarationNode(tree functionDecl)
 
 void KdmTripleWriter::finishTranslationUnit()
 {
+    for (AstNodeReferenceMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
+    {
+        writeSharedUnit(i->first);
+    }
+//    for (AstNodeReferenceMap::const_iterator i = mReferencedFiles.begin(), e = mReferencedFiles.end(); i != e; ++i)
+//    {
+//        writeFiles(i->first);
+//    }
+
 }
 
 void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predicate, long const object)
@@ -349,6 +358,36 @@ long KdmTripleWriter::findOrAddReferencedNode(tree node)
     return retValue;
 }
 
+//long KdmTripleWriter::findOrAddReferencedFile(tree file)
+//{
+//    long retValue(-1);
+//    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedFiles.insert(std::make_pair(file, mSubjectId + 1));
+//    if (result.second)
+//    {
+//        retValue = ++mSubjectId;
+//    }
+//    else
+//    {
+//        retValue = result.first->second;
+//    }
+//    return retValue;
+//}
+
+long KdmTripleWriter::findOrAddReferencedSharedUnit(tree file)
+{
+    long retValue(-1);
+    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedSharedUnits.insert(std::make_pair(file, mSubjectId + 1));
+    if (result.second)
+    {
+        retValue = ++mSubjectId;
+    }
+    else
+    {
+        retValue = result.first->second;
+    }
+    return retValue;
+}
+
 void KdmTripleWriter::writePrimitiveType(tree type)
 {
     long typeSubjectId = findOrAddReferencedNode(type);
@@ -375,102 +414,60 @@ void KdmTripleWriter::writePointerType(tree pointerType)
 
 }
 
+bool isAnonymousStruct(tree t) {
+  tree name = TYPE_NAME (t);
+  if (name && TREE_CODE (name) == TYPE_DECL)
+    name = DECL_NAME (name);
+  return !name || ANON_AGGRNAME_P (name);
+}
+
 void KdmTripleWriter::writeRecordType(tree recordType)
 {
-    //    if (DECL_ARTIFICIAL (recordType))
-    //    {
-    //        std::cerr << "artificial" << std::endl;
-    //    }
-
-    //    std::cerr << "writeRecordType: " << typeNameString(recordType) << std::endl;
     recordType = TYPE_MAIN_VARIANT (recordType);
 
-
-    tree name = TYPE_NAME (recordType);
-    if (name && TREE_CODE (name) == TYPE_DECL)
+    if (TREE_CODE(recordType) == ENUMERAL_TYPE)
     {
-        name = DECL_NAME (name);
+        //enum
     }
-    if (!name || ANON_AGGRNAME_P (name))
+    else if (TREE_CODE(recordType) == UNION_TYPE)
     {
-        std::cerr << "Anonymous Struct :" << locationString(locationOf(recordType)) << std::endl;
+        //union
+    }
+    else if (global_namespace && TYPE_LANG_SPECIFIC (recordType) && CLASSTYPE_DECLARED_CLASS (recordType))
+    {
+        //class
     }
     else
     {
-        std::cerr << typeNameString(recordType) << " " << locationString(locationOf(recordType)) << std::endl;
+        expanded_location loc(expand_location(locationOf(recordType)));
+        tree t = get_identifier(loc.file);
+//        long fileId=findOrAddReferencedFile(t);
+        long sharedUnitId=findOrAddReferencedSharedUnit(t);
+        //std::cerr << IDENTIFIER_POINTER(t) << std::endl;
+
+        //struct
+        long structId(++mSubjectId);
+        writeKdmType(structId, KdmType::RecordType());
+
+        std::string name;
+        //check to see if we are an annonymous struct
+        name = (isAnonymousStruct(recordType)) ? "<unnamed>" : typeNameString(recordType);
+        writeName(structId, name);
+        writeContains(sharedUnitId, structId);
     }
-
-
-//    if (!TYPE_ANONYMOUS_P (recordType))
-//    {
-//        tree decl(TYPE_NAME(recordType));
-//        if (decl)
-//        {
-//
-//            std::cerr << typeNameString(recordType) << " " << locationString(locationOf(recordType)) << std::endl;
-//            //            tree id (DECL_NAME (TYPE_NAME(recordType)));
-//            //            const char* name (IDENTIFIER_POINTER (decl));
-//            //std::cerr << "struct " << name << " at \n";// << DECL_SOURCE_FILE (recordType) << ":" << DECL_SOURCE_LINE (recordType) << std::endl;
-//
-//        }
-//        else
-//        {
-//            std::cerr << "no name???? =======================" << locationString(locationOf(recordType)) << std::endl;
-//        }
-//        //        tree decl(TYPE_NAME(recordType));
-//    }
-//    else
-//    {
-//        std::cerr << "anonymous struct" << std::endl;
-//    }
-    ////    if (RECORD_OR_UNION_CODE_P(TREE_CODE(recordType)))
-    ////    {
-    ////        if (TREE_CODE(recordType) == RECORD_TYPE)
-    ////        {
-    ////            if (CLASSTYPE_DECLARED_CLASS (recordType))
-    ////            {
-    ////                //we have a class
-    ////            }
-    ////            else
-    ////            {
-    ////                //we have a struct
-    ////                long structId = ++mSubjectId;
-    ////                writeKdmType(structId, KdmType::RecordType());
-    ////
-    ////                if (!TYPE_ANONYMOUS_P (recordType))
-    ////                {
-    ////                    tree typeName(TYPE_NAME (recordType));
-    ////                    tree id(DECL_NAME (typeName));
-    ////                    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-    ////                    writeName(structId, name);
-    ////    //                xml_print_name_attribute(xdi, DECL_NAME (TYPE_NAME (rt)));
-    ////                }
-    ////
-    ////            }
-    ////        }
-    ////    }
 }
 
-//void KdmTripleWriter::writeDirectory()
-//{
-//
-//}
-//
-//void KdmTripleWriter::writeDirectoryStructure()
-//{
-//    for(PathSet::const_iterator i= mPaths.start(), e=mPaths.end(); i!=e ;++i)
-//    {
-//        writeDirectory((*i));
-//    }
-//}
-//
-//void KdmTripleWriter::addPath(boost::filesystem::path const & newPath)
-//{
-//    for (boost::filesystem::path::const_iterator i= newPath.begin(), e=newPath.end(); i!=e; ++i)
-//    {
-//       mPaths.insert(*i);
-//    }
-//}
+
+void KdmTripleWriter::writeSharedUnit(tree file)
+{
+    long id = findOrAddReferencedSharedUnit(file);
+    writeKdmType(id,KdmType::SharedUnit());
+
+    boost::filesystem::path filename(IDENTIFIER_POINTER(file));
+    writeName(id, filename.filename());
+    writeLinkId(id,filename.string());
+    writeContains(SubjectId_CodeAssembly, id);
+}
 
 
 } // namespace kdmtriplewriter

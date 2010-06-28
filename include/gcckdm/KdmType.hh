@@ -31,8 +31,14 @@ private:
         KdmType_CompilationUnit,
         KdmType_CallableUnit,
         KdmType_ParameterUnit,
-        KdmType_PrimitiveType,
         KdmType_PointerType,
+        KdmType_PrimitiveType,
+        KdmType_IntegerType,
+        KdmType_BooleanType,
+        KdmType_DecimalType,
+        KdmType_FloatType,
+        KdmType_VoidType,
+        KdmType_CharType,
         KdmType_Signature,
         KdmType_RecordType,
         KdmType_ItemUnit,
@@ -67,6 +73,12 @@ public:
     static const KdmType CallableUnit() { return KdmType(KdmType_CallableUnit, "code/CallableUnit");}
     static const KdmType ParameterUnit() { return KdmType(KdmType_ParameterUnit, "code/ParameterUnit");}
     static const KdmType PrimitiveType() { return KdmType(KdmType_PrimitiveType, "code/PrimitiveType");}
+    static const KdmType IntegerType() { return KdmType(KdmType_IntegerType, "code/IntegerType");}
+    static const KdmType BooleanType() { return KdmType(KdmType_BooleanType, "code/BooleanType");}
+    static const KdmType DecimalType() { return KdmType(KdmType_DecimalType, "code/DecimalType");}
+    static const KdmType FloatType() { return KdmType(KdmType_FloatType, "code/FloatType");}
+    static const KdmType VoidType() { return KdmType(KdmType_VoidType, "code/VoidType");}
+    static const KdmType CharType() { return KdmType(KdmType_CharType, "code/CharType");}
     static const KdmType Signature() { return KdmType(KdmType_Signature, "code/Signature");}
     static const KdmType PointerType() { return KdmType(KdmType_PointerType, "code/PointerType");}
     static const KdmType CompilationUnit() { return KdmType(KdmType_CompilationUnit, "code/CompilationUnit");}

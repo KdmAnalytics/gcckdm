@@ -135,6 +135,8 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
                         writePointerType(typeNode);
                         break;
                     }
+                    case REAL_TYPE:
+                        //Fall through
                     case INTEGER_TYPE:
                     {
                         writePrimitiveType(typeNode);
@@ -352,8 +354,6 @@ long KdmTripleWriter::writeReturnParameterUnit(tree param)
 
 long KdmTripleWriter::writeParameterUnit(tree param)
 {
-    //    if (!DECL_ARTIFICIAL (param))
-    //    {
     long parameterUnitId(++mSubjectId);
     writeKdmType(parameterUnitId, KdmType::ParameterUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(param)));
@@ -363,11 +363,8 @@ long KdmTripleWriter::writeParameterUnit(tree param)
     std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
     writeName(parameterUnitId, name);
 
-    //long paramSubjectId = findOrAddReferencedNode(type);
-
     writeTriple(parameterUnitId, KdmPredicate::Type(), ref);
     return parameterUnitId;
-    //    }
 }
 
 long KdmTripleWriter::writeItemUnit(tree item)
@@ -422,7 +419,6 @@ long KdmTripleWriter::findOrAddReferencedSharedUnit(tree file)
 void KdmTripleWriter::writePrimitiveType(tree type)
 {
     long typeSubjectId = findOrAddReferencedNode(type);
-    writeKdmType(typeSubjectId, KdmType::PrimitiveType());
 
     tree typeName(TYPE_NAME (type));
     tree treeName(NULL_TREE);
@@ -433,6 +429,29 @@ void KdmTripleWriter::writePrimitiveType(tree type)
     }
     std::string name(treeName ? IDENTIFIER_POINTER (treeName) : "<unnamed>");
 
+    KdmType kdmType = KdmType::PrimitiveType();
+    if (name.find("int") != std::string::npos || name.find("long") != std::string::npos)
+    {
+        kdmType = KdmType::IntegerType();
+    }
+    else if (name.find("double") != std::string::npos)
+    {
+        kdmType = KdmType::DecimalType();
+    }
+    else if (name.find("void") != std::string::npos)
+    {
+        kdmType = KdmType::VoidType();
+    }
+    else if (name.find("float") != std::string::npos)
+    {
+        kdmType = KdmType::FloatType();
+    }
+    else if (name.find("char") != std::string::npos)
+    {
+        kdmType = KdmType::CharType();
+    }
+
+    writeKdmType(typeSubjectId, kdmType);
     writeName(typeSubjectId, name);
 }
 
@@ -532,9 +551,6 @@ void KdmTripleWriter::writeRecordType(tree recordType)
                     default:
                     {
                         std::cerr << "Unimplemented feature" << std::endl;
-//                        long fieldId = findOrAddReferencedNode(TYPE_MAIN_VARIANT(TREE_TYPE(d)));
-//                        processAstNode(d);
-//                        writeContains(structId, fieldId);
                         break;
                     }
                 }

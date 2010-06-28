@@ -424,9 +424,13 @@ void KdmTripleWriter::writePrimitiveType(tree type)
     long typeSubjectId = findOrAddReferencedNode(type);
     writeKdmType(typeSubjectId, KdmType::PrimitiveType());
 
-    //Some fundamental types do not have names...
     tree typeName(TYPE_NAME (type));
-    tree treeName = (TREE_CODE(typeName) == IDENTIFIER_NODE) ? typeName : DECL_NAME (typeName);
+    tree treeName(NULL_TREE);
+    //Some types do not have names...
+    if (typeName)
+    {
+        treeName = (TREE_CODE(typeName) == IDENTIFIER_NODE) ? typeName : DECL_NAME (typeName);
+    }
     std::string name(treeName ? IDENTIFIER_POINTER (treeName) : "<unnamed>");
 
     writeName(typeSubjectId, name);
@@ -449,11 +453,6 @@ void KdmTripleWriter::writeArrayType(tree arrayType)
 {
     long arraySubjectId = findOrAddReferencedNode(arrayType);
     writeKdmType(arraySubjectId, KdmType::ArrayType());
-
-//    tree typeName(TYPE_NAME (arrayType));
-//    tree treeName = (TREE_CODE(typeName) == IDENTIFIER_NODE) ? typeName : DECL_NAME (typeName);
-//    std::string name(treeName ? IDENTIFIER_POINTER (treeName) : "<unnamed>");
-//    writeName(arraySubjectId, name);
 
     tree treeType(TREE_TYPE(arrayType));
     tree t2(TYPE_MAIN_VARIANT(treeType));
@@ -485,11 +484,6 @@ void KdmTripleWriter::writeRecordType(tree recordType)
         std::cerr << "Unhandled Class type" << std::endl;
         //class
     }
-    //    else if (TREE_CODE(recordType) == UNION_TYPE)
-    //    {
-    //        std::cerr << "Unhandled Union type" << std::endl;
-    //        //union
-    //    }
     else //Record or Union
     {
         long compilationUnitId(0);
@@ -503,10 +497,9 @@ void KdmTripleWriter::writeRecordType(tree recordType)
         {
             compilationUnitId = SubjectId_CompilationUnit;
         }
-        //std::cerr << IDENTIFIER_POINTER(t) << std::endl;
 
         //struct
-        long structId(++mSubjectId);
+        long structId = findOrAddReferencedNode(recordType);
         writeKdmType(structId, KdmType::RecordType());
         std::string name;
         //check to see if we are an annonymous struct

@@ -35,6 +35,8 @@ private:
         KdmType_PointerType,
         KdmType_Signature,
         KdmType_RecordType,
+        KdmType_ItemUnit,
+        KdmType_ArrayType,
 
         //Source Group
         KdmType_InventoryModel,
@@ -69,6 +71,8 @@ public:
     static const KdmType PointerType() { return KdmType(KdmType_PointerType, "code/PointerType");}
     static const KdmType CompilationUnit() { return KdmType(KdmType_CompilationUnit, "code/CompilationUnit");}
     static const KdmType RecordType() { return KdmType(KdmType_RecordType, "code/RecordType");}
+    static const KdmType ItemUnit() { return KdmType(KdmType_ItemUnit, "code/ItemUnit");}
+    static const KdmType ArrayType() { return KdmType(KdmType_ArrayType, "code/ArrayType");}
     //static const KdmType () { return KdmType(KdmType_, "code/");}
     //static const KdmType () { return KdmType(KdmType_, "code/");}
 

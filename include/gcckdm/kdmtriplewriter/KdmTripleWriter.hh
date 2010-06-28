@@ -62,6 +62,7 @@ private:
     void processAstDeclarationNode(tree decl);
     void processAstTypeNode(tree decl);
     void processAstFunctionDeclarationNode(tree functionDecl);
+    void processAstFieldDeclarationNode(tree fieldDecl);
 
     long findOrAddReferencedNode(tree node);
     long findOrAddReferencedSharedUnit(tree file);
@@ -105,6 +106,8 @@ private:
     void writePointerType(tree type);
     void writeRecordType(tree type);
     void writeSharedUnit(tree file);
+    long writeItemUnit(tree item);
+    void writeArrayType(tree item);
 
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();
@@ -115,23 +118,13 @@ private:
     void writeLinkId(long const subject, std::string const & name);
 
 
-
-
-//    void writeDirectoryStructure();
-
-   // void addPath(boost::filesystem::path const & newPath);
-
     KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
     long mSubjectId;     /// The current unique subject, incremented for each new subject
-//    PathSet mPaths;
-
-//    DeclSet mReferencedNodes;
     typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
     typedef std::tr1::unordered_set<tree> TreeMap;
-//    typedef std::tr1::unordered_map<tree, long> PathMap;
 
-    AstNodeReferenceMap referencedNodes;
-//    AstNodeReferenceMap mReferencedFiles;
+    AstNodeReferenceMap mReferencedNodes;
+    AstNodeReferenceMap mProcessedNodes;
     AstNodeReferenceMap mReferencedSharedUnits;
     boost::filesystem::path  mCompilationFile;
 

@@ -20,23 +20,18 @@ int plugin_is_GPL_compatible = 1;
 namespace
 {
 
-extern "C" int  plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
+extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
 extern "C" void executeStartUnit(void *event_data, void *data);
 extern "C" void executeFinishType(void *event_data, void *data);
 extern "C" unsigned int executeKdmGimplePass();
 extern "C" void executeFinishUnit(void *event_data, void *data);
 
-
-
 void registerCallbacks(char const * pluginName);
 
 boost::unique_ptr<gcckdm::GccKdmWriter> kdmWriter;
-
 // Queue up tree object for latest processing (ie because gcc will fill in more info or
 // loose track of them)
 VEC(tree,heap) *treeQueueVec = NULL;
-
-
 
 struct opt_pass kdmGimplePass =
 { GIMPLE_PASS, // type
@@ -54,25 +49,20 @@ struct opt_pass kdmGimplePass =
         0 // todo_flags_finish
         };
 
-
-
-
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
 {
     int retValue(0);
 
     treeQueueVec = VEC_alloc(tree, heap, 10);
 
-
-//    struct opt_pass *p;
-//    for(p = all_small_ipa_passes;p;p=p->next) {
-//      if (p->tv_id != TV_IPA_FREE_LANG_DATA)
-//        continue;
-//      //disable it
-//      p->execute = NULL;
-//      break;
-//    }
-
+    //    struct opt_pass *p;
+    //    for(p = all_small_ipa_passes;p;p=p->next) {
+    //      if (p->tv_id != TV_IPA_FREE_LANG_DATA)
+    //        continue;
+    //      //disable it
+    //      p->execute = NULL;
+    //      break;
+    //    }
 
 
     //Recommended version check
@@ -143,12 +133,11 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
 
 void registerCallbacks(char const * pluginName)
 {
-    //Called at the start of a translation unit
-    register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
+    //    //Called at the start of a translation unit
+    //    register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
 
     // Called whenever a type has been parsed
     register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
-
 
     //Attempt to get the very first gimple AST before any optimizations, called for every function
     struct register_pass_info pass_info;
@@ -160,7 +149,6 @@ void registerCallbacks(char const * pluginName)
 
     // Called when finished with the translation unit
     register_callback(pluginName, PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func> (executeFinishUnit), NULL);
-
 
     //
     //
@@ -182,14 +170,17 @@ void registerCallbacks(char const * pluginName)
 
 extern "C" void executeStartUnit(void *event_data, void *data)
 {
-    boost::filesystem::path filename(main_input_filename);
-    kdmWriter->startTranslationUnit(boost::filesystem::complete(filename));
+}
+
+extern "C" void executeAllPassStart(void *event_data, void *data)
+{
 }
 
 extern "C" void executeFinishType(void *event_data, void *data)
 {
-    tree type(static_cast<tree>(event_data));
-    if (!errorcount && TREE_CODE(type) == RECORD_TYPE)
+    tree type(static_cast<tree> (event_data));
+    //    if (!errorcount && TREE_CODE(type) == RECORD_TYPE)
+    if (!errorcount)
     {
         //Appending nodes to the queue instead of processing them immediately is
         //because gcc is overly lazy and does some things (like setting annonymous struct names)
@@ -200,43 +191,53 @@ extern "C" void executeFinishType(void *event_data, void *data)
     }
 }
 
-
 extern "C" unsigned int executeKdmGimplePass()
 {
-//    std::cerr << "======================start executeKdmGimplePass========================" << std::endl;
-    int retValue(0);
+    unsigned int retValue(0);
 
-    kdmWriter->startKdmGimplePass();
-//    if (global_namespace)
-//    {
-//        kdmWriter->processAstNode(global_namespace);
-//    }
-//    else
-//    {
-//        int count(0);
-//        struct cgraph_node *n;
-//        for (n = cgraph_nodes; n; n = n->next)
-//        {
-//            std::cerr << "executeKdmGimplePass: AST NodeCount: " << ++count << std::endl;
-//            kdmWriter->processAstNode(n->decl);
-//        }
-//    }
-    kdmWriter->processAstNode(current_function_decl);
-    kdmWriter->finishKdmGimplePass();
-//    std::cerr << "======================end executeKdmGimplePass========================" << std::endl;
+    if (!errorcount && !sorrycount)
+    {
+        //    std::cerr << "======================start executeKdmGimplePass========================" << std::endl;
+        boost::filesystem::path filename(main_input_filename);
+        kdmWriter->startTranslationUnit(boost::filesystem::complete(filename));
+
+        kdmWriter->startKdmGimplePass();
+        //    if (global_namespace)
+        //    {
+        //        kdmWriter->processAstNode(global_namespace);
+        //    }
+        //    else
+        //    {
+        //        int count(0);
+        //        struct cgraph_node *n;
+        //        for (n = cgraph_nodes; n; n = n->next)
+        //        {
+        //            std::cerr << "executeKdmGimplePass: AST NodeCount: " << ++count << std::endl;
+        //            kdmWriter->processAstNode(n->decl);
+        //        }
+        //    }
+        kdmWriter->processAstNode(current_function_decl);
+        kdmWriter->finishKdmGimplePass();
+        //    std::cerr << "======================end executeKdmGimplePass========================" << std::endl;
+    }
     return retValue;
 }
 
 extern "C" void executeFinishUnit(void *event_data, void *data)
 {
-    tree t;
-    for (int i = 0; treeQueueVec && VEC_iterate (tree, treeQueueVec, i, t); ++i)
+    if (!errorcount && !sorrycount)
     {
-        kdmWriter->processAstNode(t);
+        tree t;
+        for (int i = 0; treeQueueVec && VEC_iterate (tree, treeQueueVec, i, t); ++i)
+        {
+            kdmWriter->processAstNode(t);
+        }
+        kdmWriter->finishTranslationUnit();
+        VEC_free (tree, heap, treeQueueVec);
+        treeQueueVec = nullptr;
     }
-    kdmWriter->finishTranslationUnit();
-    VEC_free (tree, heap, treeQueueVec);
-    treeQueueVec = nullptr;
+    int retValue(0);
+    exit(retValue);
 }
 
 //

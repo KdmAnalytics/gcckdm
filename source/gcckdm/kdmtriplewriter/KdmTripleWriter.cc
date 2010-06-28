@@ -7,6 +7,9 @@
 
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 
+#include <algorithm>
+#include <iterator>
+
 #include "boost/filesystem/fstream.hpp"
 #include "boost/filesystem/operations.hpp"
 
@@ -48,11 +51,17 @@ void KdmTripleWriter::startKdmGimplePass()
 
 }
 
+//std::ostream & operator << (std::ostream & out, const std::pair<tree, long> rhs)
+//{
+//    return out << rhs.first << " " << rhs.second;
+//}
+
 void KdmTripleWriter::finishKdmGimplePass()
 {
-    for (AstNodeReferenceMap::const_iterator i = referencedNodes.begin(), e = referencedNodes.end(); i != e; ++i)
+    for (AstNodeReferenceMap::const_iterator i = mReferencedNodes.begin(), e = mReferencedNodes.end(); i != e; ++i)
     {
         processAstNode(i->first);
+        mProcessedNodes.insert(*i);
     }
 }
 
@@ -89,9 +98,14 @@ void KdmTripleWriter::processAstDeclarationNode(tree decl)
                 processAstFunctionDeclarationNode(decl);
                 break;
             }
+            case FIELD_DECL:
+            {
+                processAstFieldDeclarationNode(decl);
+                break;
+            }
             default:
             {
-                std::cerr << "unsupported declaration node" << tree_code_name[treeCode] << std::endl;
+                std::cerr << "unsupported declaration node: " << tree_code_name[treeCode] << std::endl;
             }
         }
     }
@@ -111,6 +125,11 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
                 int treeCode(TREE_CODE(typeNode));
                 switch (treeCode)
                 {
+                    case ARRAY_TYPE:
+                    {
+                        writeArrayType(typeNode);
+                        break;
+                    }
                     case POINTER_TYPE:
                     {
                         writePointerType(typeNode);
@@ -121,6 +140,8 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
                         writePrimitiveType(typeNode);
                         break;
                     }
+                    case UNION_TYPE:
+                        //Fall Through
                     case RECORD_TYPE:
                     {
                         writeRecordType(typeNode);
@@ -135,7 +156,6 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
             }
         }
     }
-
 }
 
 void KdmTripleWriter::processAstFunctionDeclarationNode(tree functionDecl)
@@ -143,17 +163,30 @@ void KdmTripleWriter::processAstFunctionDeclarationNode(tree functionDecl)
     writeCallableUnit(functionDecl);
 }
 
+void KdmTripleWriter::processAstFieldDeclarationNode(tree fieldDecl)
+{
+    writeItemUnit(fieldDecl);
+}
+
 void KdmTripleWriter::finishTranslationUnit()
 {
+    do
+    {
+        for (AstNodeReferenceMap::const_iterator i = mReferencedNodes.begin(), e = mReferencedNodes.end(); i != e; ++i)
+        {
+            if (mProcessedNodes.find(i->first) == mProcessedNodes.end())
+            {
+                processAstNode(i->first);
+                mProcessedNodes.insert(*i);
+            }
+        }
+    }
+    while (mProcessedNodes.size() != mReferencedNodes.size());
+
     for (AstNodeReferenceMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
     {
         writeSharedUnit(i->first);
     }
-//    for (AstNodeReferenceMap::const_iterator i = mReferencedFiles.begin(), e = mReferencedFiles.end(); i != e; ++i)
-//    {
-//        writeFiles(i->first);
-//    }
-
 }
 
 void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predicate, long const object)
@@ -337,10 +370,23 @@ long KdmTripleWriter::writeParameterUnit(tree param)
     //    }
 }
 
+long KdmTripleWriter::writeItemUnit(tree item)
+{
+    long itemId(++mSubjectId);
+    writeKdmType(itemId, KdmType::ItemUnit());
+    tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
+    long ref = findOrAddReferencedNode(type);
+    tree id(DECL_NAME (item));
+    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+    writeName(itemId, name);
+    writeTriple(itemId, KdmPredicate::Type(), ref);
+    return itemId;
+}
+
 long KdmTripleWriter::findOrAddReferencedNode(tree node)
 {
     long retValue(-1);
-    std::pair<AstNodeReferenceMap::iterator, bool> result = referencedNodes.insert(std::make_pair(node, mSubjectId + 1));
+    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mSubjectId + 1));
     if (result.second)
     {
         retValue = ++mSubjectId;
@@ -357,21 +403,6 @@ long KdmTripleWriter::findOrAddReferencedNode(tree node)
     }
     return retValue;
 }
-
-//long KdmTripleWriter::findOrAddReferencedFile(tree file)
-//{
-//    long retValue(-1);
-//    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedFiles.insert(std::make_pair(file, mSubjectId + 1));
-//    if (result.second)
-//    {
-//        retValue = ++mSubjectId;
-//    }
-//    else
-//    {
-//        retValue = result.first->second;
-//    }
-//    return retValue;
-//}
 
 long KdmTripleWriter::findOrAddReferencedSharedUnit(tree file)
 {
@@ -414,11 +445,30 @@ void KdmTripleWriter::writePointerType(tree pointerType)
 
 }
 
-bool isAnonymousStruct(tree t) {
-  tree name = TYPE_NAME (t);
-  if (name && TREE_CODE (name) == TYPE_DECL)
-    name = DECL_NAME (name);
-  return !name || ANON_AGGRNAME_P (name);
+void KdmTripleWriter::writeArrayType(tree arrayType)
+{
+    long arraySubjectId = findOrAddReferencedNode(arrayType);
+    writeKdmType(arraySubjectId, KdmType::ArrayType());
+
+//    tree typeName(TYPE_NAME (arrayType));
+//    tree treeName = (TREE_CODE(typeName) == IDENTIFIER_NODE) ? typeName : DECL_NAME (typeName);
+//    std::string name(treeName ? IDENTIFIER_POINTER (treeName) : "<unnamed>");
+//    writeName(arraySubjectId, name);
+
+    tree treeType(TREE_TYPE(arrayType));
+    tree t2(TYPE_MAIN_VARIANT(treeType));
+    long arrayTypeSubjectId = findOrAddReferencedNode(t2);
+    writeTriple(arraySubjectId, KdmPredicate::Type(), arrayTypeSubjectId);
+
+}
+
+
+bool isAnonymousStruct(tree t)
+{
+    tree name = TYPE_NAME (t);
+    if (name && TREE_CODE (name) == TYPE_DECL)
+        name = DECL_NAME (name);
+    return !name || ANON_AGGRNAME_P (name);
 }
 
 void KdmTripleWriter::writeRecordType(tree recordType)
@@ -427,48 +477,92 @@ void KdmTripleWriter::writeRecordType(tree recordType)
 
     if (TREE_CODE(recordType) == ENUMERAL_TYPE)
     {
+        std::cerr << "Unhandled Enumeral type" << std::endl;
         //enum
-    }
-    else if (TREE_CODE(recordType) == UNION_TYPE)
-    {
-        //union
     }
     else if (global_namespace && TYPE_LANG_SPECIFIC (recordType) && CLASSTYPE_DECLARED_CLASS (recordType))
     {
+        std::cerr << "Unhandled Class type" << std::endl;
         //class
     }
-    else
+    //    else if (TREE_CODE(recordType) == UNION_TYPE)
+    //    {
+    //        std::cerr << "Unhandled Union type" << std::endl;
+    //        //union
+    //    }
+    else //Record or Union
     {
+        long compilationUnitId(0);
         expanded_location loc(expand_location(locationOf(recordType)));
-        tree t = get_identifier(loc.file);
-//        long fileId=findOrAddReferencedFile(t);
-        long sharedUnitId=findOrAddReferencedSharedUnit(t);
+        if (mCompilationFile != boost::filesystem::path(loc.file))
+        {
+            tree t = get_identifier(loc.file);
+            compilationUnitId = findOrAddReferencedSharedUnit(t);
+        }
+        else
+        {
+            compilationUnitId = SubjectId_CompilationUnit;
+        }
         //std::cerr << IDENTIFIER_POINTER(t) << std::endl;
 
         //struct
         long structId(++mSubjectId);
         writeKdmType(structId, KdmType::RecordType());
-
         std::string name;
         //check to see if we are an annonymous struct
         name = (isAnonymousStruct(recordType)) ? "<unnamed>" : typeNameString(recordType);
         writeName(structId, name);
-        writeContains(sharedUnitId, structId);
+
+        if (COMPLETE_TYPE_P (recordType))
+        {
+            for (tree d(TYPE_FIELDS(recordType)); d; d = TREE_CHAIN(d))
+            {
+                switch (TREE_CODE(d))
+                {
+                    case TYPE_DECL:
+                    {
+                        if (!DECL_SELF_REFERENCE_P(d))
+                        {
+                            std::cerr << "Unimplemented feature" << std::endl;
+                        }
+                        break;
+                    }
+                    case FIELD_DECL:
+                    {
+                        if (!DECL_ARTIFICIAL(d))
+                        {
+                            long itemId = writeItemUnit(d);
+                            writeContains(structId, itemId);
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        std::cerr << "Unimplemented feature" << std::endl;
+//                        long fieldId = findOrAddReferencedNode(TYPE_MAIN_VARIANT(TREE_TYPE(d)));
+//                        processAstNode(d);
+//                        writeContains(structId, fieldId);
+                        break;
+                    }
+                }
+            }
+
+        }
+
+        writeContains(compilationUnitId, structId);
     }
 }
-
 
 void KdmTripleWriter::writeSharedUnit(tree file)
 {
     long id = findOrAddReferencedSharedUnit(file);
-    writeKdmType(id,KdmType::SharedUnit());
+    writeKdmType(id, KdmType::SharedUnit());
 
     boost::filesystem::path filename(IDENTIFIER_POINTER(file));
     writeName(id, filename.filename());
-    writeLinkId(id,filename.string());
+    writeLinkId(id, filename.string());
     writeContains(SubjectId_CodeAssembly, id);
 }
-
 
 } // namespace kdmtriplewriter
 

@@ -26,6 +26,10 @@ decl_cloned_function_p(const_tree decl, bool just_testing)
     return 0;
 }
 
+
+namespace gcckdm
+{
+
 location_t locationOf(tree t)
 {
     if (TREE_CODE (t) == PARM_DECL && DECL_CONTEXT (t))
@@ -64,6 +68,11 @@ std::string const locationString(location_t loc)
     return str.str();
 }
 
+std::string const treeNodeNameString(tree node)
+{
+    return DECL_P(node) ? declNameString(node) : typeNameString(node);
+}
+
 std::string const declNameString(tree decl)
 {
     tree aName = DECL_P(decl) ? DECL_NAME(decl) : decl;
@@ -72,5 +81,7 @@ std::string const declNameString(tree decl)
 
 std::string const typeNameString(tree type)
 {
-    return declNameString (TYPE_NAME(type));
+    return TYPE_P(type) ? declNameString (TYPE_NAME(type)) : "";
 }
+
+}  // namespace gcckdm

@@ -43,18 +43,17 @@ void KdmTripleWriter::startTranslationUnit(boost::filesystem::path const & file)
     writeTripleKdmHeader();
     writeDefaultKdmModelElements();
     writeSourceFile(mCompilationFile);
-    //   writeCompilationUnit(file);
 }
 
 void KdmTripleWriter::startKdmGimplePass()
 {
-
+    //C Support..variables are stored in varpool... C++ we can use global_namespace
+    struct varpool_node *pNode;
+    FOR_EACH_STATIC_VARIABLE(pNode)
+    {
+        processAstNode(pNode->decl);
+    }
 }
-
-//std::ostream & operator << (std::ostream & out, const std::pair<tree, long> rhs)
-//{
-//    return out << rhs.first << " " << rhs.second;
-//}
 
 void KdmTripleWriter::finishKdmGimplePass()
 {
@@ -63,6 +62,8 @@ void KdmTripleWriter::finishKdmGimplePass()
         processAstNode(i->first);
         mProcessedNodes.insert(*i);
     }
+
+
 }
 
 void KdmTripleWriter::processAstNode(tree ast)
@@ -93,6 +94,11 @@ void KdmTripleWriter::processAstDeclarationNode(tree decl)
         int treeCode(TREE_CODE(decl));
         switch (treeCode)
         {
+            case VAR_DECL:
+            {
+                processAstVariableDeclarationNode(decl);
+                break;
+            }
             case FUNCTION_DECL:
             {
                 processAstFunctionDeclarationNode(decl);
@@ -160,6 +166,11 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
     }
 }
 
+void KdmTripleWriter::processAstVariableDeclarationNode(tree varDeclaration)
+{
+    writeStorableUnit(varDeclaration);
+}
+
 void KdmTripleWriter::processAstFunctionDeclarationNode(tree functionDecl)
 {
     writeCallableUnit(functionDecl);
@@ -185,10 +196,12 @@ void KdmTripleWriter::finishTranslationUnit()
     }
     while (mProcessedNodes.size() != mReferencedNodes.size());
 
+
     for (AstNodeReferenceMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
     {
         writeSharedUnit(i->first);
     }
+
 }
 
 void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predicate, long const object)
@@ -379,6 +392,14 @@ long KdmTripleWriter::writeItemUnit(tree item)
     writeTriple(itemId, KdmPredicate::Type(), ref);
     return itemId;
 }
+
+void KdmTripleWriter::writeStorableUnit(tree var)
+{
+    long unitId(++mSubjectId);
+    writeKdmType(unitId, KdmType::StorableUnit());
+
+}
+
 
 long KdmTripleWriter::findOrAddReferencedNode(tree node)
 {

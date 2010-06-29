@@ -25,6 +25,10 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 
+/**
+ * This class traverses the Gcc AST nodes passed to it and writes their KDM
+ * representation to and output stream
+ */
 class KdmTripleWriter: public GccKdmWriter
 {
 public:
@@ -63,6 +67,7 @@ private:
     void processAstTypeNode(tree decl);
     void processAstFunctionDeclarationNode(tree functionDecl);
     void processAstFieldDeclarationNode(tree fieldDecl);
+    void processAstVariableDeclarationNode(tree varDecl);
 
     long findOrAddReferencedNode(tree node);
     long findOrAddReferencedSharedUnit(tree file);
@@ -107,7 +112,8 @@ private:
     void writeRecordType(tree type);
     void writeSharedUnit(tree file);
     long writeItemUnit(tree item);
-    void writeArrayType(tree item);
+    void writeArrayType(tree array);
+    void writeStorableUnit(tree var);
 
     void writeTripleKdmHeader();
     void writeDefaultKdmModelElements();

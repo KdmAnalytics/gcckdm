@@ -23,6 +23,7 @@ namespace
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
 extern "C" void executeStartUnit(void *event_data, void *data);
 extern "C" void executeFinishType(void *event_data, void *data);
+extern "C" void executePreGeneric(void *event_data, void *data);
 extern "C" unsigned int executeKdmGimplePass();
 extern "C" void executeFinishUnit(void *event_data, void *data);
 
@@ -153,8 +154,8 @@ void registerCallbacks(char const * pluginName)
     //
     //
     //
-    //Allows access to C/C++ ASTs... called for each function
-    //    register_callback(name().c_str(), PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
+    // Allows access to C/C++ ASTs... called for each function
+//        register_callback(pluginName, PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
     //
     //
     //    //    register_callback(name().c_str(), PLUGIN_ALL_IPA_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
@@ -189,6 +190,11 @@ extern "C" void executeFinishType(void *event_data, void *data)
         VEC_safe_push(tree, heap, treeQueueVec, type);
         //kdmWriter->processAstNode(static_cast<tree>(event_data));
     }
+}
+
+extern "C" void executePreGeneric(void *event_data, void *data)
+{
+    kdmWriter->processAstNode(static_cast<tree>(event_data));
 }
 
 extern "C" unsigned int executeKdmGimplePass()

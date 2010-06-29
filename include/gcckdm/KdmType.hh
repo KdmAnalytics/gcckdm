@@ -26,7 +26,7 @@ private:
         KdmType_CodeModel,
         KdmType_CodeAssembly,
         KdmType_SharedUnit,
-        KdmType_StoreableUnit,
+        KdmType_StorableUnit,
         KdmType_Value,
         KdmType_CompilationUnit,
         KdmType_CallableUnit,
@@ -68,7 +68,7 @@ public:
     static const KdmType CodeModel() { return KdmType(KdmType_CodeModel, "code/CodeModel");}
     static const KdmType CodeAssembly() { return KdmType(KdmType_CodeAssembly, "code/CodeAssembly");}
     static const KdmType SharedUnit() { return KdmType(KdmType_SharedUnit, "code/SharedUnit");}
-    static const KdmType StoreableUnit() { return KdmType(KdmType_StoreableUnit, "code/StoreableUnit");}
+    static const KdmType StorableUnit() { return KdmType(KdmType_StorableUnit, "code/StorableUnit");}
     static const KdmType Value() { return KdmType(KdmType_Value, "code/Value");}
     static const KdmType CallableUnit() { return KdmType(KdmType_CallableUnit, "code/CallableUnit");}
     static const KdmType ParameterUnit() { return KdmType(KdmType_ParameterUnit, "code/ParameterUnit");}

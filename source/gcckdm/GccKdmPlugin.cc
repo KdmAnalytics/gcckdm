@@ -12,7 +12,6 @@
 #include "gcckdm/utilities/null_deleter.hpp"
 #include "boost/filesystem/operations.hpp"
 
-
 /**
  * Have to define this to ensure that GCC is able to play nice with our plugin
  */

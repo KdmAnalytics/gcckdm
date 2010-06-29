@@ -19,11 +19,13 @@
 
 namespace
 {
+std::string const unamedNode("<unnamed>");
+
 
 std::string nodeName(tree node)
 {
     std::string name(gcckdm::treeNodeNameString(node));
-    return name.empty() ? "<unnamed>" : name;
+    return name.empty() ? unamedNode : name;
 }
 
 bool isAnonymousStruct(tree t)
@@ -42,9 +44,6 @@ namespace gcckdm
 
 namespace kdmtriplewriter
 {
-
-
-
 
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
@@ -398,8 +397,9 @@ long KdmTripleWriter::writeKdmParameterUnit(tree param)
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(param)));
     long ref = getReferenceId(type);
 
-    tree id(DECL_NAME (param));
-    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+//    tree id(DECL_NAME (param));
+//    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+    std::string name(nodeName(param));
     writeTripleName(parameterUnitId, name);
 
     writeTriple(parameterUnitId, KdmPredicate::Type(), ref);
@@ -412,8 +412,10 @@ long KdmTripleWriter::writeKdmItemUnit(tree item)
     writeTripleKdmType(itemId, KdmType::ItemUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
     long ref = getReferenceId(type);
-    tree id(DECL_NAME (item));
-    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+//    tree id(DECL_NAME (item));
+//    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+    std::string name(nodeName(item));
+
     writeTripleName(itemId, name);
     writeTriple(itemId, KdmPredicate::Type(), ref);
     return itemId;
@@ -423,6 +425,7 @@ void KdmTripleWriter::writeKdmStorableUnit(tree var)
 {
     long unitId(++mKdmElementId);
     writeTripleKdmType(unitId, KdmType::StorableUnit());
+    writeTripleName(unitId, nodeName(var));
 
 }
 
@@ -467,14 +470,15 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree type)
 {
     long typeKdmElementId = getReferenceId(type);
 
-    tree typeName(TYPE_NAME (type));
-    tree treeName(NULL_TREE);
+//    tree typeName(TYPE_NAME (type));
+//    tree treeName(NULL_TREE);
     //Some types do not have names...
-    if (typeName)
-    {
-        treeName = (TREE_CODE(typeName) == IDENTIFIER_NODE) ? typeName : DECL_NAME (typeName);
-    }
-    std::string name(treeName ? IDENTIFIER_POINTER (treeName) : "<unnamed>");
+//    if (typeName)
+//    {
+//        treeName = (TREE_CODE(typeName) == IDENTIFIER_NODE) ? typeName : DECL_NAME (typeName);
+//    }
+//    std::string name(treeName ? IDENTIFIER_POINTER (treeName) : "<unnamed>");
+    std::string name(nodeName(type));
 
     KdmType kdmType = KdmType::PrimitiveType();
     if (name.find("int") != std::string::npos || name.find("long") != std::string::npos)
@@ -562,7 +566,7 @@ void KdmTripleWriter::writeKdmRecordType(tree recordType)
         writeTripleKdmType(structId, KdmType::RecordType());
         std::string name;
         //check to see if we are an annonymous struct
-        name = (isAnonymousStruct(recordType)) ? "<unnamed>" : typeNameString(recordType);
+        name = (isAnonymousStruct(recordType)) ? unamedNode : nodeName(recordType);
         writeTripleName(structId, name);
 
         if (COMPLETE_TYPE_P (recordType))

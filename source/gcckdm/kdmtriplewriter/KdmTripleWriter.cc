@@ -22,13 +22,13 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
-    mKdmSink(kdmSinkPtr), mSubjectId(SubjectId_DefaultStart)
+    mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
 {
 
 }
 
 KdmTripleWriter::KdmTripleWriter(boost::filesystem::path const & filename) :
-    mKdmSink(new boost::filesystem::ofstream(filename)), mSubjectId(SubjectId_DefaultStart)
+    mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
 }
 
@@ -40,9 +40,9 @@ KdmTripleWriter::~KdmTripleWriter()
 void KdmTripleWriter::startTranslationUnit(boost::filesystem::path const & file)
 {
     mCompilationFile = file;
-    writeTripleKdmHeader();
+    writeVersionHeader();
     writeDefaultKdmModelElements();
-    writeSourceFile(mCompilationFile);
+    writeKdmSourceFile(mCompilationFile);
 }
 
 void KdmTripleWriter::startKdmGimplePass()
@@ -133,26 +133,26 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
                 {
                     case ARRAY_TYPE:
                     {
-                        writeArrayType(typeNode);
+                        writeKdmArrayType(typeNode);
                         break;
                     }
                     case POINTER_TYPE:
                     {
-                        writePointerType(typeNode);
+                        writeKdmPointerType(typeNode);
                         break;
                     }
                     case REAL_TYPE:
                         //Fall through
                     case INTEGER_TYPE:
                     {
-                        writePrimitiveType(typeNode);
+                        writeKdmPrimitiveType(typeNode);
                         break;
                     }
                     case UNION_TYPE:
                         //Fall Through
                     case RECORD_TYPE:
                     {
-                        writeRecordType(typeNode);
+                        writeKdmRecordType(typeNode);
                         break;
                     }
                     default:
@@ -168,17 +168,17 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
 
 void KdmTripleWriter::processAstVariableDeclarationNode(tree varDeclaration)
 {
-    writeStorableUnit(varDeclaration);
+    writeKdmStorableUnit(varDeclaration);
 }
 
 void KdmTripleWriter::processAstFunctionDeclarationNode(tree functionDecl)
 {
-    writeCallableUnit(functionDecl);
+    writeKdmCallableUnit(functionDecl);
 }
 
 void KdmTripleWriter::processAstFieldDeclarationNode(tree fieldDecl)
 {
-    writeItemUnit(fieldDecl);
+    writeKdmItemUnit(fieldDecl);
 }
 
 void KdmTripleWriter::finishTranslationUnit()
@@ -199,7 +199,7 @@ void KdmTripleWriter::finishTranslationUnit()
 
     for (AstNodeReferenceMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
     {
-        writeSharedUnit(i->first);
+        writeKdmSharedUnit(i->first);
     }
 
 }
@@ -219,44 +219,44 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
     *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
-void KdmTripleWriter::writeCallableUnit(tree functionDecl)
+void KdmTripleWriter::writeKdmCallableUnit(tree functionDecl)
 {
     tree id(DECL_NAME (functionDecl));
     std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
 
-    long callableUnitId = ++mSubjectId;
-    writeKdmType(callableUnitId, KdmType::CallableUnit());
-    writeName(callableUnitId, name);
-    writeLinkId(callableUnitId, name);
+    long callableUnitId = ++mKdmElementId;
+    writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
+    writeTripleName(callableUnitId, name);
+    writeTripleLinkId(callableUnitId, name);
 
     std::string sourceFile(DECL_SOURCE_FILE(functionDecl));
     if (sourceFile == mCompilationFile.string())
     {
-        writeContains(SubjectId_CompilationUnit, callableUnitId);
+        writeTripleContains(KdmElementId_CompilationUnit, callableUnitId);
     }
     else
     {
-        writeContains(SubjectId_ClassSharedUnit, callableUnitId);
+        writeTripleContains(KdmElementId_ClassSharedUnit, callableUnitId);
     }
 
-    long signatureId = ++mSubjectId;
-    writeKdmType(signatureId, KdmType::Signature());
-    writeName(signatureId, name);
-    writeContains(callableUnitId, signatureId);
+    long signatureId = ++mKdmElementId;
+    writeTripleKdmType(signatureId, KdmType::Signature());
+    writeTripleName(signatureId, name);
+    writeTripleContains(callableUnitId, signatureId);
 
     //Determine return type id
     tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
     tree t2(TYPE_MAIN_VARIANT(t));
-    long paramId = writeReturnParameterUnit(t2);
-    writeContains(signatureId, paramId);
+    long paramId = writeKdmReturnParameterUnit(t2);
+    writeTripleContains(signatureId, paramId);
 
     //Iterator through argument list
     tree arg(DECL_ARGUMENTS (functionDecl));
     tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
     while (argType && (argType != void_list_node))
     {
-        long refId = writeParameterUnit(arg);
-        writeContains(signatureId, refId);
+        long refId = writeKdmParameterUnit(arg);
+        writeTripleContains(signatureId, refId);
         if (arg)
         {
             arg = TREE_CHAIN (arg);
@@ -265,138 +265,138 @@ void KdmTripleWriter::writeCallableUnit(tree functionDecl)
     }
 }
 
-void KdmTripleWriter::writeTripleKdmHeader()
+void KdmTripleWriter::writeVersionHeader()
 {
     *mKdmSink << "KDM_Triple:" << KdmTripleWriter::KdmTripleVersion << "\n";
 }
 
 void KdmTripleWriter::writeDefaultKdmModelElements()
 {
-    writeTriple(SubjectId_Segment, KdmPredicate::KdmType(), KdmType::Segment());
-    writeTriple(SubjectId_Segment, KdmPredicate::Uid(), "0");
-    writeTriple(SubjectId_Segment, KdmPredicate::LinkId(), "root");
-    writeTriple(SubjectId_CodeModel, KdmPredicate::KdmType(), KdmType::CodeModel());
-    writeTriple(SubjectId_CodeModel, KdmPredicate::Name(), KdmType::CodeModel());
-    writeTriple(SubjectId_CodeModel, KdmPredicate::Uid(), "1");
-    writeTriple(SubjectId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
-    writeTriple(SubjectId_Segment, KdmPredicate::Contains(), SubjectId_CodeModel);
-    writeTriple(SubjectId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
-    writeTriple(SubjectId_WorkbenchExtensionFamily, KdmPredicate::Name(), "__WORKBENCH__");
-    writeTriple(SubjectId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "__WORKBENCH__");
-    writeTriple(SubjectId_Segment, KdmPredicate::Contains(), SubjectId_WorkbenchExtensionFamily);
-    writeTriple(SubjectId_HiddenStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-    writeTriple(SubjectId_HiddenStereoType, KdmPredicate::Name(), "__HIDDEN__");
-    writeTriple(SubjectId_HiddenStereoType, KdmPredicate::LinkId(), "__HIDDEN__");
-    writeTriple(SubjectId_WorkbenchExtensionFamily, KdmPredicate::Contains(), SubjectId_HiddenStereoType);
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Name(), ":code");
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Uid(), "2");
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::LinkId(), ":code");
-    writeTriple(SubjectId_CodeModel, KdmPredicate::Contains(), SubjectId_CodeAssembly);
-    writeTriple(SubjectId_PrimitiveSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
-    writeTriple(SubjectId_PrimitiveSharedUnit, KdmPredicate::Name(), ":primitive");
-    writeTriple(SubjectId_PrimitiveSharedUnit, KdmPredicate::Uid(), "3");
-    writeTriple(SubjectId_PrimitiveSharedUnit, KdmPredicate::LinkId(), ":primitive");
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Contains(), SubjectId_PrimitiveSharedUnit);
-    writeTriple(SubjectId_DerivedSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
-    writeTriple(SubjectId_DerivedSharedUnit, KdmPredicate::Name(), ":derived");
-    writeTriple(SubjectId_DerivedSharedUnit, KdmPredicate::Uid(), "4");
-    writeTriple(SubjectId_DerivedSharedUnit, KdmPredicate::LinkId(), ":derived");
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Contains(), SubjectId_DerivedSharedUnit);
-    writeTriple(SubjectId_ClassSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
-    writeTriple(SubjectId_ClassSharedUnit, KdmPredicate::Name(), ":class");
-    writeTriple(SubjectId_ClassSharedUnit, KdmPredicate::Uid(), "5");
-    writeTriple(SubjectId_ClassSharedUnit, KdmPredicate::LinkId(), ":class");
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Contains(), SubjectId_ClassSharedUnit);
-    writeTriple(SubjectId_InventoryModel, KdmPredicate::KdmType(), KdmType::InventoryModel());
-    writeTriple(SubjectId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
-    writeTriple(SubjectId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
-    writeTriple(SubjectId_Segment, KdmPredicate::Contains(), SubjectId_InventoryModel);
+    writeTriple(KdmElementId_Segment, KdmPredicate::KdmType(), KdmType::Segment());
+    writeTriple(KdmElementId_Segment, KdmPredicate::Uid(), "0");
+    writeTriple(KdmElementId_Segment, KdmPredicate::LinkId(), "root");
+    writeTriple(KdmElementId_CodeModel, KdmPredicate::KdmType(), KdmType::CodeModel());
+    writeTriple(KdmElementId_CodeModel, KdmPredicate::Name(), KdmType::CodeModel());
+    writeTriple(KdmElementId_CodeModel, KdmPredicate::Uid(), "1");
+    writeTriple(KdmElementId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
+    writeTriple(KdmElementId_Segment, KdmPredicate::Contains(), KdmElementId_CodeModel);
+    writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
+    writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "__WORKBENCH__");
+    writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "__WORKBENCH__");
+    writeTriple(KdmElementId_Segment, KdmPredicate::Contains(), KdmElementId_WorkbenchExtensionFamily);
+    writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+    writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::Name(), "__HIDDEN__");
+    writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::LinkId(), "__HIDDEN__");
+    writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Contains(), KdmElementId_HiddenStereoType);
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Uid(), "2");
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::LinkId(), ":code");
+    writeTriple(KdmElementId_CodeModel, KdmPredicate::Contains(), KdmElementId_CodeAssembly);
+    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
+    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::Name(), ":primitive");
+    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::Uid(), "3");
+    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::LinkId(), ":primitive");
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_PrimitiveSharedUnit);
+    writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
+    writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Name(), ":derived");
+    writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Uid(), "4");
+    writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::LinkId(), ":derived");
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_DerivedSharedUnit);
+    writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
+    writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Name(), ":class");
+    writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Uid(), "5");
+    writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::LinkId(), ":class");
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_ClassSharedUnit);
+    writeTriple(KdmElementId_InventoryModel, KdmPredicate::KdmType(), KdmType::InventoryModel());
+    writeTriple(KdmElementId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
+    writeTriple(KdmElementId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
+    writeTriple(KdmElementId_Segment, KdmPredicate::Contains(), KdmElementId_InventoryModel);
 
-    writeKdmType(SubjectId_CompilationUnit, KdmType::CompilationUnit());
-    writeName(SubjectId_CompilationUnit, mCompilationFile.filename());
-    writeTriple(SubjectId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Contains(), SubjectId_CompilationUnit);
+    writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
+    writeTripleName(KdmElementId_CompilationUnit, mCompilationFile.filename());
+    writeTriple(KdmElementId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_CompilationUnit);
 
 }
 
-void KdmTripleWriter::writeKdmType(long const subject, KdmType const & object)
+void KdmTripleWriter::writeTripleKdmType(long const subject, KdmType const & object)
 {
     writeTriple(subject, KdmPredicate::KdmType(), object);
 }
 
-void KdmTripleWriter::writeName(long const subject, std::string const & name)
+void KdmTripleWriter::writeTripleName(long const subject, std::string const & name)
 {
     writeTriple(subject, KdmPredicate::Name(), name);
 }
 
-void KdmTripleWriter::writeContains(long const parent, long const child)
+void KdmTripleWriter::writeTripleContains(long const parent, long const child)
 {
     writeTriple(parent, KdmPredicate::Contains(), child);
 }
-void KdmTripleWriter::writeLinkId(long const subject, std::string const & name)
+void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & name)
 {
     writeTriple(subject, KdmPredicate::LinkId(), name);
 }
 
-void KdmTripleWriter::writeSourceFile(boost::filesystem::path const & file)
+void KdmTripleWriter::writeKdmSourceFile(boost::filesystem::path const & file)
 {
-    writeKdmType(++mSubjectId, KdmType::SourceFile());
-    writeName(mSubjectId, file.filename());
-    writeTriple(mSubjectId, KdmPredicate::Path(), file.string());
-    writeTriple(mSubjectId, KdmPredicate::LinkId(), file.string());
-    writeTriple(SubjectId_InventoryModel, KdmPredicate::Contains(), mSubjectId);
+    writeTripleKdmType(++mKdmElementId, KdmType::SourceFile());
+    writeTripleName(mKdmElementId, file.filename());
+    writeTriple(mKdmElementId, KdmPredicate::Path(), file.string());
+    writeTripleLinkId(mKdmElementId, file.string());
+    writeTripleContains(KdmElementId_InventoryModel, mKdmElementId);
 }
 
-void KdmTripleWriter::writeCompilationUnit(boost::filesystem::path const & file)
+void KdmTripleWriter::writeKdmCompilationUnit(boost::filesystem::path const & file)
 {
-    writeKdmType(++mSubjectId, KdmType::CompilationUnit());
-    writeName(mSubjectId, file.filename());
-    writeTriple(mSubjectId, KdmPredicate::LinkId(), file.string());
-    writeTriple(SubjectId_CodeAssembly, KdmPredicate::Contains(), mSubjectId);
+    writeTripleKdmType(++mKdmElementId, KdmType::CompilationUnit());
+    writeTripleName(mKdmElementId, file.filename());
+    writeTripleLinkId(mKdmElementId, file.string());
+    writeTripleContains(KdmElementId_CodeAssembly, mKdmElementId);
 }
 
-long KdmTripleWriter::writeReturnParameterUnit(tree param)
+long KdmTripleWriter::writeKdmReturnParameterUnit(tree param)
 {
     long ref = findOrAddReferencedNode(param);
-    writeKdmType(++mSubjectId, KdmType::ParameterUnit());
-    writeTriple(mSubjectId, KdmPredicate::Name(), "__RESULT__");
-    writeTriple(mSubjectId, KdmPredicate::Type(), ref);
-    return mSubjectId;
+    writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
+    writeTripleName(mKdmElementId, "__RESULT__");
+    writeTriple(mKdmElementId, KdmPredicate::Type(), ref);
+    return mKdmElementId;
 }
 
-long KdmTripleWriter::writeParameterUnit(tree param)
+long KdmTripleWriter::writeKdmParameterUnit(tree param)
 {
-    long parameterUnitId(++mSubjectId);
-    writeKdmType(parameterUnitId, KdmType::ParameterUnit());
+    long parameterUnitId(++mKdmElementId);
+    writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(param)));
     long ref = findOrAddReferencedNode(type);
 
     tree id(DECL_NAME (param));
     std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-    writeName(parameterUnitId, name);
+    writeTripleName(parameterUnitId, name);
 
     writeTriple(parameterUnitId, KdmPredicate::Type(), ref);
     return parameterUnitId;
 }
 
-long KdmTripleWriter::writeItemUnit(tree item)
+long KdmTripleWriter::writeKdmItemUnit(tree item)
 {
-    long itemId(++mSubjectId);
-    writeKdmType(itemId, KdmType::ItemUnit());
+    long itemId(++mKdmElementId);
+    writeTripleKdmType(itemId, KdmType::ItemUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
     long ref = findOrAddReferencedNode(type);
     tree id(DECL_NAME (item));
     std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-    writeName(itemId, name);
+    writeTripleName(itemId, name);
     writeTriple(itemId, KdmPredicate::Type(), ref);
     return itemId;
 }
 
-void KdmTripleWriter::writeStorableUnit(tree var)
+void KdmTripleWriter::writeKdmStorableUnit(tree var)
 {
-    long unitId(++mSubjectId);
-    writeKdmType(unitId, KdmType::StorableUnit());
+    long unitId(++mKdmElementId);
+    writeTripleKdmType(unitId, KdmType::StorableUnit());
 
 }
 
@@ -404,10 +404,10 @@ void KdmTripleWriter::writeStorableUnit(tree var)
 long KdmTripleWriter::findOrAddReferencedNode(tree node)
 {
     long retValue(-1);
-    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mSubjectId + 1));
+    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
     if (result.second)
     {
-        retValue = ++mSubjectId;
+        retValue = ++mKdmElementId;
         tree treeType(TREE_TYPE(node));
         if (treeType)
         {
@@ -425,10 +425,10 @@ long KdmTripleWriter::findOrAddReferencedNode(tree node)
 long KdmTripleWriter::findOrAddReferencedSharedUnit(tree file)
 {
     long retValue(-1);
-    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedSharedUnits.insert(std::make_pair(file, mSubjectId + 1));
+    std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedSharedUnits.insert(std::make_pair(file, mKdmElementId + 1));
     if (result.second)
     {
-        retValue = ++mSubjectId;
+        retValue = ++mKdmElementId;
     }
     else
     {
@@ -437,9 +437,9 @@ long KdmTripleWriter::findOrAddReferencedSharedUnit(tree file)
     return retValue;
 }
 
-void KdmTripleWriter::writePrimitiveType(tree type)
+void KdmTripleWriter::writeKdmPrimitiveType(tree type)
 {
-    long typeSubjectId = findOrAddReferencedNode(type);
+    long typeKdmElementId = findOrAddReferencedNode(type);
 
     tree typeName(TYPE_NAME (type));
     tree treeName(NULL_TREE);
@@ -472,32 +472,32 @@ void KdmTripleWriter::writePrimitiveType(tree type)
         kdmType = KdmType::CharType();
     }
 
-    writeKdmType(typeSubjectId, kdmType);
-    writeName(typeSubjectId, name);
+    writeTripleKdmType(typeKdmElementId, kdmType);
+    writeTripleName(typeKdmElementId, name);
 }
 
-void KdmTripleWriter::writePointerType(tree pointerType)
+void KdmTripleWriter::writeKdmPointerType(tree pointerType)
 {
-    long pointerSubjectId = findOrAddReferencedNode(pointerType);
-    writeKdmType(pointerSubjectId, KdmType::PointerType());
-    writeName(pointerSubjectId, "PointerType");
+    long pointerKdmElementId = findOrAddReferencedNode(pointerType);
+    writeTripleKdmType(pointerKdmElementId, KdmType::PointerType());
+    writeTripleName(pointerKdmElementId, "PointerType");
 
     tree treeType(TREE_TYPE(pointerType));
     tree t2(TYPE_MAIN_VARIANT(treeType));
-    long pointerTypeSubjectId = findOrAddReferencedNode(t2);
-    writeTriple(pointerSubjectId, KdmPredicate::Type(), pointerTypeSubjectId);
+    long pointerTypeKdmElementId = findOrAddReferencedNode(t2);
+    writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
 
 }
 
-void KdmTripleWriter::writeArrayType(tree arrayType)
+void KdmTripleWriter::writeKdmArrayType(tree arrayType)
 {
-    long arraySubjectId = findOrAddReferencedNode(arrayType);
-    writeKdmType(arraySubjectId, KdmType::ArrayType());
+    long arrayKdmElementId = findOrAddReferencedNode(arrayType);
+    writeTripleKdmType(arrayKdmElementId, KdmType::ArrayType());
 
     tree treeType(TREE_TYPE(arrayType));
     tree t2(TYPE_MAIN_VARIANT(treeType));
-    long arrayTypeSubjectId = findOrAddReferencedNode(t2);
-    writeTriple(arraySubjectId, KdmPredicate::Type(), arrayTypeSubjectId);
+    long arrayTypeKdmElementId = findOrAddReferencedNode(t2);
+    writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
 
 }
 
@@ -510,7 +510,7 @@ bool isAnonymousStruct(tree t)
     return !name || ANON_AGGRNAME_P (name);
 }
 
-void KdmTripleWriter::writeRecordType(tree recordType)
+void KdmTripleWriter::writeKdmRecordType(tree recordType)
 {
     recordType = TYPE_MAIN_VARIANT (recordType);
 
@@ -535,16 +535,16 @@ void KdmTripleWriter::writeRecordType(tree recordType)
         }
         else
         {
-            compilationUnitId = SubjectId_CompilationUnit;
+            compilationUnitId = KdmElementId_CompilationUnit;
         }
 
         //struct
         long structId = findOrAddReferencedNode(recordType);
-        writeKdmType(structId, KdmType::RecordType());
+        writeTripleKdmType(structId, KdmType::RecordType());
         std::string name;
         //check to see if we are an annonymous struct
         name = (isAnonymousStruct(recordType)) ? "<unnamed>" : typeNameString(recordType);
-        writeName(structId, name);
+        writeTripleName(structId, name);
 
         if (COMPLETE_TYPE_P (recordType))
         {
@@ -564,8 +564,8 @@ void KdmTripleWriter::writeRecordType(tree recordType)
                     {
                         if (!DECL_ARTIFICIAL(d))
                         {
-                            long itemId = writeItemUnit(d);
-                            writeContains(structId, itemId);
+                            long itemId = writeKdmItemUnit(d);
+                            writeTripleContains(structId, itemId);
                         }
                         break;
                     }
@@ -579,19 +579,19 @@ void KdmTripleWriter::writeRecordType(tree recordType)
 
         }
 
-        writeContains(compilationUnitId, structId);
+        writeTripleContains(compilationUnitId, structId);
     }
 }
 
-void KdmTripleWriter::writeSharedUnit(tree file)
+void KdmTripleWriter::writeKdmSharedUnit(tree file)
 {
     long id = findOrAddReferencedSharedUnit(file);
-    writeKdmType(id, KdmType::SharedUnit());
+    writeTripleKdmType(id, KdmType::SharedUnit());
 
     boost::filesystem::path filename(IDENTIFIER_POINTER(file));
-    writeName(id, filename.filename());
-    writeLinkId(id, filename.string());
-    writeContains(SubjectId_CodeAssembly, id);
+    writeTripleName(id, filename.filename());
+    writeTripleLinkId(id, filename.string());
+    writeTripleContains(KdmElementId_CodeAssembly, id);
 }
 
 } // namespace kdmtriplewriter

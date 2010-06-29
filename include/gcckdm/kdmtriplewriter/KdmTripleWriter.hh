@@ -36,7 +36,7 @@ public:
 
     explicit KdmTripleWriter(KdmSinkPtr const & kdmSink);
     explicit KdmTripleWriter(boost::filesystem::path const & filename);
-    ~KdmTripleWriter();
+    virtual ~KdmTripleWriter();
 
     virtual void startTranslationUnit(boost::filesystem::path const & file);
     virtual void startKdmGimplePass();
@@ -45,22 +45,28 @@ public:
     virtual void finishTranslationUnit();
 
     static const int KdmTripleVersion = 1;
+
 private:
-    //typedef std::multiset<tree, DeclComparator> DeclSet;
+    typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
+    typedef std::tr1::unordered_set<tree> TreeMap;
+
+    long findOrAddReferencedNode(tree node);
+
+    long findOrAddReferencedSharedUnit(tree file);
 
     enum
     {
-        SubjectId_Segment = 0,
-        SubjectId_CodeModel,
-        SubjectId_WorkbenchExtensionFamily,
-        SubjectId_HiddenStereoType,
-        SubjectId_CodeAssembly,
-        SubjectId_PrimitiveSharedUnit,
-        SubjectId_DerivedSharedUnit,
-        SubjectId_ClassSharedUnit,
-        SubjectId_InventoryModel,
-        SubjectId_CompilationUnit,
-        SubjectId_DefaultStart,
+        KdmElementId_Segment = 0,
+        KdmElementId_CodeModel,
+        KdmElementId_WorkbenchExtensionFamily,
+        KdmElementId_HiddenStereoType,
+        KdmElementId_CodeAssembly,
+        KdmElementId_PrimitiveSharedUnit,
+        KdmElementId_DerivedSharedUnit,
+        KdmElementId_ClassSharedUnit,
+        KdmElementId_InventoryModel,
+        KdmElementId_CompilationUnit,
+        KdmElementId_DefaultStart,
     };
 
     void processAstDeclarationNode(tree decl);
@@ -69,8 +75,40 @@ private:
     void processAstFieldDeclarationNode(tree fieldDecl);
     void processAstVariableDeclarationNode(tree varDecl);
 
-    long findOrAddReferencedNode(tree node);
-    long findOrAddReferencedSharedUnit(tree file);
+
+    void writeVersionHeader();
+    void writeDefaultKdmModelElements();
+
+    /**
+     * Write a SourceFile kdm element to the KdmSink stream using the given file
+     *
+     * Sample output:
+     *
+     * <10> <kdmtype> "source/SourceFile".
+     * <10> <name> "test002.c".
+     * <10> <path> "/tmp/c-tests/test002.c".
+     * <10> <link::id> "/tmp/c-tests/test002.c".
+     * <8> <contains> <10>.
+     *
+     * @param file the file to use to populate the SourceFile kdm element
+     */
+    void writeKdmSourceFile(boost::filesystem::path const & file);
+    void writeKdmCompilationUnit(boost::filesystem::path const & file);
+    void writeKdmCallableUnit(tree functionDecl);
+    long writeKdmReturnParameterUnit(tree param);
+    long writeKdmParameterUnit(tree param);
+    void writeKdmPrimitiveType(tree type);
+    void writeKdmPointerType(tree type);
+    void writeKdmRecordType(tree type);
+    void writeKdmSharedUnit(tree file);
+    long writeKdmItemUnit(tree item);
+    void writeKdmArrayType(tree array);
+    void writeKdmStorableUnit(tree var);
+
+    void writeTripleKdmType(long const subject, KdmType const & object);
+    void writeTripleName(long const subject, std::string const & name);
+    void writeTripleContains(long const parent, long const child);
+    void writeTripleLinkId(long const subject, std::string const & name);
 
     /**
      *
@@ -87,47 +125,9 @@ private:
      */
     void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object);
 
-    /**
-     * Write a SourceFile kdm element to the KdmSink stream using the given file
-     *
-     * Sample output:
-     *
-     * <10> <kdmtype> "source/SourceFile".
-     * <10> <name> "test002.c".
-     * <10> <path> "/tmp/c-tests/test002.c".
-     * <10> <link::id> "/tmp/c-tests/test002.c".
-     * <8> <contains> <10>.
-     *
-     * @param file the file to use to populate the SourceFile kdm element
-     */
-    void writeSourceFile(boost::filesystem::path const & file);
-    void writeCompilationUnit(boost::filesystem::path const & file);
-
-
-    void writeCallableUnit(tree functionDecl);
-    long writeReturnParameterUnit(tree param);
-    long writeParameterUnit(tree param);
-    void writePrimitiveType(tree type);
-    void writePointerType(tree type);
-    void writeRecordType(tree type);
-    void writeSharedUnit(tree file);
-    long writeItemUnit(tree item);
-    void writeArrayType(tree array);
-    void writeStorableUnit(tree var);
-
-    void writeTripleKdmHeader();
-    void writeDefaultKdmModelElements();
-
-    void writeKdmType(long const subject, KdmType const & object);
-    void writeName(long const subject, std::string const & name);
-    void writeContains(long const parent, long const child);
-    void writeLinkId(long const subject, std::string const & name);
-
 
     KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
-    long mSubjectId;     /// The current unique subject, incremented for each new subject
-    typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
-    typedef std::tr1::unordered_set<tree> TreeMap;
+    long mKdmElementId;     /// The current element id, incremented for each new element
 
     AstNodeReferenceMap mReferencedNodes;
     AstNodeReferenceMap mProcessedNodes;
@@ -136,7 +136,6 @@ private:
 
     TreeMap mDeclarationNodes;
     TreeMap mTypeNodes;
-//    PathMap mFiles;
 };
 
 } // namespace kdmtriplewriter

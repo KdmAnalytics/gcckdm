@@ -50,9 +50,9 @@ private:
     typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
     typedef std::tr1::unordered_set<tree> TreeMap;
 
-    long findOrAddReferencedNode(tree node);
+    long getReferenceId(tree node);
 
-    long findOrAddReferencedSharedUnit(tree file);
+    long getSharedUnitReferenceId(tree file);
 
     enum
     {

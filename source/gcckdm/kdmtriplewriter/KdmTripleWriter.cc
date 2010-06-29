@@ -16,11 +16,37 @@
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
 
+
+namespace
+{
+
+std::string nodeName(tree node)
+{
+    std::string name(gcckdm::treeNodeNameString(node));
+    return name.empty() ? "<unnamed>" : name;
+}
+
+bool isAnonymousStruct(tree t)
+{
+    tree name = TYPE_NAME (t);
+    if (name && TREE_CODE (name) == TYPE_DECL)
+        name = DECL_NAME (name);
+    return !name || ANON_AGGRNAME_P (name);
+}
+
+
+}
+
 namespace gcckdm
 {
 
 namespace kdmtriplewriter
 {
+
+
+
+
+
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
     mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
 {
@@ -358,7 +384,7 @@ void KdmTripleWriter::writeKdmCompilationUnit(boost::filesystem::path const & fi
 
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree param)
 {
-    long ref = findOrAddReferencedNode(param);
+    long ref = getReferenceId(param);
     writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
     writeTripleName(mKdmElementId, "__RESULT__");
     writeTriple(mKdmElementId, KdmPredicate::Type(), ref);
@@ -370,7 +396,7 @@ long KdmTripleWriter::writeKdmParameterUnit(tree param)
     long parameterUnitId(++mKdmElementId);
     writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(param)));
-    long ref = findOrAddReferencedNode(type);
+    long ref = getReferenceId(type);
 
     tree id(DECL_NAME (param));
     std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
@@ -385,7 +411,7 @@ long KdmTripleWriter::writeKdmItemUnit(tree item)
     long itemId(++mKdmElementId);
     writeTripleKdmType(itemId, KdmType::ItemUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
-    long ref = findOrAddReferencedNode(type);
+    long ref = getReferenceId(type);
     tree id(DECL_NAME (item));
     std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
     writeTripleName(itemId, name);
@@ -401,7 +427,7 @@ void KdmTripleWriter::writeKdmStorableUnit(tree var)
 }
 
 
-long KdmTripleWriter::findOrAddReferencedNode(tree node)
+long KdmTripleWriter::getReferenceId(tree node)
 {
     long retValue(-1);
     std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
@@ -412,7 +438,7 @@ long KdmTripleWriter::findOrAddReferencedNode(tree node)
         if (treeType)
         {
             tree t2(TYPE_MAIN_VARIANT(treeType));
-            findOrAddReferencedNode(t2);
+            getReferenceId(t2);
         }
     }
     else
@@ -422,7 +448,7 @@ long KdmTripleWriter::findOrAddReferencedNode(tree node)
     return retValue;
 }
 
-long KdmTripleWriter::findOrAddReferencedSharedUnit(tree file)
+long KdmTripleWriter::getSharedUnitReferenceId(tree file)
 {
     long retValue(-1);
     std::pair<AstNodeReferenceMap::iterator, bool> result = mReferencedSharedUnits.insert(std::make_pair(file, mKdmElementId + 1));
@@ -439,7 +465,7 @@ long KdmTripleWriter::findOrAddReferencedSharedUnit(tree file)
 
 void KdmTripleWriter::writeKdmPrimitiveType(tree type)
 {
-    long typeKdmElementId = findOrAddReferencedNode(type);
+    long typeKdmElementId = getReferenceId(type);
 
     tree typeName(TYPE_NAME (type));
     tree treeName(NULL_TREE);
@@ -478,37 +504,30 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree type)
 
 void KdmTripleWriter::writeKdmPointerType(tree pointerType)
 {
-    long pointerKdmElementId = findOrAddReferencedNode(pointerType);
+    long pointerKdmElementId = getReferenceId(pointerType);
     writeTripleKdmType(pointerKdmElementId, KdmType::PointerType());
     writeTripleName(pointerKdmElementId, "PointerType");
 
     tree treeType(TREE_TYPE(pointerType));
     tree t2(TYPE_MAIN_VARIANT(treeType));
-    long pointerTypeKdmElementId = findOrAddReferencedNode(t2);
+    long pointerTypeKdmElementId = getReferenceId(t2);
     writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
 
 }
 
 void KdmTripleWriter::writeKdmArrayType(tree arrayType)
 {
-    long arrayKdmElementId = findOrAddReferencedNode(arrayType);
+    long arrayKdmElementId = getReferenceId(arrayType);
     writeTripleKdmType(arrayKdmElementId, KdmType::ArrayType());
 
     tree treeType(TREE_TYPE(arrayType));
     tree t2(TYPE_MAIN_VARIANT(treeType));
-    long arrayTypeKdmElementId = findOrAddReferencedNode(t2);
+    long arrayTypeKdmElementId = getReferenceId(t2);
     writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
 
 }
 
 
-bool isAnonymousStruct(tree t)
-{
-    tree name = TYPE_NAME (t);
-    if (name && TREE_CODE (name) == TYPE_DECL)
-        name = DECL_NAME (name);
-    return !name || ANON_AGGRNAME_P (name);
-}
 
 void KdmTripleWriter::writeKdmRecordType(tree recordType)
 {
@@ -531,7 +550,7 @@ void KdmTripleWriter::writeKdmRecordType(tree recordType)
         if (mCompilationFile != boost::filesystem::path(loc.file))
         {
             tree t = get_identifier(loc.file);
-            compilationUnitId = findOrAddReferencedSharedUnit(t);
+            compilationUnitId = getSharedUnitReferenceId(t);
         }
         else
         {
@@ -539,7 +558,7 @@ void KdmTripleWriter::writeKdmRecordType(tree recordType)
         }
 
         //struct
-        long structId = findOrAddReferencedNode(recordType);
+        long structId = getReferenceId(recordType);
         writeTripleKdmType(structId, KdmType::RecordType());
         std::string name;
         //check to see if we are an annonymous struct
@@ -585,7 +604,7 @@ void KdmTripleWriter::writeKdmRecordType(tree recordType)
 
 void KdmTripleWriter::writeKdmSharedUnit(tree file)
 {
-    long id = findOrAddReferencedSharedUnit(file);
+    long id = getSharedUnitReferenceId(file);
     writeTripleKdmType(id, KdmType::SharedUnit());
 
     boost::filesystem::path filename(IDENTIFIER_POINTER(file));

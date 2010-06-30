@@ -50,8 +50,9 @@ private:
     typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
     typedef std::tr1::unordered_set<tree> TreeMap;
 
-    long getReferenceId(tree node);
+    long getSourceFileReferenceId(tree decl);
 
+    long getReferenceId(tree node);
     long getSharedUnitReferenceId(tree file);
 
     enum
@@ -103,7 +104,7 @@ private:
     void writeKdmSharedUnit(tree file);
     long writeKdmItemUnit(tree item);
     void writeKdmArrayType(tree array);
-    void writeKdmStorableUnit(tree var);
+    long writeKdmStorableUnit(tree var);
 
     void writeTripleKdmType(long const subject, KdmType const & object);
     void writeTripleName(long const subject, std::string const & name);

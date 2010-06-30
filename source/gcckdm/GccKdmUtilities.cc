@@ -75,13 +75,26 @@ std::string const treeNodeNameString(tree node)
 
 std::string const declNameString(tree decl)
 {
-    tree aName = DECL_P(decl) ? DECL_NAME(decl) : decl;
-    return aName ? IDENTIFIER_POINTER(aName) : "";
+    std::string nameStr("");
+    if (decl)
+    {
+        tree aName = DECL_P(decl) ? DECL_NAME(decl) : decl;
+        if (aName)
+        {
+            nameStr = IDENTIFIER_POINTER(aName);
+        }
+    }
+    return nameStr;
 }
 
 std::string const typeNameString(tree type)
 {
-    return TYPE_P(type) ? declNameString (TYPE_NAME(type)) : "";
+    std::string nameStr("");
+    if (type && TYPE_P(type))
+    {
+        nameStr = declNameString (TYPE_NAME(type));
+    }
+    return nameStr;
 }
 
 }  // namespace gcckdm

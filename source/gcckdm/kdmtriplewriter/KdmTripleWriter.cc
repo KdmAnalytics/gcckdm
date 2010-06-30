@@ -76,7 +76,8 @@ void KdmTripleWriter::startKdmGimplePass()
     struct varpool_node *pNode;
     FOR_EACH_STATIC_VARIABLE(pNode)
     {
-        processAstNode(pNode->decl);
+        long unitId = writeKdmStorableUnit(pNode->decl);
+        writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
     }
 }
 
@@ -412,8 +413,6 @@ long KdmTripleWriter::writeKdmItemUnit(tree item)
     writeTripleKdmType(itemId, KdmType::ItemUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
     long ref = getReferenceId(type);
-//    tree id(DECL_NAME (item));
-//    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
     std::string name(nodeName(item));
 
     writeTripleName(itemId, name);
@@ -421,12 +420,15 @@ long KdmTripleWriter::writeKdmItemUnit(tree item)
     return itemId;
 }
 
-void KdmTripleWriter::writeKdmStorableUnit(tree var)
+long KdmTripleWriter::writeKdmStorableUnit(tree var)
 {
     long unitId(++mKdmElementId);
     writeTripleKdmType(unitId, KdmType::StorableUnit());
     writeTripleName(unitId, nodeName(var));
-
+    tree type(TYPE_MAIN_VARIANT(TREE_TYPE(var)));
+    long ref = getReferenceId(type);
+    writeTriple(unitId, KdmPredicate::Type(), ref);
+    return unitId;
 }
 
 
@@ -450,6 +452,23 @@ long KdmTripleWriter::getReferenceId(tree node)
     }
     return retValue;
 }
+
+long KdmTripleWriter::getSourceFileReferenceId(tree t)
+{
+    long sourceFileId(0);
+    expanded_location loc(expand_location(locationOf(t)));
+    if (mCompilationFile != boost::filesystem::path(loc.file))
+    {
+        tree t = get_identifier(loc.file);
+        sourceFileId = getSharedUnitReferenceId(t);
+    }
+    else
+    {
+        sourceFileId = KdmElementId_CompilationUnit;
+    }
+    return sourceFileId;
+}
+
 
 long KdmTripleWriter::getSharedUnitReferenceId(tree file)
 {
@@ -532,7 +551,6 @@ void KdmTripleWriter::writeKdmArrayType(tree arrayType)
 }
 
 
-
 void KdmTripleWriter::writeKdmRecordType(tree recordType)
 {
     recordType = TYPE_MAIN_VARIANT (recordType);
@@ -549,17 +567,7 @@ void KdmTripleWriter::writeKdmRecordType(tree recordType)
     }
     else //Record or Union
     {
-        long compilationUnitId(0);
-        expanded_location loc(expand_location(locationOf(recordType)));
-        if (mCompilationFile != boost::filesystem::path(loc.file))
-        {
-            tree t = get_identifier(loc.file);
-            compilationUnitId = getSharedUnitReferenceId(t);
-        }
-        else
-        {
-            compilationUnitId = KdmElementId_CompilationUnit;
-        }
+        long compilationUnitId(getSourceFileReferenceId(recordType));
 
         //struct
         long structId = getReferenceId(recordType);

@@ -48,7 +48,7 @@ public:
 
 private:
     typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
-    typedef std::tr1::unordered_set<tree> TreeMap;
+    typedef std::tr1::unordered_set<tree> TreeSet;
 
     long getSourceFileReferenceId(tree decl);
 
@@ -105,6 +105,9 @@ private:
     long writeKdmItemUnit(tree item);
     void writeKdmArrayType(tree array);
     long writeKdmStorableUnit(tree var);
+    long writeSignature(tree function);
+    long writeSignatureDeclaration(tree functionDecl);
+    long writeSignatureType(tree functionType);
 
     void writeTripleKdmType(long const subject, KdmType const & object);
     void writeTripleName(long const subject, std::string const & name);
@@ -131,12 +134,13 @@ private:
     long mKdmElementId;     /// The current element id, incremented for each new element
 
     AstNodeReferenceMap mReferencedNodes;
-    AstNodeReferenceMap mProcessedNodes;
+    //AstNodeReferenceMap mProcessedNodes;
     AstNodeReferenceMap mReferencedSharedUnits;
     boost::filesystem::path  mCompilationFile;
 
-    TreeMap mDeclarationNodes;
-    TreeMap mTypeNodes;
+    TreeSet mProcessedNodes;
+//    TreeSet mDeclarationNodes;
+//    TreeSet mTypeNodes;
 };
 
 } // namespace kdmtriplewriter

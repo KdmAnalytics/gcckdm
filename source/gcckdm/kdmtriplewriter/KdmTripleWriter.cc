@@ -199,7 +199,7 @@ void KdmTripleWriter::processAstTypeNode(tree typeNode)
                 }
                 case FUNCTION_TYPE:
                 {
-                    writeSignature(typeNode);
+                    writeKdmSignature(typeNode);
                     break;
                 }
                 case POINTER_TYPE:
@@ -276,13 +276,22 @@ void KdmTripleWriter::writeKdmCallableUnit(tree functionDecl)
     long unitId = (sourceFile == mCompilationFile.string()) ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit;
     writeTripleContains(unitId, callableUnitId);
 
-    long signatureId = writeSignature(functionDecl);
+    long signatureId = writeKdmSignature(functionDecl);
     writeTripleContains(callableUnitId, signatureId);
 
+    if (gimple_has_body_p(functionDecl))
+    {
+        gimple_seq seq = gimple_body(functionDecl);
 
+        for (gimple_stmt_iterator i = gsi_start(seq); !gsi_end_p(i); gsi_next(&i))
+        {
+            gimple gs = gsi_stmt(i);
+            processGimpleStatement(gs);
+        }
+    }
 }
 
-long KdmTripleWriter::writeSignatureDeclaration(tree functionDecl)
+long KdmTripleWriter::writeKdmSignatureDeclaration(tree functionDecl)
 {
     std::string name(nodeName(functionDecl));
     long signatureId = ++mKdmElementId;
@@ -311,7 +320,7 @@ long KdmTripleWriter::writeSignatureDeclaration(tree functionDecl)
     return signatureId;
 }
 
-long KdmTripleWriter::writeSignatureType(tree functionType)
+long KdmTripleWriter::writeKdmSignatureType(tree functionType)
 {
     std::string name(nodeName(functionType));
     long signatureId = getReferenceId(functionType);
@@ -336,16 +345,16 @@ long KdmTripleWriter::writeSignatureType(tree functionType)
 
 }
 
-long KdmTripleWriter::writeSignature(tree function)
+long KdmTripleWriter::writeKdmSignature(tree function)
 {
     long sigId;
     if (DECL_P(function))
     {
-        sigId = writeSignatureDeclaration(function);
+        sigId = writeKdmSignatureDeclaration(function);
     }
     else
     {
-        sigId = writeSignatureType(function);
+        sigId = writeKdmSignatureType(function);
 
     }
     return sigId;
@@ -457,7 +466,8 @@ long KdmTripleWriter::writeKdmParameterUnit(tree param)
 {
     long parameterUnitId(++mKdmElementId);
     writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
-    tree type(TYPE_MAIN_VARIANT(TREE_TYPE(param)));
+
+    tree type = TREE_TYPE(param) ? TYPE_MAIN_VARIANT(TREE_TYPE(param)): TREE_VALUE (param);
     long ref = getReferenceId(type);
 
     std::string name(nodeName(param));
@@ -676,6 +686,188 @@ void KdmTripleWriter::writeKdmSharedUnit(tree file)
     writeTripleLinkId(id, filename.string());
     writeTripleContains(KdmElementId_CodeAssembly, id);
 }
+
+
+void gimple_not_implemented_yet(gimple gs)
+{
+    std::cerr << "Unknown GIMPLE statement: " << gimple_code_name[static_cast<int>(gimple_code(gs))] << std::endl;
+}
+
+void KdmTripleWriter::processGimpleStatement(gimple gs)
+{
+    if (gs)
+    {
+        switch (gimple_code(gs))
+        {
+            case GIMPLE_ASM:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_ASSIGN:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_BIND:
+            {
+                //debug_gimple_stmt(gs);
+                //gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_CALL:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_COND:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_LABEL:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_GOTO:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_NOP:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_RETURN:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_SWITCH:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_TRY:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_PHI:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_PARALLEL:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_TASK:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_ATOMIC_LOAD:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_ATOMIC_STORE:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_FOR:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_CONTINUE:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_SINGLE:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_RETURN:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_SECTIONS:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_SECTIONS_SWITCH:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_MASTER:
+            case GIMPLE_OMP_ORDERED:
+            case GIMPLE_OMP_SECTION:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_OMP_CRITICAL:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_CATCH:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_EH_FILTER:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_EH_MUST_NOT_THROW:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_RESX:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_EH_DISPATCH:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_DEBUG:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            case GIMPLE_PREDICT:
+            {
+                gimple_not_implemented_yet(gs);
+                break;
+            }
+            default:
+            {
+                std::cerr << "Gimple statement not handled yet" << std::endl;
+                break;
+            }
+
+        }
+
+    }
+}
+
 
 } // namespace kdmtriplewriter
 

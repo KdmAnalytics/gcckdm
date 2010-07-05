@@ -105,9 +105,12 @@ private:
     long writeKdmItemUnit(tree item);
     void writeKdmArrayType(tree array);
     long writeKdmStorableUnit(tree var);
-    long writeSignature(tree function);
-    long writeSignatureDeclaration(tree functionDecl);
-    long writeSignatureType(tree functionType);
+    long writeKdmSignature(tree function);
+    long writeKdmSignatureDeclaration(tree functionDecl);
+    long writeKdmSignatureType(tree functionType);
+
+
+    void processGimpleStatement(gimple gs);
 
     void writeTripleKdmType(long const subject, KdmType const & object);
     void writeTripleName(long const subject, std::string const & name);

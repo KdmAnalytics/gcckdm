@@ -213,16 +213,6 @@ extern "C" unsigned int executeKdmGimplePass()
         //    {
         //        kdmWriter->processAstNode(global_namespace);
         //    }
-        //    else
-        //    {
-        //        int count(0);
-        //        struct cgraph_node *n;
-        //        for (n = cgraph_nodes; n; n = n->next)
-        //        {
-        //            std::cerr << "executeKdmGimplePass: AST NodeCount: " << ++count << std::endl;
-        //            kdmWriter->processAstNode(n->decl);
-        //        }
-        //    }
         kdmWriter->processAstNode(current_function_decl);
         kdmWriter->finishKdmGimplePass();
         //    std::cerr << "======================end executeKdmGimplePass========================" << std::endl;

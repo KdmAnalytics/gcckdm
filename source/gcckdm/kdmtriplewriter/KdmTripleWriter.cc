@@ -266,8 +266,6 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
 void KdmTripleWriter::writeKdmCallableUnit(tree functionDecl)
 {
     std::string name(nodeName(functionDecl));
-    //    tree id(DECL_NAME (functionDecl));
-    //    std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
 
     long callableUnitId = getReferenceId(functionDecl);
     writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
@@ -275,17 +273,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree functionDecl)
     writeTripleLinkId(callableUnitId, name);
 
     std::string sourceFile(DECL_SOURCE_FILE(functionDecl));
-    if (sourceFile == mCompilationFile.string())
-    {
-        writeTripleContains(KdmElementId_CompilationUnit, callableUnitId);
-    }
-    else
-    {
-        writeTripleContains(KdmElementId_ClassSharedUnit, callableUnitId);
-    }
+    long unitId = (sourceFile == mCompilationFile.string()) ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit;
+    writeTripleContains(unitId, callableUnitId);
 
     long signatureId = writeSignature(functionDecl);
     writeTripleContains(callableUnitId, signatureId);
+
+
 }
 
 long KdmTripleWriter::writeSignatureDeclaration(tree functionDecl)

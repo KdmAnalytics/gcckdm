@@ -18,14 +18,28 @@
 
 namespace
 {
+//If a AST node doesn't have a name use this name
 std::string const unamedNode("<unnamed>");
 
+/**
+ * Returns the name of the given node or the value of unnamedNode
+ *
+ * @param node the node to query for it's name
+ *
+ * @return the name of the given node or the value of unnamedNode
+ */
 std::string nodeName(tree node)
 {
     std::string name(gcckdm::treeNodeNameString(node));
     return name.empty() ? unamedNode : name;
 }
 
+/**
+ * True if the given AST node is an annoymous struct
+ *
+ * @param t the node to test
+ * @return true if t is an annoymous struct
+ */
 bool isAnonymousStruct(tree t)
 {
     tree name = TYPE_NAME (t);
@@ -272,31 +286,6 @@ void KdmTripleWriter::writeKdmCallableUnit(tree functionDecl)
 
     long signatureId = writeSignature(functionDecl);
     writeTripleContains(callableUnitId, signatureId);
-
-    //    long signatureId = ++mKdmElementId;
-    //    writeTripleKdmType(signatureId, KdmType::Signature());
-    //    writeTripleName(signatureId, name);
-    //    writeTripleContains(callableUnitId, signatureId);
-    //
-    //    //Determine return type id
-    //    tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
-    //    tree t2(TYPE_MAIN_VARIANT(t));
-    //    long paramId = writeKdmReturnParameterUnit(t2);
-    //    writeTripleContains(signatureId, paramId);
-    //
-    //    //Iterator through argument list
-    //    tree arg(DECL_ARGUMENTS (functionDecl));
-    //    tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
-    //    while (argType && (argType != void_list_node))
-    //    {
-    //        long refId = writeKdmParameterUnit(arg);
-    //        writeTripleContains(signatureId, refId);
-    //        if (arg)
-    //        {
-    //            arg = TREE_CHAIN (arg);
-    //        }
-    //        argType = TREE_CHAIN (argType);
-    //    }
 }
 
 long KdmTripleWriter::writeSignatureDeclaration(tree functionDecl)

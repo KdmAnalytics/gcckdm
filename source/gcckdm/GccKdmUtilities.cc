@@ -144,21 +144,7 @@ std::string getAstNodeName(tree node)
             }
             case TREE_LIST:
             {
-//                while (node && node != error_mark_node)
-//                {
-//                    if (TREE_PURPOSE (node))
-//                    {
-//                        nameStr = getAstNodeName(TREE_PURPOSE (node));
-//                    }
-//                    nameStr += " " + getAstNodeName(TREE_VALUE (node));
-                    nameStr += getAstNodeName(TREE_VALUE (node));
-//                    node = TREE_CHAIN (node);
-//                    if (node && TREE_CODE (node) == TREE_LIST)
-//                    {
-//                        nameStr += ", ";
-//                    }
-//                }
-
+                nameStr += getAstNodeName(TREE_VALUE (node));
                 break;
             }
             case VOID_TYPE:
@@ -267,7 +253,7 @@ std::string getAstNodeName(tree node)
                 }
                 else
                 {
-                    nameStr += " <T." + boost::lexical_cast<std::string>(TYPE_UID (node)) +">";
+                    nameStr += " <T." + boost::lexical_cast<std::string>(TYPE_UID (node)) + ">";
                 }
                 nameStr += getAstFunctionDeclarationName(node);
                 break;
@@ -275,15 +261,6 @@ std::string getAstNodeName(tree node)
             case RECORD_TYPE:
             case UNION_TYPE:
             {
-//                if (TREE_CODE (node) == RECORD_TYPE)
-//                {
-//                    nameStr = "struct ";
-//                }
-//                else if (TREE_CODE (node) == UNION_TYPE)
-//                {
-//                    nameStr = "union ";
-//                }
-
                 if (TYPE_NAME(node))
                 {
                     nameStr += getAstNodeName(TYPE_NAME(node));
@@ -299,67 +276,5 @@ std::string getAstNodeName(tree node)
     }
     return nameStr;
 }
-
-//std::string treeNodeNameString(tree node)
-//{
-//    if (node != NULL_TREE)
-//    {
-//        std::string nameStr;
-//        switch(TREE_CODE(node))
-//        {
-//            case IDENTIFIER_NODE:
-//            {
-//                nameStr = IDENTIFIER_POINTER(node);
-//                break;
-//            }
-//            default:
-//            {
-//                std::cerr << "treeNodeNameString not implemented yet" std::<<endl;
-//            }
-//
-//        }
-//    }
-//}
-//
-//
-//std::string treeNodeDeclName(tree node)
-//{
-//    if (DECL_NAME(node))
-//    {
-//var
-//    }
-//}
-//
-//std::string get
-
-
-//std::string const treeNodeNameString(tree node)
-//{
-//    return DECL_P(node) ? declNameString(node) : typeNameString(node);
-//}
-//
-//std::string const declNameString(tree decl)
-//{
-//    std::string nameStr("");
-//    if (decl)
-//    {
-//        tree aName = DECL_P(decl) ? DECL_NAME(decl) : decl;
-//        if (aName)
-//        {
-//            nameStr = IDENTIFIER_POINTER(aName);
-//        }
-//    }
-//    return nameStr;
-//}
-//
-//std::string const typeNameString(tree type)
-//{
-//    std::string nameStr("");
-//    if (type && TYPE_P(type))
-//    {
-//        nameStr = declNameString(TYPE_NAME(type));
-//    }
-//    return nameStr;
-//}
 
 } // namespace gcckdm

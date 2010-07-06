@@ -108,7 +108,7 @@ private:
     long writeKdmSignature(tree function);
     long writeKdmSignatureDeclaration(tree functionDecl);
     long writeKdmSignatureType(tree functionType);
-
+    long writeKdmSourceRef(tree var);
 
     void processGimpleSequence(tree parent, gimple_seq gs);
     void processGimpleStatement(tree parent, gimple gs);
@@ -140,13 +140,10 @@ private:
     long mKdmElementId;     /// The current element id, incremented for each new element
 
     AstNodeReferenceMap mReferencedNodes;
-    //AstNodeReferenceMap mProcessedNodes;
     AstNodeReferenceMap mReferencedSharedUnits;
     boost::filesystem::path  mCompilationFile;
 
     TreeSet mProcessedNodes;
-//    TreeSet mDeclarationNodes;
-//    TreeSet mTypeNodes;
 };
 
 } // namespace kdmtriplewriter

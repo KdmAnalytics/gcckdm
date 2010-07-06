@@ -31,12 +31,6 @@ std::string const unamedNode("<unnamed>");
  */
 std::string nodeName(tree node)
 {
-//    std::cerr << "GCC:";
-//    debug_generic_stmt(node);
-//    std::cerr << "Mine:" << gcckdm::getAstNodeName(node) << std::endl;
-//    std::string name(gcckdm::treeNodeNameString(node));
-//    long uid = static_cast<long>(DECL_P(node) ? DECL_UID(node) : TYPE_UID(node));
-//    return name.empty() ? boost::lexical_cast<std::string>(uid) : name;
     return gcckdm::getAstNodeName(node);
 }
 

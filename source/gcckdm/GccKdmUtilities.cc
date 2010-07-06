@@ -333,33 +333,33 @@ std::string getAstNodeName(tree node)
 //std::string get
 
 
-std::string const treeNodeNameString(tree node)
-{
-    return DECL_P(node) ? declNameString(node) : typeNameString(node);
-}
-
-std::string const declNameString(tree decl)
-{
-    std::string nameStr("");
-    if (decl)
-    {
-        tree aName = DECL_P(decl) ? DECL_NAME(decl) : decl;
-        if (aName)
-        {
-            nameStr = IDENTIFIER_POINTER(aName);
-        }
-    }
-    return nameStr;
-}
-
-std::string const typeNameString(tree type)
-{
-    std::string nameStr("");
-    if (type && TYPE_P(type))
-    {
-        nameStr = declNameString(TYPE_NAME(type));
-    }
-    return nameStr;
-}
+//std::string const treeNodeNameString(tree node)
+//{
+//    return DECL_P(node) ? declNameString(node) : typeNameString(node);
+//}
+//
+//std::string const declNameString(tree decl)
+//{
+//    std::string nameStr("");
+//    if (decl)
+//    {
+//        tree aName = DECL_P(decl) ? DECL_NAME(decl) : decl;
+//        if (aName)
+//        {
+//            nameStr = IDENTIFIER_POINTER(aName);
+//        }
+//    }
+//    return nameStr;
+//}
+//
+//std::string const typeNameString(tree type)
+//{
+//    std::string nameStr("");
+//    if (type && TYPE_P(type))
+//    {
+//        nameStr = declNameString(TYPE_NAME(type));
+//    }
+//    return nameStr;
+//}
 
 } // namespace gcckdm

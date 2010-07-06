@@ -62,7 +62,7 @@ std::string getAstDeclarationNodeName(tree node)
 
 std::string getAstFunctionDeclarationName(tree node)
 {
-    std::string declStr("(");
+    std::string declStr = "(";
     bool wroteFlag = false;
 
     tree arg;
@@ -81,7 +81,7 @@ std::string getAstFunctionDeclarationName(tree node)
     }
     if (!wroteFlag)
     {
-        declStr = "void";
+        declStr += "void";
     }
     declStr += ")";
     return declStr;
@@ -211,7 +211,7 @@ std::string getAstNodeName(tree node)
                     }
                     else
                     {
-                        nameStr += boost::lexical_cast<std::string>(TYPE_UID(node));
+                        nameStr += " <T." + boost::lexical_cast<std::string>(TYPE_UID(node)) + ">";
                     }
                     nameStr += ")";
                     nameStr += getAstFunctionDeclarationName(fNode);
@@ -267,9 +267,27 @@ std::string getAstNodeName(tree node)
                 }
                 else
                 {
-                    nameStr += " " + boost::lexical_cast<std::string>(TYPE_UID (node));
+                    nameStr += " <T." + boost::lexical_cast<std::string>(TYPE_UID (node)) +">";
                 }
                 nameStr += getAstFunctionDeclarationName(node);
+                break;
+            }
+            case RECORD_TYPE:
+            case UNION_TYPE:
+            {
+//                if (TREE_CODE (node) == RECORD_TYPE)
+//                {
+//                    nameStr = "struct ";
+//                }
+//                else if (TREE_CODE (node) == UNION_TYPE)
+//                {
+//                    nameStr = "union ";
+//                }
+
+                if (TYPE_NAME(node))
+                {
+                    nameStr += getAstNodeName(TYPE_NAME(node));
+                }
                 break;
             }
             default:

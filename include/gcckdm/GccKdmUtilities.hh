@@ -13,6 +13,8 @@ namespace gcckdm
 
 
 
+std::string getAstNodeName(tree node);
+
 
 /**
  * Returns true if the location <code>loc</code> is a known location

@@ -12,6 +12,7 @@
 
 #include "boost/filesystem/fstream.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "boost/lexical_cast.hpp"
 
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
@@ -30,8 +31,13 @@ std::string const unamedNode("<unnamed>");
  */
 std::string nodeName(tree node)
 {
-    std::string name(gcckdm::treeNodeNameString(node));
-    return name.empty() ? unamedNode : name;
+//    std::cerr << "GCC:";
+//    debug_generic_stmt(node);
+//    std::cerr << "Mine:" << gcckdm::getAstNodeName(node) << std::endl;
+//    std::string name(gcckdm::treeNodeNameString(node));
+//    long uid = static_cast<long>(DECL_P(node) ? DECL_UID(node) : TYPE_UID(node));
+//    return name.empty() ? boost::lexical_cast<std::string>(uid) : name;
+    return gcckdm::getAstNodeName(node);
 }
 
 /**
@@ -286,7 +292,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree functionDecl)
         for (gimple_stmt_iterator i = gsi_start(seq); !gsi_end_p(i); gsi_next(&i))
         {
             gimple gs = gsi_stmt(i);
-            processGimpleStatement(gs);
+            processGimpleStatement(functionDecl, gs);
         }
     }
 }
@@ -693,8 +699,10 @@ void gimple_not_implemented_yet(gimple gs)
     std::cerr << "Unknown GIMPLE statement: " << gimple_code_name[static_cast<int>(gimple_code(gs))] << std::endl;
 }
 
-void KdmTripleWriter::processGimpleStatement(gimple gs)
+void KdmTripleWriter::processGimpleStatement(tree parent, gimple gs)
 {
+
+    std::cerr << "================GIMPLE START==========================\n";
     if (gs)
     {
         switch (gimple_code(gs))
@@ -711,8 +719,8 @@ void KdmTripleWriter::processGimpleStatement(gimple gs)
             }
             case GIMPLE_BIND:
             {
+                processGimpleBindStatement(parent, gs);
                 //debug_gimple_stmt(gs);
-                //gimple_not_implemented_yet(gs);
                 break;
             }
             case GIMPLE_CALL:
@@ -865,6 +873,20 @@ void KdmTripleWriter::processGimpleStatement(gimple gs)
 
         }
 
+    }
+    std::cerr << "================GIMPLE END==========================\n";
+
+}
+
+void KdmTripleWriter::processGimpleBindStatement(tree parent, gimple gs)
+{
+    tree var;
+    for (var = gimple_bind_vars (gs); var; var = TREE_CHAIN (var))
+    {
+        long declId = getReferenceId(var);
+
+        processAstDeclarationNode(var);
+        writeTripleContains(getReferenceId(parent), declId);
     }
 }
 

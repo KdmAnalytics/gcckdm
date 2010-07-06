@@ -299,12 +299,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree functionDecl)
     if (gimple_has_body_p(functionDecl))
     {
         gimple_seq seq = gimple_body(functionDecl);
-
-        for (gimple_stmt_iterator i = gsi_start(seq); !gsi_end_p(i); gsi_next(&i))
-        {
-            gimple gs = gsi_stmt(i);
-            processGimpleStatement(functionDecl, gs);
-        }
+        processGimpleSequence(functionDecl, seq);
     }
 }
 
@@ -708,7 +703,18 @@ void KdmTripleWriter::writeKdmSharedUnit(tree file)
 void gimple_not_implemented_yet(gimple gs)
 {
     std::cerr << "Unknown GIMPLE statement: " << gimple_code_name[static_cast<int>(gimple_code(gs))] << std::endl;
+    print_gimple_stmt(stderr, gs, 0, 0);
 }
+
+void KdmTripleWriter::processGimpleSequence(tree parent, gimple_seq seq)
+{
+    for (gimple_stmt_iterator i = gsi_start(seq); !gsi_end_p(i); gsi_next(&i))
+    {
+        gimple gs = gsi_stmt(i);
+        processGimpleStatement(parent, gs);
+    }
+}
+
 
 void KdmTripleWriter::processGimpleStatement(tree parent, gimple gs)
 {
@@ -726,6 +732,7 @@ void KdmTripleWriter::processGimpleStatement(tree parent, gimple gs)
             case GIMPLE_ASSIGN:
             {
                 gimple_not_implemented_yet(gs);
+                //processGimpleAssignStatement(parent, gs);
                 break;
             }
             case GIMPLE_BIND:
@@ -895,12 +902,18 @@ void KdmTripleWriter::processGimpleBindStatement(tree parent, gimple gs)
     for (var = gimple_bind_vars (gs); var; var = TREE_CHAIN (var))
     {
         long declId = getReferenceId(var);
-        processAstDeclarationNode(var);
-        mProcessedNodes.insert(var);
+        processAstNode(var);
         writeTripleContains(getReferenceId(parent), declId);
     }
+
+    processGimpleSequence(parent, gimple_bind_body(gs));
 }
 
+
+void KdmTripleWriter::processGimpleAssignStatement(tree parent, gimple gs)
+{
+
+}
 
 } // namespace kdmtriplewriter
 

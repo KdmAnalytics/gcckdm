@@ -110,8 +110,10 @@ private:
     long writeKdmSignatureType(tree functionType);
 
 
+    void processGimpleSequence(tree parent, gimple_seq gs);
     void processGimpleStatement(tree parent, gimple gs);
     void processGimpleBindStatement(tree parent, gimple gs);
+    void processGimpleAssignStatement(tree parent, gimple gs);
 
     void writeTripleKdmType(long const subject, KdmType const & object);
     void writeTripleName(long const subject, std::string const & name);

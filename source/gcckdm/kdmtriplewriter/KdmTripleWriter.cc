@@ -896,6 +896,7 @@ void KdmTripleWriter::processGimpleBindStatement(tree parent, gimple gs)
     {
         long declId = getReferenceId(var);
         processAstDeclarationNode(var);
+        mProcessedNodes.insert(var);
         writeTripleContains(getReferenceId(parent), declId);
     }
 }

@@ -274,7 +274,7 @@ std::string getAstNodeName(tree node)
             }
             default:
             {
-                std::cerr << "treeNodeNameString not implemented yet: " << tree_code_name[TREE_CODE(node)] << std::endl;
+                std::cerr << "gcckdm::getAstNodeName() not implemented yet: " << tree_code_name[TREE_CODE(node)] << std::endl;
             }
 
         }

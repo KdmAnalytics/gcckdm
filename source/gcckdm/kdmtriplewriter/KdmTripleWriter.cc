@@ -142,6 +142,11 @@ void KdmTripleWriter::processAstNode(tree ast)
         processAstDeclarationNode(ast);
         mProcessedNodes.insert(ast);
     }
+    else if (treeCode == TREE_LIST)
+    {
+        //Not implemented yet but put here to prevent breakage
+        mProcessedNodes.insert(ast);
+    }
     else if (TYPE_P(ast))
     {
         processAstTypeNode(ast);
@@ -149,7 +154,8 @@ void KdmTripleWriter::processAstNode(tree ast)
     }
     else
     {
-        std::cerr << "unsupported AST Node " << tree_code_name[treeCode] << std::endl;
+        std::cerr << "KdmTripleWriter: unsupported AST Node " << tree_code_name[treeCode] << std::endl;
+        mProcessedNodes.insert(ast);
     }
 }
 
@@ -178,9 +184,14 @@ void KdmTripleWriter::processAstDeclarationNode(tree decl)
                 processAstFieldDeclarationNode(decl);
                 break;
             }
+            case PARM_DECL:
+            {
+                //Not implemented yet but put here to prevent breakage
+                break;
+            }
             default:
             {
-                std::cerr << "unsupported declaration node: " << tree_code_name[treeCode] << std::endl;
+                std::cerr << "KdmTripleWriter: unsupported declaration node: " << tree_code_name[treeCode] << std::endl;
             }
         }
     }
@@ -470,7 +481,7 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree param)
 
 long KdmTripleWriter::writeKdmParameterUnit(tree param)
 {
-    long parameterUnitId(++mKdmElementId);
+    long parameterUnitId = getReferenceId(param);
     writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
 
     tree type = TREE_TYPE(param) ? TYPE_MAIN_VARIANT(TREE_TYPE(param)): TREE_VALUE (param);
@@ -485,7 +496,7 @@ long KdmTripleWriter::writeKdmParameterUnit(tree param)
 
 long KdmTripleWriter::writeKdmItemUnit(tree item)
 {
-    long itemId(++mKdmElementId);
+    long itemId = getReferenceId(item);
     writeTripleKdmType(itemId, KdmType::ItemUnit());
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
     long ref = getReferenceId(type);
@@ -498,7 +509,7 @@ long KdmTripleWriter::writeKdmItemUnit(tree item)
 
 long KdmTripleWriter::writeKdmStorableUnit(tree var)
 {
-    long unitId(++mKdmElementId);
+    long unitId = getReferenceId(var);
     writeTripleKdmType(unitId, KdmType::StorableUnit());
     writeTripleName(unitId, nodeName(var));
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(var)));
@@ -884,7 +895,6 @@ void KdmTripleWriter::processGimpleBindStatement(tree parent, gimple gs)
     for (var = gimple_bind_vars (gs); var; var = TREE_CHAIN (var))
     {
         long declId = getReferenceId(var);
-
         processAstDeclarationNode(var);
         writeTripleContains(getReferenceId(parent), declId);
     }

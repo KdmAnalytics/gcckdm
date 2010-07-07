@@ -47,6 +47,8 @@ private:
         //Source Group
         KdmType_InventoryModel,
         KdmType_SourceFile,
+        KdmType_SourceRef,
+        KdmType_SourceRegion,
 
 
         //Action Group
@@ -91,6 +93,8 @@ public:
     //Source Group
     static const KdmType InventoryModel() { return KdmType(KdmType_InventoryModel, "source/InventoryModel");}
     static const KdmType SourceFile() { return KdmType(KdmType_SourceFile, "source/SourceFile");}
+    static const KdmType SourceRef() { return KdmType(KdmType_SourceRef, "source/SourceRef");}
+    static const KdmType SourceRegion() { return KdmType(KdmType_SourceRegion, "source/SourceRegion");}
 
     //Action Group
     static const KdmType ActionElement() { return KdmType(KdmType_ActionElement, "action/ActionElement");}

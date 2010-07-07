@@ -8,6 +8,9 @@
 #ifndef GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 #define GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 
+//#include <map>
+//#include <set>
+#include <queue>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include <iostream>
@@ -18,12 +21,14 @@
 #include "gcckdm/GccKdmUtilities.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/KdmType.hh"
+#include "gcckdm/kdmtriplewriter/PathHash.hh"
 
 namespace gcckdm
 {
 
 namespace kdmtriplewriter
 {
+
 
 /**
  * This class traverses the Gcc AST nodes passed to it and writes their KDM
@@ -33,6 +38,7 @@ class KdmTripleWriter: public GccKdmWriter
 {
 public:
     typedef boost::shared_ptr<std::ostream> KdmSinkPtr;
+    typedef boost::filesystem::path Path;
 
     explicit KdmTripleWriter(KdmSinkPtr const & kdmSink);
     explicit KdmTripleWriter(boost::filesystem::path const & filename);
@@ -47,8 +53,15 @@ public:
     static const int KdmTripleVersion = 1;
 
 private:
-    typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
+    typedef std::tr1::unordered_map<tree, long> TreeMap;
+    typedef std::tr1::unordered_map<Path, long> FileMap;
     typedef std::tr1::unordered_set<tree> TreeSet;
+    typedef std::queue<tree> TreeQueue;
+
+    //    typedef std::map<tree, long> AstNodeReferenceMap;
+//    typedef std::map<tree, long> TreeMap;
+//    typedef std::set<tree> TreeSet;
+//    typedef std::map<boost::filesystem::path, long> FileMap;
 
     long getSourceFileReferenceId(tree decl);
 
@@ -93,8 +106,8 @@ private:
      *
      * @param file the file to use to populate the SourceFile kdm element
      */
-    void writeKdmSourceFile(boost::filesystem::path const & file);
-    void writeKdmCompilationUnit(boost::filesystem::path const & file);
+    void writeKdmSourceFile(Path const & file);
+    void writeKdmCompilationUnit(Path const & file);
     void writeKdmCallableUnit(tree functionDecl);
     long writeKdmReturnParameterUnit(tree param);
     long writeKdmParameterUnit(tree param);
@@ -108,7 +121,7 @@ private:
     long writeKdmSignature(tree function);
     long writeKdmSignatureDeclaration(tree functionDecl);
     long writeKdmSignatureType(tree functionType);
-    long writeKdmSourceRef(tree var);
+    long writeKdmSourceRef(long id,tree var);
 
     void processGimpleSequence(tree parent, gimple_seq gs);
     void processGimpleStatement(tree parent, gimple gs);
@@ -139,11 +152,13 @@ private:
     KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
     long mKdmElementId;     /// The current element id, incremented for each new element
 
-    AstNodeReferenceMap mReferencedNodes;
-    AstNodeReferenceMap mReferencedSharedUnits;
+    TreeMap mReferencedNodes;
+    TreeMap mReferencedSharedUnits;
     boost::filesystem::path  mCompilationFile;
+    FileMap mInventoryMap;
 
     TreeSet mProcessedNodes;
+    TreeQueue mNodeQueue;
 };
 
 } // namespace kdmtriplewriter

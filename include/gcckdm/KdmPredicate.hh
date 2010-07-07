@@ -27,6 +27,7 @@ private:
         KdmPredicate_To,
         KdmPredicate_Path,
         KdmPredicate_LinkId,
+        KdmPredicate_SourceRef,
         KdmPredicate_Uid,
         KdmPredicate_LastUid,
    };
@@ -40,6 +41,7 @@ public:
     static const KdmPredicate From() { return KdmPredicate(KdmPredicate_From, "from");}
     static const KdmPredicate To() { return KdmPredicate(KdmPredicate_To, "to");}
     static const KdmPredicate Path() { return KdmPredicate(KdmPredicate_Path, "path");}
+    static const KdmPredicate SourceRef() { return KdmPredicate(KdmPredicate_SourceRef, "SourceRef");}
 
     static const KdmPredicate LinkId() { return KdmPredicate(KdmPredicate_LinkId, "link::id");}
     static const KdmPredicate Uid() { return KdmPredicate(KdmPredicate_Uid, "UID");}

@@ -204,18 +204,11 @@ extern "C" unsigned int executeKdmGimplePass()
 
     if (!errorcount && !sorrycount)
     {
-        //    std::cerr << "======================start executeKdmGimplePass========================" << std::endl;
         boost::filesystem::path filename(main_input_filename);
         kdmWriter->startTranslationUnit(boost::filesystem::complete(filename));
-
         kdmWriter->startKdmGimplePass();
-        //    if (global_namespace)
-        //    {
-        //        kdmWriter->processAstNode(global_namespace);
-        //    }
         kdmWriter->processAstNode(current_function_decl);
         kdmWriter->finishKdmGimplePass();
-        //    std::cerr << "======================end executeKdmGimplePass========================" << std::endl;
     }
     return retValue;
 }
@@ -224,6 +217,7 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
 {
     if (!errorcount && !sorrycount)
     {
+
         tree t;
         for (int i = 0; treeQueueVec && VEC_iterate (tree, treeQueueVec, i, t); ++i)
         {

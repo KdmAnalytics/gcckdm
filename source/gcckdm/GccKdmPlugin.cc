@@ -12,7 +12,6 @@
 #include "gcckdm/utilities/null_deleter.hpp"
 #include "boost/filesystem/operations.hpp"
 
-
 /**
  * Have to define this to ensure that GCC is able to play nice with our plugin
  */
@@ -70,60 +69,65 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
     //Recommended version check
     if (plugin_default_version_check(version, &gcc_version))
     {
-        // Process any plugin arguments
-        int argc = plugin_info->argc;
-        struct plugin_argument *argv = plugin_info->argv;
-
-        for (int i = 0; i < argc; ++i)
+        if (!std::string(gcc_version.basever).empty())
         {
-            std::string key(argv[i].key);
-            if (key == "output")
+            // Process any plugin arguments
+            int argc = plugin_info->argc;
+            struct plugin_argument *argv = plugin_info->argv;
+
+            for (int i = 0; i < argc; ++i)
             {
-                gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink;
-                std::string value(argv[i].value);
-                if (value == "stdout")
+                std::string key(argv[i].key);
+                if (key == "output")
                 {
-                    kdmSink.reset(&std::cout, null_deleter());
-                }
-                else if (value == "stderr")
-                {
-                    kdmSink.reset(&std::cout, null_deleter());
-                }
-                else if (value == "file")
-                {
-                    //this is the default... handled below
+                    gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink;
+                    std::string value(argv[i].value);
+                    if (value == "stdout")
+                    {
+                        kdmSink.reset(&std::cout, null_deleter());
+                    }
+                    else if (value == "stderr")
+                    {
+                        kdmSink.reset(&std::cout, null_deleter());
+                    }
+                    else if (value == "file")
+                    {
+                        //this is the default... handled below
+                    }
+                    else
+                    {
+                        warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, value.c_str());
+                        continue;
+                    }
+
+                    if (kdmSink)
+                    {
+                        kdmWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+                    }
                 }
                 else
                 {
-                    warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, value.c_str());
-                    continue;
-                }
-
-                if (kdmSink)
-                {
-                    kdmWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+                    warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, key.c_str());
                 }
             }
-            else
+
+            //default to file output
+            if (!kdmWriter)
             {
-                warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, key.c_str());
+                boost::filesystem::path filename(main_input_filename);
+                filename.replace_extension(".tkdm");
+                kdmWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
             }
+
+            //Disable assembly output
+            asm_file_name = HOST_BIT_BUCKET;
+
+            // Register callbacks.
+            //
+            registerCallbacks(plugin_info->base_name);
+
         }
 
-        //default to file output
-        if (!kdmWriter)
-        {
-            boost::filesystem::path filename(main_input_filename);
-            filename.replace_extension(".tkdm");
-            kdmWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
-        }
-
-        //Disable assembly output
-        asm_file_name = HOST_BIT_BUCKET;
-
-        // Register callbacks.
-        //
-        registerCallbacks(plugin_info->base_name);
     }
     else
     {
@@ -156,7 +160,7 @@ void registerCallbacks(char const * pluginName)
     //
     //
     // Allows access to C/C++ ASTs... called for each function
-//        register_callback(pluginName, PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
+    //        register_callback(pluginName, PLUGIN_PRE_GENERICIZE, static_cast<plugin_callback_func> (executePreGeneric), NULL);
     //
     //
     //    //    register_callback(name().c_str(), PLUGIN_ALL_IPA_PASSES_START, static_cast<plugin_callback_func> (executeGccKdm), NULL);
@@ -195,7 +199,7 @@ extern "C" void executeFinishType(void *event_data, void *data)
 
 extern "C" void executePreGeneric(void *event_data, void *data)
 {
-    kdmWriter->processAstNode(static_cast<tree>(event_data));
+    kdmWriter->processAstNode(static_cast<tree> (event_data));
 }
 
 extern "C" unsigned int executeKdmGimplePass()
@@ -232,5 +236,4 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
 }
 
 }
-
 

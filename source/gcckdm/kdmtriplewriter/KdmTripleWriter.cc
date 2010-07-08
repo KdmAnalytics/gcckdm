@@ -667,7 +667,6 @@ long KdmTripleWriter::writeKdmActionElement(gimple const gs)
         nameStr += getTernaryRhsString(gs);
     }
 
-    nameStr += getUnaryRhsString(gs);
     writeTripleName(id, nameStr);
     writeTripleLinkId(id, nodeName(gimple_assign_lhs(gs)));
     return id;

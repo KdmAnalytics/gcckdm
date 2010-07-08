@@ -16,7 +16,6 @@ struct hash<boost::filesystem::path>
     }
 };
 
-
 }  // namespace tr1
 
 }  // namespace std

@@ -11,6 +11,7 @@
 #include <boost/lexical_cast.hpp>
 #include <iostream>
 #include <sstream>
+#include <boost/format.hpp>
 
 //This is to indicated that the global namespace is not linked in
 tree global_namespace = NULL;
@@ -267,6 +268,61 @@ std::string getAstNodeName(tree node)
                 }
                 break;
             }
+            case INTEGER_CST:
+            {
+                if (TREE_CODE (TREE_TYPE (node)) == POINTER_TYPE)
+                {
+//                    pp_wide_integer (buffer, TREE_INT_CST_LOW (node));
+//                    nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % TREE_INT_CST_LOW (node));
+                }
+                else if (! host_integerp (node, 0))
+                {
+                    {
+                      tree val = node;
+                      unsigned HOST_WIDE_INT low = TREE_INT_CST_LOW (val);
+                      HOST_WIDE_INT high = TREE_INT_CST_HIGH (val);
+
+                      if (tree_int_cst_sgn (val) < 0)
+                        {
+                          nameStr += "-";
+                          high = ~high + !low;
+                          low = -low;
+                        }
+                      /* Would "%x%0*x" or "%x%*0x" get zero-padding on all
+                         systems?  */
+
+//                      nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DOUBLE_HEX) % (unsigned HOST_WIDE_INT)high % low);
+
+//                      sprintf (pp_buffer (buffer)->digit_buffer,
+//                           HOST_WIDE_INT_PRINT_DOUBLE_HEX,
+//                           (unsigned HOST_WIDE_INT) high, low);
+//                      pp_string (buffer, pp_buffer (buffer)->digit_buffer);
+                    }
+                }
+                else
+                {
+                    //nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % TREE_INT_CST_LOW (node));
+                    nameStr += boost::str(boost::format("%lld") % (long long)TREE_INT_CST_LOW (node));
+                    //printf("%lld", TREE_INT_CST_LOW (node));
+//                    char digit_buffer[128];
+//                    sprintf(foo, "%" "ll" "d", TREE_INT_CST_LOW (node));
+//                    std::cerr << foo << std::endl;
+//                   pp_wide_integer (buffer, TREE_INT_CST_LOW (node));
+//                   print_generic_expr(stderr, node, 0);
+//                    do
+//                        {
+//                          sprintf (digit_buffer, "%" "ll" "d", (long long) ((
+//                    ({  __typeof (node) const __t = (node);
+//                        if (((enum tree_code) (__t)->base.code) != (INTEGER_CST))
+//                          tree_check_failed (__t, "/home/kgirard/Workspaces/GccPluginWorkspace/kyle-gcckdm/source/gcckdm/GccKdmUtilities.cc", 314, __FUNCTION__,
+//                                 (INTEGER_CST), 0);
+//                        __t; })->int_cst.int_cst).low)); \
+//                            std::cerr << digit_buffer << std::endl;
+//                        }
+//                      while (0);
+                }
+                break;
+           }
             default:
             {
                 std::cerr << "gcckdm::getAstNodeName() not implemented yet: " << tree_code_name[TREE_CODE(node)] << std::endl;

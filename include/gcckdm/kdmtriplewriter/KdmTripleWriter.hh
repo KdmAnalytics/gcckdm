@@ -56,6 +56,8 @@ private:
     typedef std::tr1::unordered_map<tree, long> TreeMap;
     typedef std::tr1::unordered_map<Path, long> FileMap;
     typedef std::tr1::unordered_set<tree> TreeSet;
+    typedef std::tr1::unordered_map<location_t, long> LocationMap;
+
     typedef std::queue<tree> TreeQueue;
 
     //    typedef std::map<tree, long> AstNodeReferenceMap;
@@ -63,10 +65,10 @@ private:
 //    typedef std::set<tree> TreeSet;
 //    typedef std::map<boost::filesystem::path, long> FileMap;
 
-    long getSourceFileReferenceId(tree decl);
+    long getSourceFileReferenceId(tree const decl);
 
-    long getReferenceId(tree node);
-    long getSharedUnitReferenceId(tree file);
+    long getReferenceId(tree const node);
+    long getSharedUnitReferenceId(tree const file);
 
     enum
     {
@@ -83,11 +85,11 @@ private:
         KdmElementId_DefaultStart,
     };
 
-    void processAstDeclarationNode(tree decl);
-    void processAstTypeNode(tree decl);
-    void processAstFunctionDeclarationNode(tree functionDecl);
-    void processAstFieldDeclarationNode(tree fieldDecl);
-    void processAstVariableDeclarationNode(tree varDecl);
+    void processAstDeclarationNode(tree const decl);
+    void processAstTypeNode(tree const decl);
+    void processAstFunctionDeclarationNode(tree const functionDecl);
+    void processAstFieldDeclarationNode(tree const fieldDecl);
+    void processAstVariableDeclarationNode(tree const varDecl);
 
 
     void writeVersionHeader();
@@ -108,25 +110,30 @@ private:
      */
     void writeKdmSourceFile(Path const & file);
     void writeKdmCompilationUnit(Path const & file);
-    void writeKdmCallableUnit(tree functionDecl);
-    long writeKdmReturnParameterUnit(tree param);
-    long writeKdmParameterUnit(tree param);
-    void writeKdmPrimitiveType(tree type);
-    void writeKdmPointerType(tree type);
-    void writeKdmRecordType(tree type);
-    void writeKdmSharedUnit(tree file);
-    long writeKdmItemUnit(tree item);
-    void writeKdmArrayType(tree array);
-    long writeKdmStorableUnit(tree var);
-    long writeKdmSignature(tree function);
-    long writeKdmSignatureDeclaration(tree functionDecl);
-    long writeKdmSignatureType(tree functionType);
-    long writeKdmSourceRef(long id,tree var);
+    void writeKdmCallableUnit(tree const functionDecl);
+    long writeKdmReturnParameterUnit(tree const param);
+    long writeKdmParameterUnit(tree const param);
+    void writeKdmPrimitiveType(tree const type);
+    void writeKdmPointerType(tree const type);
+    void writeKdmRecordType(tree const type);
+    void writeKdmSharedUnit(tree const file);
+    long writeKdmItemUnit(tree const item);
+    void writeKdmArrayType(tree const array);
+    long writeKdmStorableUnit(tree const var);
+    long writeKdmSignature(tree const function);
+    long writeKdmSignatureDeclaration(tree const functionDecl);
+    long writeKdmSignatureType(tree const functionType);
+    long writeKdmSourceRef(long id,tree const var);
 
-    void processGimpleSequence(tree parent, gimple_seq gs);
-    void processGimpleStatement(tree parent, gimple gs);
-    void processGimpleBindStatement(tree parent, gimple gs);
-    void processGimpleAssignStatement(tree parent, gimple gs);
+    long writeKdmActionElement(gimple const gs);
+    std::string getUnaryRhsString(gimple const gs);
+    std::string getBinaryRhsString(gimple const gs);
+    std::string getTernaryRhsString(gimple const gs);
+
+    void processGimpleSequence(tree const parent, gimple_seq const gs);
+    void processGimpleStatement(tree const parent, gimple const gs);
+    void processGimpleBindStatement(tree const parent, gimple const gs);
+    void processGimpleAssignStatement(tree const parent, gimple const gs);
 
     void writeTripleKdmType(long const subject, KdmType const & object);
     void writeTripleName(long const subject, std::string const & name);
@@ -154,8 +161,9 @@ private:
 
     TreeMap mReferencedNodes;
     TreeMap mReferencedSharedUnits;
-    boost::filesystem::path  mCompilationFile;
+    Path  mCompilationFile;
     FileMap mInventoryMap;
+    LocationMap mBlockUnitMap;
 
     TreeSet mProcessedNodes;
     TreeQueue mNodeQueue;

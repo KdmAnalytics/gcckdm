@@ -124,11 +124,13 @@ private:
     long writeKdmSignatureDeclaration(tree const functionDecl);
     long writeKdmSignatureType(tree const functionType);
     long writeKdmSourceRef(long id,tree const var);
+    long writeKdmSourceRef(long id, location_t const loc);
 
     long writeKdmActionElement(gimple const gs);
     std::string getUnaryRhsString(gimple const gs);
     std::string getBinaryRhsString(gimple const gs);
     std::string getTernaryRhsString(gimple const gs);
+    long getBlockReferenceId(location_t const loc);
 
     void processGimpleSequence(tree const parent, gimple_seq const gs);
     void processGimpleStatement(tree const parent, gimple const gs);

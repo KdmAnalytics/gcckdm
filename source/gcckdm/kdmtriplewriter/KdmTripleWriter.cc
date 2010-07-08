@@ -872,7 +872,12 @@ void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 
 long KdmTripleWriter::writeKdmSourceRef(long id, const tree node)
 {
-    expanded_location eloc = expand_location(locationOf(node));
+	return writeKdmSourceRef(id, locationOf(node));
+}
+
+long KdmTripleWriter::writeKdmSourceRef(long id, const location_t loc)
+{
+    expanded_location eloc = expand_location(loc);
     Path filename(eloc.file);
     FileMap::iterator i = mInventoryMap.find(filename);
     if (i == mInventoryMap.end())
@@ -1095,15 +1100,30 @@ void KdmTripleWriter::processGimpleBindStatement(tree const parent, gimple const
     processGimpleSequence(parent, gimple_bind_body(gs));
 }
 
-void KdmTripleWriter::processGimpleAssignStatement(tree const parent, gimple const gs)
+long KdmTripleWriter::getBlockReferenceId(location_t const loc)
 {
-    LocationMap::iterator i = mBlockUnitMap.find(gimple_location(gs));
+    LocationMap::iterator i = mBlockUnitMap.find(loc);
+    long blockId;
     if (i == mBlockUnitMap.end())
     {
-        mBlockUnitMap.insert(std::make_pair(gimple_location(gs), ++mKdmElementId));
+    	blockId = ++mKdmElementId;
+        mBlockUnitMap.insert(std::make_pair(loc, blockId));
+        writeTripleKdmType(blockId, KdmType::BlockUnit());
+        long srcId = writeKdmSourceRef(blockId, loc);
+        writeTripleContains(blockId, srcId);
     }
+    else
+    {
+    	blockId = i->second;
+    }
+    return blockId;
+}
 
-    writeKdmActionElement(gs);
+void KdmTripleWriter::processGimpleAssignStatement(tree const parent, gimple const gs)
+{
+	long blockId = getBlockReferenceId(gimple_location(gs));
+    long actionId = writeKdmActionElement(gs);
+    writeTripleContains(blockId, actionId);
 }
 
 } // namespace kdmtriplewriter

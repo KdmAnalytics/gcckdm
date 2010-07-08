@@ -16,9 +16,21 @@ struct hash<boost::filesystem::path>
     }
 };
 
+
+
 }  // namespace tr1
 
 }  // namespace std
+
+struct location_equal
+{
+	bool operator()(location_t const rhs, location_t const lhs) const
+	{
+		expanded_location rhs2 = expand_location(rhs);
+		expanded_location lhs2 = expand_location(lhs);
+		return (std::string(rhs2.file) == std::string(lhs2.file)) && (rhs2.line == lhs2.line);
+	}
+};
 
 
 #endif

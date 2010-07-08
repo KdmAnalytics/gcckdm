@@ -56,7 +56,7 @@ private:
     typedef std::tr1::unordered_map<tree, long> TreeMap;
     typedef std::tr1::unordered_map<Path, long> FileMap;
     typedef std::tr1::unordered_set<tree> TreeSet;
-    typedef std::tr1::unordered_map<location_t, long> LocationMap;
+    typedef std::tr1::unordered_map<location_t, long, std::tr1::hash<location_t>, location_equal> LocationMap;
 
     typedef std::queue<tree> TreeQueue;
 

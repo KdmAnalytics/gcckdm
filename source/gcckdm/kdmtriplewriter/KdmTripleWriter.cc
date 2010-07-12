@@ -872,12 +872,11 @@ void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 
 long KdmTripleWriter::writeKdmSourceRef(long id, const tree node)
 {
-	return writeKdmSourceRef(id, locationOf(node));
+	return writeKdmSourceRef(id, expand_location(locationOf(node)));
 }
 
-long KdmTripleWriter::writeKdmSourceRef(long id, const location_t loc)
+long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
 {
-    expanded_location eloc = expand_location(loc);
     Path filename(eloc.file);
     FileMap::iterator i = mInventoryMap.find(filename);
     if (i == mInventoryMap.end())
@@ -1102,14 +1101,15 @@ void KdmTripleWriter::processGimpleBindStatement(tree const parent, gimple const
 
 long KdmTripleWriter::getBlockReferenceId(location_t const loc)
 {
-    LocationMap::iterator i = mBlockUnitMap.find(loc);
+	expanded_location xloc = expand_location(loc);
+    LocationMap::iterator i = mBlockUnitMap.find(xloc);
     long blockId;
     if (i == mBlockUnitMap.end())
     {
     	blockId = ++mKdmElementId;
-        mBlockUnitMap.insert(std::make_pair(loc, blockId));
+        mBlockUnitMap.insert(std::make_pair(xloc, blockId));
         writeTripleKdmType(blockId, KdmType::BlockUnit());
-        long srcId = writeKdmSourceRef(blockId, loc);
+        long srcId = writeKdmSourceRef(blockId, xloc);
         writeTripleContains(blockId, srcId);
     }
     else

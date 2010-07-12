@@ -56,7 +56,7 @@ private:
     typedef std::tr1::unordered_map<tree, long> TreeMap;
     typedef std::tr1::unordered_map<Path, long> FileMap;
     typedef std::tr1::unordered_set<tree> TreeSet;
-    typedef std::tr1::unordered_map<location_t, long, std::tr1::hash<location_t>, location_equal> LocationMap;
+    typedef std::tr1::unordered_map<expanded_location, long, std::tr1::hash<expanded_location>, location_equal> LocationMap;
 
     typedef std::queue<tree> TreeQueue;
 
@@ -124,7 +124,7 @@ private:
     long writeKdmSignatureDeclaration(tree const functionDecl);
     long writeKdmSignatureType(tree const functionType);
     long writeKdmSourceRef(long id,tree const var);
-    long writeKdmSourceRef(long id, location_t const loc);
+    long writeKdmSourceRef(long id, expanded_location const & xloc);
 
     long writeKdmActionElement(gimple const gs);
     std::string getUnaryRhsString(gimple const gs);

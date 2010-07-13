@@ -19,6 +19,8 @@ class GccAstListener
 public:
     typedef boost::filesystem::path Path;
 
+    virtual ~GccAstListener(){};
+
     virtual void startTranslationUnit(Path const & filename) = 0;
     virtual void startKdmGimplePass() = 0;
     virtual void finishKdmGimplePass() = 0;

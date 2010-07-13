@@ -17,15 +17,12 @@ namespace gcckdm
 class GccKdmWriter
 {
 public:
-    virtual void startTranslationUnit(boost::filesystem::path const & filename) = 0;
+    typedef boost::filesystem::path Path;
 
+    virtual void startTranslationUnit(Path const & filename) = 0;
     virtual void startKdmGimplePass() = 0;
     virtual void finishKdmGimplePass() = 0;
-
-    //virtual void writeCallableUnit(tree functionDecl) = 0;
-
-    virtual void processAstNode(tree ast) = 0;
-
+    virtual void processAstNode(tree const ast) = 0;
     virtual void finishTranslationUnit() = 0;
 };
 

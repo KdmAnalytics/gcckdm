@@ -103,6 +103,7 @@ bool locationIsUnknown(location_t loc) {
 	return !memcmp(&loc, &unk, sizeof(location_t));
 }
 
+
 std::string const locationString(location_t loc) {
 	if (locationIsUnknown(loc)) {
 		return "";
@@ -112,6 +113,7 @@ std::string const locationString(location_t loc) {
 	str << eloc.file << ":" << eloc.line << ":" << eloc.column;
 	return str.str();
 }
+
 
 std::string getAstNodeName(tree node) {
 	std::string nameStr("");

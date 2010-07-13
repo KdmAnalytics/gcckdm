@@ -8,11 +8,14 @@
 #ifndef GCCKDM_GCCKDMUTILITIES_HH_
 #define GCCKDM_GCCKDMUTILITIES_HH_
 
+#include <string>
+
 namespace gcckdm
 {
 
-
-
+/**
+ * Return the name of the given node
+ */
 std::string getAstNodeName(tree node);
 
 

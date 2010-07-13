@@ -16,6 +16,7 @@
 
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
+#include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 
 namespace
 {
@@ -59,12 +60,13 @@ namespace kdmtriplewriter
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
     mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
 {
-
+    mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
-KdmTripleWriter::KdmTripleWriter(boost::filesystem::path const & filename) :
+KdmTripleWriter::KdmTripleWriter(Path const & filename) :
     mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
+    mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
 KdmTripleWriter::~KdmTripleWriter()
@@ -72,7 +74,7 @@ KdmTripleWriter::~KdmTripleWriter()
     mKdmSink->flush();
 }
 
-void KdmTripleWriter::startTranslationUnit(boost::filesystem::path const & file)
+void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
     mCompilationFile = file;
     writeVersionHeader();
@@ -273,7 +275,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     if (gimple_has_body_p(functionDecl))
     {
         gimple_seq seq = gimple_body(functionDecl);
-        processGimpleSequence(functionDecl, seq);
+        mGimpleWriter->processGimpleSequence(functionDecl, seq);
     }
 }
 
@@ -421,7 +423,7 @@ void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & 
     writeTriple(subject, KdmPredicate::LinkId(), name);
 }
 
-void KdmTripleWriter::writeKdmSourceFile(boost::filesystem::path const & file)
+void KdmTripleWriter::writeKdmSourceFile(Path const & file)
 {
     writeTripleKdmType(++mKdmElementId, KdmType::SourceFile());
     writeTripleName(mKdmElementId, file.filename());
@@ -433,7 +435,7 @@ void KdmTripleWriter::writeKdmSourceFile(boost::filesystem::path const & file)
     mInventoryMap.insert(std::make_pair(file, mKdmElementId));
 }
 
-void KdmTripleWriter::writeKdmCompilationUnit(boost::filesystem::path const & file)
+void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
 {
     writeTripleKdmType(++mKdmElementId, KdmType::CompilationUnit());
     writeTripleName(mKdmElementId, file.filename());
@@ -492,185 +494,44 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var)
     return unitId;
 }
 
-std::string KdmTripleWriter::getUnaryRhsString(gimple const gs)
-{
-    std::string rhsString("");
 
-    enum tree_code rhs_code = gimple_assign_rhs_code(gs);
-    tree lhs = gimple_assign_lhs(gs);
-    tree rhs = gimple_assign_rhs1(gs);
-
-    switch (rhs_code)
-    {
-        case VIEW_CONVERT_EXPR:
-        case ASSERT_EXPR:
-            rhsString += nodeName(rhs);
-            break;
-
-        case FIXED_CONVERT_EXPR:
-        case ADDR_SPACE_CONVERT_EXPR:
-        case FIX_TRUNC_EXPR:
-        case FLOAT_EXPR:
-        CASE_CONVERT
-        :
-            rhsString += "(" + nodeName(TREE_TYPE(lhs)) + ") ";
-            if (op_prio(rhs) < op_code_prio(rhs_code))
-            {
-                rhsString += "(" + nodeName(rhs) + ")";
-            }
-            else
-                rhsString += nodeName(rhs);
-            break;
-
-        case PAREN_EXPR:
-            rhsString += "((" + nodeName(rhs) + "))";
-            break;
-
-        case ABS_EXPR:
-            rhsString += "ABS_EXPR <" + nodeName(rhs) + ">";
-            break;
-
-        default:
-            if (TREE_CODE_CLASS (rhs_code) == tcc_declaration || TREE_CODE_CLASS (rhs_code) == tcc_constant || TREE_CODE_CLASS (rhs_code)
-                    == tcc_reference || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
-            {
-                rhsString += nodeName(rhs);
-                break;
-            }
-            else if (rhs_code == BIT_NOT_EXPR)
-            {
-                rhsString += '~';
-            }
-            else if (rhs_code == TRUTH_NOT_EXPR)
-            {
-                rhsString += '!';
-            }
-            else if (rhs_code == NEGATE_EXPR)
-            {
-                rhsString += "-";
-            }
-            else
-            {
-                rhsString += "[" + std::string(tree_code_name[rhs_code]) + "]";
-            }
-
-            if (op_prio(rhs) < op_code_prio(rhs_code))
-            {
-                rhsString += "(" + nodeName(rhs) + ")";
-            }
-            else
-            {
-                rhsString += nodeName(rhs);
-            }
-            break;
-    }
-    return rhsString;
-}
-
-std::string KdmTripleWriter::getBinaryRhsString(gimple const gs)
-{
-    std::string rhsString("");
-    enum tree_code code = gimple_assign_rhs_code(gs);
-    switch (code)
-    {
-        case COMPLEX_EXPR:
-        case MIN_EXPR:
-        case MAX_EXPR:
-        case VEC_WIDEN_MULT_HI_EXPR:
-        case VEC_WIDEN_MULT_LO_EXPR:
-        case VEC_PACK_TRUNC_EXPR:
-        case VEC_PACK_SAT_EXPR:
-        case VEC_PACK_FIX_TRUNC_EXPR:
-        case VEC_EXTRACT_EVEN_EXPR:
-        case VEC_EXTRACT_ODD_EXPR:
-        case VEC_INTERLEAVE_HIGH_EXPR:
-        case VEC_INTERLEAVE_LOW_EXPR:
-        {
-            rhsString += tree_code_name[static_cast<int>(code)];
-            std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-            //        for (p = tree_code_name [(int) code]; *p; p++)
-            //      pp_character (buffer, TOUPPER (*p));
-            rhsString += " <" + nodeName(gimple_assign_rhs1(gs)) + ", " + nodeName(gimple_assign_rhs2(gs)) + ">";
-            break;
-        }
-        default:
-        {
-            if (op_prio(gimple_assign_rhs1(gs)) <= op_code_prio(code))
-            {
-                rhsString += "(" + nodeName(gimple_assign_rhs1(gs)) + ")";
-            }
-            else
-            {
-                rhsString += nodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs))) + " ";
-            }
-            if (op_prio(gimple_assign_rhs2(gs)) <= op_code_prio(code))
-            {
-                rhsString += "(" + nodeName(gimple_assign_rhs2(gs)) + ")";
-            }
-            else
-            {
-                rhsString += nodeName(gimple_assign_rhs2(gs));
-            }
-        }
-    }
-    return rhsString;
-
-}
-
-std::string KdmTripleWriter::getTernaryRhsString(gimple const gs)
-{
-    std::cerr << "TernaryRhsString not implemented" << std::endl;
-    return "<TODO: ternary not implemented>";
-//    ///Might not need this function I don't know
+//long KdmTripleWriter::writeKdmActionElement(gimple const gs)
+//{
+//    //get a new id and write the action element type
+//    long id = ++mKdmElementId;
+//    writeTripleKdmType(id, KdmType::ActionElement());
 //
-//    std::string rhsString("");
-////    const char *p;
-//    enum tree_code code = gimple_assign_rhs_code (gs);
-//    switch (code)
-//      {
-//      case WIDEN_MULT_PLUS_EXPR:
-//      case WIDEN_MULT_MINUS_EXPR:
-//      {
-//          rhsString += tree_code_name [static_cast<int>(code)];
-//          std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-//          rhsString += " <" + nodeName(gimple_assign_rhs1(gs)) + ", " + nodeName(gimple_assign_rhs2(gs)) + ", " + nodeName(gimple_assign_rhs3(gs)) + ">";
-//        break;
-//      }
 //
-//      default:
-//      {
-//        gcc_unreachable ();
-//      }
+//    unsigned numOps = gimple_num_ops(gs);
+//    // a gimple statement with only two ops is equivalent to a KDM ASSIGN
+//    if (numOps == 2)
+//
+//
+//    writeTriple(id, KdmPredicate::Kind(), "Assign");
+//
+//    std::string nameStr("");
+//    nameStr += nodeName(gimple_assign_lhs(gs)) + " = ";
+//
+//    unsigned numOps = gimple_num_ops(gs);
+//    if (numOps == 2)
+//    {
+//        nameStr += getUnaryRhsString(gs);
+//    }
+//    else if (numOps == 3)
+//    {
+//        nameStr += getBinaryRhsString(gs);
+//    }
+//    else if (numOps == 4)
+//    {
+//        nameStr += getTernaryRhsString(gs);
+//    }
+//
+//    writeTripleName(id, nameStr);
+//    writeTripleLinkId(id, nodeName(gimple_assign_lhs(gs)));
+//    return id;
+//}
 
-}
 
-long KdmTripleWriter::writeKdmActionElement(gimple const gs)
-{
-    long id = ++mKdmElementId;
-    writeTripleKdmType(id, KdmType::ActionElement());
-    writeTriple(id, KdmPredicate::Kind(), "Assign");
-
-    std::string nameStr("");
-    nameStr += nodeName(gimple_assign_lhs(gs)) + " = ";
-
-    unsigned numOps = gimple_num_ops(gs);
-    if (numOps == 2)
-    {
-        nameStr += getUnaryRhsString(gs);
-    }
-    else if (numOps == 3)
-    {
-        nameStr += getBinaryRhsString(gs);
-    }
-    else if (numOps == 4)
-    {
-        nameStr += getTernaryRhsString(gs);
-    }
-
-    writeTripleName(id, nameStr);
-    writeTripleLinkId(id, nodeName(gimple_assign_lhs(gs)));
-    return id;
-}
 
 long KdmTripleWriter::getReferenceId(tree const node)
 {
@@ -704,7 +565,7 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const t)
 {
     long sourceFileId(0);
     expanded_location loc(expand_location(locationOf(t)));
-    if (mCompilationFile != boost::filesystem::path(loc.file))
+    if (mCompilationFile != Path(loc.file))
     {
         tree t = get_identifier(loc.file);
         sourceFileId = getSharedUnitReferenceId(t);
@@ -729,6 +590,12 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const file)
         retValue = result.first->second;
     }
     return retValue;
+}
+
+
+long KdmTripleWriter::getNextElementId()
+{
+    return ++mKdmElementId;
 }
 
 void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
@@ -864,7 +731,7 @@ void KdmTripleWriter::writeKdmSharedUnit(tree const file)
     long id = getSharedUnitReferenceId(file);
     writeTripleKdmType(id, KdmType::SharedUnit());
 
-    boost::filesystem::path filename(IDENTIFIER_POINTER(file));
+    Path filename(IDENTIFIER_POINTER(file));
     writeTripleName(id, filename.filename());
     writeTripleLinkId(id, filename.string());
     writeTripleContains(KdmElementId_CodeAssembly, id);
@@ -889,241 +756,6 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
     writeTriple(id, KdmPredicate::SourceRef(), srcRef);
 
     return id;
-}
-
-void gimple_not_implemented_yet(gimple const gs)
-{
-    std::cerr << "Unknown GIMPLE statement: " << gimple_code_name[static_cast<int> (gimple_code(gs))] << std::endl;
-    print_gimple_stmt(stderr, gs, 0, 0);
-}
-
-void KdmTripleWriter::processGimpleSequence(tree const parent, gimple_seq const seq)
-{
-    for (gimple_stmt_iterator i = gsi_start(seq); !gsi_end_p(i); gsi_next(&i))
-    {
-        gimple gs = gsi_stmt(i);
-        processGimpleStatement(parent, gs);
-    }
-}
-
-void KdmTripleWriter::processGimpleStatement(tree const parent, gimple const gs)
-{
-
-    std::cerr << "================GIMPLE START==========================\n";
-    if (gs)
-    {
-        switch (gimple_code(gs))
-        {
-            case GIMPLE_ASM:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_ASSIGN:
-            {
-                //gimple_not_implemented_yet(gs);
-                processGimpleAssignStatement(parent, gs);
-                break;
-            }
-            case GIMPLE_BIND:
-            {
-                processGimpleBindStatement(parent, gs);
-                //debug_gimple_stmt(gs);
-                break;
-            }
-            case GIMPLE_CALL:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_COND:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_LABEL:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_GOTO:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_NOP:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_RETURN:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_SWITCH:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_TRY:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_PHI:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_PARALLEL:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_TASK:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_ATOMIC_LOAD:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_ATOMIC_STORE:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_FOR:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_CONTINUE:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_SINGLE:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_RETURN:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_SECTIONS:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_SECTIONS_SWITCH:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_MASTER:
-            case GIMPLE_OMP_ORDERED:
-            case GIMPLE_OMP_SECTION:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_OMP_CRITICAL:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_CATCH:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_EH_FILTER:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_EH_MUST_NOT_THROW:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_RESX:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_EH_DISPATCH:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_DEBUG:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            case GIMPLE_PREDICT:
-            {
-                gimple_not_implemented_yet(gs);
-                break;
-            }
-            default:
-            {
-                std::cerr << "Gimple statement not handled yet" << std::endl;
-                break;
-            }
-
-        }
-
-    }
-    std::cerr << "================GIMPLE END==========================\n";
-
-}
-
-void KdmTripleWriter::processGimpleBindStatement(tree const parent, gimple const gs)
-{
-    tree var;
-    for (var = gimple_bind_vars(gs); var; var = TREE_CHAIN (var))
-    {
-        long declId = getReferenceId(var);
-        processAstNode(var);
-        writeTripleContains(getReferenceId(parent), declId);
-    }
-
-    processGimpleSequence(parent, gimple_bind_body(gs));
-}
-
-long KdmTripleWriter::getBlockReferenceId(location_t const loc)
-{
-	expanded_location xloc = expand_location(loc);
-    LocationMap::iterator i = mBlockUnitMap.find(xloc);
-    long blockId;
-    if (i == mBlockUnitMap.end())
-    {
-    	blockId = ++mKdmElementId;
-        mBlockUnitMap.insert(std::make_pair(xloc, blockId));
-        writeTripleKdmType(blockId, KdmType::BlockUnit());
-        long srcId = writeKdmSourceRef(blockId, xloc);
-        writeTripleContains(blockId, srcId);
-    }
-    else
-    {
-    	blockId = i->second;
-    }
-    return blockId;
-}
-
-void KdmTripleWriter::processGimpleAssignStatement(tree const parent, gimple const gs)
-{
-	long blockId = getBlockReferenceId(gimple_location(gs));
-    long actionId = writeKdmActionElement(gs);
-    writeTripleContains(blockId, actionId);
 }
 
 } // namespace kdmtriplewriter

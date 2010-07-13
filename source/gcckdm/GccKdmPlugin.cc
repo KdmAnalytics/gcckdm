@@ -29,7 +29,7 @@ extern "C" void executeFinishUnit(void *event_data, void *data);
 
 void registerCallbacks(char const * pluginName);
 
-boost::unique_ptr<gcckdm::GccKdmWriter> kdmWriter;
+boost::unique_ptr<gcckdm::GccAstListener> gccAstListener;
 // Queue up tree object for latest processing (ie because gcc will fill in more info or
 // loose track of them)
 VEC(tree,heap) *treeQueueVec = NULL;
@@ -102,7 +102,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
 
                     if (kdmSink)
                     {
-                        kdmWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+                        gccAstListener.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
                     }
                 }
                 else
@@ -112,11 +112,11 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
             }
 
             //default to file output
-            if (!kdmWriter)
+            if (!gccAstListener)
             {
                 boost::filesystem::path filename(main_input_filename);
                 filename.replace_extension(".tkdm");
-                kdmWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
+                gccAstListener.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
             }
 
             //Disable assembly output
@@ -193,13 +193,13 @@ extern "C" void executeFinishType(void *event_data, void *data)
         //sometime after completing the type
         // taken from dehyra_plugin.c
         VEC_safe_push(tree, heap, treeQueueVec, type);
-        //kdmWriter->processAstNode(static_cast<tree>(event_data));
+        //gccAstListener->processAstNode(static_cast<tree>(event_data));
     }
 }
 
 extern "C" void executePreGeneric(void *event_data, void *data)
 {
-    kdmWriter->processAstNode(static_cast<tree> (event_data));
+    gccAstListener->processAstNode(static_cast<tree> (event_data));
 }
 
 extern "C" unsigned int executeKdmGimplePass()
@@ -209,10 +209,10 @@ extern "C" unsigned int executeKdmGimplePass()
     if (!errorcount && !sorrycount)
     {
         boost::filesystem::path filename(main_input_filename);
-        kdmWriter->startTranslationUnit(boost::filesystem::complete(filename));
-        kdmWriter->startKdmGimplePass();
-        kdmWriter->processAstNode(current_function_decl);
-        kdmWriter->finishKdmGimplePass();
+        gccAstListener->startTranslationUnit(boost::filesystem::complete(filename));
+        gccAstListener->startKdmGimplePass();
+        gccAstListener->processAstNode(current_function_decl);
+        gccAstListener->finishKdmGimplePass();
     }
     return retValue;
 }
@@ -225,9 +225,9 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
         tree t;
         for (int i = 0; treeQueueVec && VEC_iterate (tree, treeQueueVec, i, t); ++i)
         {
-            kdmWriter->processAstNode(t);
+            gccAstListener->processAstNode(t);
         }
-        kdmWriter->finishTranslationUnit();
+        gccAstListener->finishTranslationUnit();
         VEC_free (tree, heap, treeQueueVec);
         treeQueueVec = nullptr;
     }

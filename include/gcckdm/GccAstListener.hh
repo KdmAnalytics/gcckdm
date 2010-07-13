@@ -5,8 +5,8 @@
  *      Author: kgirard
  */
 
-#ifndef GCCKDM_GCCKDMWRITER_HH_
-#define GCCKDM_GCCKDMWRITER_HH_
+#ifndef GCCKDM_GCCASTLISTENER_HH_
+#define GCCKDM_GCCASTLISTENER_HH_
 
 #include "gcckdm/GccKdmConfig.hh"
 #include <boost/filesystem/path.hpp>
@@ -14,7 +14,7 @@
 namespace gcckdm
 {
 
-class GccKdmWriter
+class GccAstListener
 {
 public:
     typedef boost::filesystem::path Path;
@@ -28,4 +28,4 @@ public:
 
 } // namespace gcckdm
 
-#endif /* GCCKDM_GCCKDMWRITER_HH_ */
+#endif /* GCCKDM_GCCASTLISTENER_HH_ */

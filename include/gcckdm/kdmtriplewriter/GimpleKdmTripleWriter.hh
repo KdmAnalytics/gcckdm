@@ -40,6 +40,10 @@ private:
     void processGimpleBindStatement(tree const parent, gimple const gs);
     void processGimpleAssignStatement(tree const parent, gimple const gs);
 
+    void processGimpleUnaryAssignStatement(long const actionId, gimple const gs);
+    void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);
+    void processGimpleTernaryAssignStatement(long const actionId, gimple const gs);
+
     /**
      * Reference to the main kdm triple writer
      */

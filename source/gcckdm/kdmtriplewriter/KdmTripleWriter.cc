@@ -423,6 +423,11 @@ void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & 
     writeTriple(subject, KdmPredicate::LinkId(), name);
 }
 
+void KdmTripleWriter::writeTripleKind(long const subject, KdmKind const & type)
+{
+    writeTriple(subject, KdmPredicate::Kind(), type.name());
+}
+
 void KdmTripleWriter::writeKdmSourceFile(Path const & file)
 {
     writeTripleKdmType(++mKdmElementId, KdmType::SourceFile());

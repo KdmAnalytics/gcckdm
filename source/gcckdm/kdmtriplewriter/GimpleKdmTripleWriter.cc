@@ -7,7 +7,7 @@
 
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
-
+#include "gcckdm/KdmKind.hh"
 
 namespace  {
 
@@ -20,7 +20,7 @@ void gimple_not_implemented_yet(gimple const gs)
 
 std::string getUnaryRhsString(gimple const gs)
 {
-    std::string rhsString("");
+    std::string rhsString;
 
     enum tree_code rhs_code = gimple_assign_rhs_code(gs);
     tree lhs = gimple_assign_lhs(gs);
@@ -395,23 +395,117 @@ void GimpleKdmTripleWriter::processGimpleAssignStatement(tree const parent, gimp
 {
     long actionId = mKdmWriter.getNextElementId();
     mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-//    unsigned numOps(gimple_num_ops(gs));
-//    if (numOps == 2)
-//    {
-//        processGimpleUnaryAssign(gs);
-//    }
-//    else if (numOps == 3)
-//    {
-//        processGimpleBinaryAssign(gs);
-//    }
-//    else if (numOps == 4)
-//    {
-//        processGimpleTernaryAssign(gs);
-//    }
-
+    unsigned numOps(gimple_num_ops(gs));
+    if (numOps == 2)
+    {
+        processGimpleUnaryAssignStatement(actionId, gs);
+    }
+    else if (numOps == 3)
+    {
+        processGimpleBinaryAssignStatement(actionId, gs);
+    }
+    else if (numOps == 4)
+    {
+        processGimpleTernaryAssignStatement(actionId, gs);
+    }
 
     long blockId = getBlockReferenceId(gimple_location(gs));
     mKdmWriter.writeTripleContains(blockId, actionId);
+}
+
+void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)
+{
+    std::string rhsString;
+
+    enum tree_code rhs_code = gimple_assign_rhs_code(gs);
+    tree lhs = gimple_assign_lhs(gs);
+    tree rhs = gimple_assign_rhs1(gs);
+    switch (rhs_code)
+    {
+        case VIEW_CONVERT_EXPR:
+        case ASSERT_EXPR:
+            rhsString += "=====Gimple Operation Not Implemented========1";
+            break;
+
+        case FIXED_CONVERT_EXPR:
+        case ADDR_SPACE_CONVERT_EXPR:
+        case FIX_TRUNC_EXPR:
+        case FLOAT_EXPR:
+        CASE_CONVERT :
+            rhsString += "=====Gimple Operation Not Implemented========2";
+//
+//            rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
+//            if (op_prio(rhs) < op_code_prio(rhs_code))
+//            {
+//                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
+//            }
+//            else
+//                rhsString += gcckdm::getAstNodeName(rhs);
+            break;
+
+        case PAREN_EXPR:
+            rhsString += "=====Gimple Operation Not Implemented========4";
+//            rhsString += "((" + gcckdm::getAstNodeName(rhs) + "))";
+            break;
+
+        case ABS_EXPR:
+            rhsString += "=====Gimple Operation Not Implemented========5";
+//            rhsString += "ABS_EXPR <" + gcckdm::getAstNodeName(rhs) + ">";
+            break;
+
+        default:
+            if (TREE_CODE_CLASS (rhs_code) == tcc_declaration || TREE_CODE_CLASS (rhs_code) == tcc_constant || TREE_CODE_CLASS (rhs_code)
+                    == tcc_reference || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
+            {
+                mKdmWriter.writeTripleKind(actionId, KdmKind::Assign());
+                rhsString += "=====Gimple Operation Not Implemented======== " + gcckdm::getAstNodeName(rhs);
+//                rhsString += gcckdm::getAstNodeName(rhs);
+                break;
+            }
+            else if (rhs_code == BIT_NOT_EXPR)
+            {
+                rhsString += "=====Gimple Operation Not Implemented========7";
+//                rhsString += '~';
+            }
+            else if (rhs_code == TRUTH_NOT_EXPR)
+            {
+                rhsString += "=====Gimple Operation Not Implemented========8";
+//                rhsString += '!';
+            }
+            else if (rhs_code == NEGATE_EXPR)
+            {
+                rhsString += "=====Gimple Operation Not Implemented========9";
+//                rhsString += "-";
+            }
+            else
+            {
+                rhsString += "=====Gimple Operation Not Implemented========10";
+//                rhsString += "[" + std::string(tree_code_name[rhs_code]) + "]";
+            }
+
+            if (op_prio(rhs) < op_code_prio(rhs_code))
+            {
+                rhsString += "=====Gimple Operation Not Implemented========11";
+//                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
+            }
+            else
+            {
+                rhsString += "=====Gimple Operation Not Implemented========12";
+//                rhsString += gcckdm::getAstNodeName(rhs);
+            }
+            break;
+    }
+    std::cerr << rhsString << std::endl;
+}
+
+void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const actionId, gimple const gs)
+{
+    std::cerr <<  "=====Gimple Operation Not Implemented======== -> processGimpleBinaryAssignStatement" << std::endl;
+}
+
+void GimpleKdmTripleWriter::processGimpleTernaryAssignStatement(long const actionId, gimple const gs)
+{
+    std::cerr <<  "=====Gimple Operation Not Implemented======== -> processGimpleTernaryAssignStatement" << std::endl;
 }
 
 

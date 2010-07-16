@@ -20,6 +20,7 @@
 #include "gcckdm/GccKdmUtilities.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/KdmType.hh"
+#include "gcckdm/KdmKind.hh"
 #include "gcckdm/kdmtriplewriter/PathHash.hh"
 #include "gcckdm/kdmtriplewriter/TripleWriter.hh"
 
@@ -70,14 +71,12 @@ public:
     virtual void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object);
 
 
-    void writeTripleKdmType(long const subject, KdmType const & object);
+    void writeTripleKdmType(long const subject, KdmType const & type);
     void writeTripleName(long const subject, std::string const & name);
     void writeTripleContains(long const parent, long const child);
     void writeTripleLinkId(long const subject, std::string const & name);
-
-
+    void writeTripleKind(long const subject, KdmKind const & kind);
     long writeKdmSourceRef(long id, expanded_location const & xloc);
-
     long getReferenceId(tree const node);
     long getNextElementId();
 

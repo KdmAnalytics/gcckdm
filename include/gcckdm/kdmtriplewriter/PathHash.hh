@@ -10,6 +10,12 @@ namespace std {
 
 namespace tr1 {
 
+/**
+ * Template specialization of the std::tr1::hash structure
+ * to allow Path variables to be hashed in std::tr1::unordered_*
+ * containers.  Current defaults to the hashing on the string
+ * representation of the given path
+ */
 template <>
 struct hash<gcckdm::GccAstListener::Path>
 {

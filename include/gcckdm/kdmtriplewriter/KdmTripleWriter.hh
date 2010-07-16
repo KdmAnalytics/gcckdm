@@ -55,17 +55,17 @@ public:
     virtual void finishTranslationUnit();
 
     /**
-     *
+     * @see TripleWriter::writerTriple
      */
     virtual void writeTriple(long const subject, KdmPredicate const & predicate, long const object);
 
     /**
-     *
+     * @see TripleWriter::writerTriple
      */
     virtual void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object);
 
     /**
-     *
+     * @see TripleWriter::writerTriple
      */
     virtual void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object);
 

@@ -458,6 +458,8 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
                     == tcc_reference || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
             {
                 mKdmWriter.writeTripleKind(actionId, KdmKind::Assign());
+                writeKdmActionRelation(KdmType::Reads(), 0,0);
+                writeKdmActionRelation(KdmType::Writes(), 0,0);
                 rhsString += "=====Gimple Operation Not Implemented======== " + gcckdm::getAstNodeName(rhs);
 //                rhsString += gcckdm::getAstNodeName(rhs);
                 break;
@@ -527,6 +529,16 @@ long GimpleKdmTripleWriter::getBlockReferenceId(location_t const loc)
         blockId = i->second;
     }
     return blockId;
+}
+
+
+long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long const fromId, long const toId)
+{
+    long arId = mKdmWriter.getNextElementId();
+    mKdmWriter.writeTripleKdmType(arId, type);
+    mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
+    mKdmWriter.writeTriple(arId, KdmPredicate::To(), toId);
+    return arId;
 }
 
 

@@ -44,6 +44,8 @@ private:
     void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);
     void processGimpleTernaryAssignStatement(long const actionId, gimple const gs);
 
+    long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
+
     /**
      * Reference to the main kdm triple writer
      */

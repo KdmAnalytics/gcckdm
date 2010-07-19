@@ -9,14 +9,14 @@
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/KdmKind.hh"
 
-namespace  {
+namespace
+{
 
 void gimple_not_implemented_yet(gimple const gs)
 {
     std::cerr << "Unknown GIMPLE statement: " << gimple_code_name[static_cast<int> (gimple_code(gs))] << std::endl;
     print_gimple_stmt(stderr, gs, 0, 0);
 }
-
 
 std::string getUnaryRhsString(gimple const gs)
 {
@@ -37,8 +37,7 @@ std::string getUnaryRhsString(gimple const gs)
         case ADDR_SPACE_CONVERT_EXPR:
         case FIX_TRUNC_EXPR:
         case FLOAT_EXPR:
-        CASE_CONVERT :
-            rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
+            CASE_CONVERT: rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
             if (op_prio(rhs) < op_code_prio(rhs_code))
             {
                 rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
@@ -56,7 +55,7 @@ std::string getUnaryRhsString(gimple const gs)
             break;
 
         default:
-            if (TREE_CODE_CLASS (rhs_code) == tcc_declaration || TREE_CODE_CLASS (rhs_code) == tcc_constant || TREE_CODE_CLASS (rhs_code)
+            if (TREE_CODE_CLASS(rhs_code) == tcc_declaration || TREE_CODE_CLASS(rhs_code) == tcc_constant || TREE_CODE_CLASS(rhs_code)
                     == tcc_reference || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
             {
                 rhsString += gcckdm::getAstNodeName(rhs);
@@ -111,9 +110,10 @@ std::string getBinaryRhsString(gimple const gs)
         case VEC_INTERLEAVE_HIGH_EXPR:
         case VEC_INTERLEAVE_LOW_EXPR:
         {
-            rhsString += tree_code_name[static_cast<int>(code)];
+            rhsString += tree_code_name[static_cast<int> (code)];
             std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-            rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ">";
+            rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs))
+                    + ">";
             break;
         }
         default:
@@ -124,7 +124,8 @@ std::string getBinaryRhsString(gimple const gs)
             }
             else
             {
-                rhsString += gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs))) + " ";
+                rhsString += gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs)))
+                        + " ";
             }
             if (op_prio(gimple_assign_rhs2(gs)) <= op_code_prio(code))
             {
@@ -144,42 +145,38 @@ std::string getTernaryRhsString(gimple const gs)
 {
     std::cerr << "TernaryRhsString not implemented" << std::endl;
     return "<TODO: ternary not implemented>";
-//    ///Might not need this function I don't know
-//
-//    std::string rhsString();
-//    enum tree_code code = gimple_assign_rhs_code (gs);
-//    switch (code)
-//      {
-//      case WIDEN_MULT_PLUS_EXPR:
-//      case WIDEN_MULT_MINUS_EXPR:
-//      {
-//          rhsString += tree_code_name [static_cast<int>(code)];
-//          std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-//          rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs3(gs)) + ">";
-//        break;
-//      }
-//
-//      default:
-//      {
-//        gcc_unreachable ();
-//      }
+    //    ///Might not need this function I don't know
+    //
+    //    std::string rhsString();
+    //    enum tree_code code = gimple_assign_rhs_code (gs);
+    //    switch (code)
+    //      {
+    //      case WIDEN_MULT_PLUS_EXPR:
+    //      case WIDEN_MULT_MINUS_EXPR:
+    //      {
+    //          rhsString += tree_code_name [static_cast<int>(code)];
+    //          std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
+    //          rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs3(gs)) + ">";
+    //        break;
+    //      }
+    //
+    //      default:
+    //      {
+    //        gcc_unreachable ();
+    //      }
 
 }
 
+} // namespace
 
+namespace gcckdm
+{
 
+namespace kdmtriplewriter
+{
 
-}  // namespace
-
-namespace gcckdm {
-
-namespace kdmtriplewriter {
-
-
-
-
-GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter)
-    : mKdmWriter(tripleWriter)
+GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter) :
+    mKdmWriter(tripleWriter)
 {
 }
 
@@ -380,7 +377,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
 void GimpleKdmTripleWriter::processGimpleBindStatement(tree const parent, gimple const gs)
 {
     tree var;
-    for (var = gimple_bind_vars(gs); var; var = TREE_CHAIN (var))
+    for (var = gimple_bind_vars(gs); var; var = TREE_CHAIN(var))
     {
         long declId = mKdmWriter.getReferenceId(var);
         mKdmWriter.processAstNode(var);
@@ -389,7 +386,6 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(tree const parent, gimple
 
     processGimpleSequence(parent, gimple_bind_body(gs));
 }
-
 
 void GimpleKdmTripleWriter::processGimpleAssignStatement(tree const parent, gimple const gs)
 {
@@ -431,85 +427,153 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
         case ADDR_SPACE_CONVERT_EXPR:
         case FIX_TRUNC_EXPR:
         case FLOAT_EXPR:
-        CASE_CONVERT :
-            rhsString += "=====Gimple Operation Not Implemented========2";
-//
-//            rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
-//            if (op_prio(rhs) < op_code_prio(rhs_code))
-//            {
-//                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
-//            }
-//            else
-//                rhsString += gcckdm::getAstNodeName(rhs);
+            CASE_CONVERT: rhsString += "=====Gimple Operation Not Implemented========2";
+            //
+            //            rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
+            //            if (op_prio(rhs) < op_code_prio(rhs_code))
+            //            {
+            //                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
+            //            }
+            //            else
+            //                rhsString += gcckdm::getAstNodeName(rhs);
             break;
 
         case PAREN_EXPR:
             rhsString += "=====Gimple Operation Not Implemented========4";
-//            rhsString += "((" + gcckdm::getAstNodeName(rhs) + "))";
+            //            rhsString += "((" + gcckdm::getAstNodeName(rhs) + "))";
             break;
 
         case ABS_EXPR:
             rhsString += "=====Gimple Operation Not Implemented========5";
-//            rhsString += "ABS_EXPR <" + gcckdm::getAstNodeName(rhs) + ">";
+            //            rhsString += "ABS_EXPR <" + gcckdm::getAstNodeName(rhs) + ">";
             break;
 
         default:
-            if (TREE_CODE_CLASS (rhs_code) == tcc_declaration || TREE_CODE_CLASS (rhs_code) == tcc_constant || TREE_CODE_CLASS (rhs_code)
+            if (TREE_CODE_CLASS(rhs_code) == tcc_declaration || TREE_CODE_CLASS(rhs_code) == tcc_constant || TREE_CODE_CLASS(rhs_code)
                     == tcc_reference || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
             {
                 mKdmWriter.writeTripleKind(actionId, KdmKind::Assign());
-                writeKdmActionRelation(KdmType::Reads(), 0,0);
-                writeKdmActionRelation(KdmType::Writes(), 0,0);
-                rhsString += "=====Gimple Operation Not Implemented======== " + gcckdm::getAstNodeName(rhs);
-//                rhsString += gcckdm::getAstNodeName(rhs);
+                long lhsId = mKdmWriter.getReferenceId(lhs);
+                long rhsId;
+
+                if (!mKdmWriter.hasReferenceId(rhs))
+                {
+                    rhsId = mKdmWriter.getReferenceId(rhs);
+                    mKdmWriter.processAstNode(rhs);
+                }
+                else
+                {
+                    rhsId = mKdmWriter.getReferenceId(rhs);
+                }
+                //constants are contained in action elements
+                //assuming everything that gets here is a constant....
+                mKdmWriter.writeTripleContains(actionId, rhsId);
+                writeKdmActionRelation(KdmType::Reads(), actionId, lhsId);
+                writeKdmActionRelation(KdmType::Writes(), actionId, rhsId);
                 break;
             }
             else if (rhs_code == BIT_NOT_EXPR)
             {
                 rhsString += "=====Gimple Operation Not Implemented========7";
-//                rhsString += '~';
+                //                rhsString += '~';
             }
             else if (rhs_code == TRUTH_NOT_EXPR)
             {
                 rhsString += "=====Gimple Operation Not Implemented========8";
-//                rhsString += '!';
+                //                rhsString += '!';
             }
             else if (rhs_code == NEGATE_EXPR)
             {
                 rhsString += "=====Gimple Operation Not Implemented========9";
-//                rhsString += "-";
+                //                rhsString += "-";
             }
             else
             {
                 rhsString += "=====Gimple Operation Not Implemented========10";
-//                rhsString += "[" + std::string(tree_code_name[rhs_code]) + "]";
+                //                rhsString += "[" + std::string(tree_code_name[rhs_code]) + "]";
             }
 
             if (op_prio(rhs) < op_code_prio(rhs_code))
             {
                 rhsString += "=====Gimple Operation Not Implemented========11";
-//                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
+                //                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
             }
             else
             {
                 rhsString += "=====Gimple Operation Not Implemented========12";
-//                rhsString += gcckdm::getAstNodeName(rhs);
+                //                rhsString += gcckdm::getAstNodeName(rhs);
             }
             break;
     }
-    std::cerr << rhsString << std::endl;
 }
 
 void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const actionId, gimple const gs)
 {
-    std::cerr <<  "=====Gimple Operation Not Implemented======== -> processGimpleBinaryAssignStatement" << std::endl;
+    std::string rhsString;
+    enum tree_code code = gimple_assign_rhs_code(gs);
+    switch (code)
+    {
+        case COMPLEX_EXPR:
+        case MIN_EXPR:
+        case MAX_EXPR:
+        case VEC_WIDEN_MULT_HI_EXPR:
+        case VEC_WIDEN_MULT_LO_EXPR:
+        case VEC_PACK_TRUNC_EXPR:
+        case VEC_PACK_SAT_EXPR:
+        case VEC_PACK_FIX_TRUNC_EXPR:
+        case VEC_EXTRACT_EVEN_EXPR:
+        case VEC_EXTRACT_ODD_EXPR:
+        case VEC_INTERLEAVE_HIGH_EXPR:
+        case VEC_INTERLEAVE_LOW_EXPR:
+        {
+            rhsString += tree_code_name[static_cast<int> (code)];
+            std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
+            rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs))
+                    + ">";
+            break;
+        }
+        default:
+        {
+            if (op_prio(gimple_assign_rhs1(gs)) <= op_code_prio(code))
+            {
+                rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ")";
+            }
+            else
+            {
+                rhsString += gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs)))
+                        + " ";
+
+//                switch (gimple_assign_rhs_code(gs))
+//                {
+//                    case GIMPLE_ADD:
+//                    {
+//                        std::cerr << "Here\n";
+//                        break;
+//                    }
+//                    default:
+//                    {
+//
+//                    }
+//                }
+            }
+            if (op_prio(gimple_assign_rhs2(gs)) <= op_code_prio(code))
+            {
+                rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ")";
+            }
+            else
+            {
+                rhsString += gcckdm::getAstNodeName(gimple_assign_rhs2(gs));
+            }
+        }
+    }
+    std::cerr << "rhsbinaryString: " << rhsString << std::endl;
+
 }
 
 void GimpleKdmTripleWriter::processGimpleTernaryAssignStatement(long const actionId, gimple const gs)
 {
-    std::cerr <<  "=====Gimple Operation Not Implemented======== -> processGimpleTernaryAssignStatement" << std::endl;
+    std::cerr << "=====Gimple Operation Not Implemented======== -> processGimpleTernaryAssignStatement" << std::endl;
 }
-
 
 long GimpleKdmTripleWriter::getBlockReferenceId(location_t const loc)
 {
@@ -531,7 +595,6 @@ long GimpleKdmTripleWriter::getBlockReferenceId(location_t const loc)
     return blockId;
 }
 
-
 long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long const fromId, long const toId)
 {
     long arId = mKdmWriter.getNextElementId();
@@ -541,9 +604,8 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
     return arId;
 }
 
+} // namespace kdmtriplewriter
 
-}  // namespace kdmtriplewriter
 
-
-}  // namespace gcckdm
+} // namespace gcckdm
 

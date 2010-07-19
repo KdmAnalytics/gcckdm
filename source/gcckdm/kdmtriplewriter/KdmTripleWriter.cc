@@ -86,7 +86,7 @@ void KdmTripleWriter::startKdmGimplePass()
 {
     //C Support..variables are stored in varpool... C++ we can use global_namespace
     struct varpool_node *pNode;
-    FOR_EACH_STATIC_VARIABLE(pNode)
+    for ((pNode) = varpool_nodes_queue; (pNode); (pNode) = (pNode)->next_needed)
     {
         long unitId = writeKdmStorableUnit(pNode->decl);
         writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
@@ -132,6 +132,10 @@ void KdmTripleWriter::processAstNode(tree const ast)
         else if (TYPE_P(ast))
         {
             processAstTypeNode(ast);
+        }
+        else if (treeCode == INTEGER_CST)
+        {
+            processAstIntegerConstantNode(ast);
         }
         else
         {
@@ -237,6 +241,11 @@ void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl)
 void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
 {
     writeKdmItemUnit(fieldDecl);
+}
+
+void KdmTripleWriter::processAstIntegerConstantNode(tree const intConst)
+{
+    writeKdmValue(intConst);
 }
 
 void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predicate, long const object)
@@ -499,43 +508,23 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var)
     return unitId;
 }
 
+long KdmTripleWriter::writeKdmValue(tree const val)
+{
+    long valueId = getReferenceId(val);
+    writeTripleKdmType(valueId, KdmType::Value());
+    writeTripleName(valueId, nodeName(val));
+    tree type(TYPE_MAIN_VARIANT(TREE_TYPE(val)));
+    long ref = getReferenceId(type);
+    writeTriple(valueId, KdmPredicate::Type(), ref);
+    return valueId;
+}
 
-//long KdmTripleWriter::writeKdmActionElement(gimple const gs)
-//{
-//    //get a new id and write the action element type
-//    long id = ++mKdmElementId;
-//    writeTripleKdmType(id, KdmType::ActionElement());
-//
-//
-//    unsigned numOps = gimple_num_ops(gs);
-//    // a gimple statement with only two ops is equivalent to a KDM ASSIGN
-//    if (numOps == 2)
-//
-//
-//    writeTriple(id, KdmPredicate::Kind(), "Assign");
-//
-//    std::string nameStr("");
-//    nameStr += nodeName(gimple_assign_lhs(gs)) + " = ";
-//
-//    unsigned numOps = gimple_num_ops(gs);
-//    if (numOps == 2)
-//    {
-//        nameStr += getUnaryRhsString(gs);
-//    }
-//    else if (numOps == 3)
-//    {
-//        nameStr += getBinaryRhsString(gs);
-//    }
-//    else if (numOps == 4)
-//    {
-//        nameStr += getTernaryRhsString(gs);
-//    }
-//
-//    writeTripleName(id, nameStr);
-//    writeTripleLinkId(id, nodeName(gimple_assign_lhs(gs)));
-//    return id;
-//}
 
+bool KdmTripleWriter::hasReferenceId(tree const node) const
+{
+    TreeMap::const_iterator i = mReferencedNodes.find(node);
+    return !(i == mReferencedNodes.end());
+}
 
 
 long KdmTripleWriter::getReferenceId(tree const node)

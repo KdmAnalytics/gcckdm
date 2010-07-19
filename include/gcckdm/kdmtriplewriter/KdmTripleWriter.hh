@@ -77,6 +77,7 @@ public:
     void writeTripleLinkId(long const subject, std::string const & name);
     void writeTripleKind(long const subject, KdmKind const & kind);
     long writeKdmSourceRef(long id, expanded_location const & xloc);
+    bool hasReferenceId(tree const node) const;
     long getReferenceId(tree const node);
     long getNextElementId();
 
@@ -110,6 +111,7 @@ private:
     void processAstFunctionDeclarationNode(tree const functionDecl);
     void processAstFieldDeclarationNode(tree const fieldDecl);
     void processAstVariableDeclarationNode(tree const varDecl);
+    void processAstIntegerConstantNode(tree const intConst);
 
     void writeVersionHeader();
     void writeDefaultKdmModelElements();
@@ -143,6 +145,7 @@ private:
     long writeKdmSignatureDeclaration(tree const functionDecl);
     long writeKdmSignatureType(tree const functionType);
     long writeKdmSourceRef(long id,tree const var);
+    long writeKdmValue(tree const val);
 
     KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
     long mKdmElementId;     /// The current element id, incremented for each new element

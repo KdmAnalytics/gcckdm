@@ -8,10 +8,15 @@
 #ifndef GCCKDM_GCCKDMUTILITIES_HH_
 #define GCCKDM_GCCKDMUTILITIES_HH_
 
+#include <string>
+
 namespace gcckdm
 {
 
-
+/**
+ * Return the name of the given node
+ */
+std::string getAstNodeName(tree node);
 
 
 /**
@@ -38,34 +43,6 @@ location_t locationOf(tree t);
  * @return the string representation of the file, line and column for the given location
  */
 std::string const locationString(location_t loc);
-
-
-/**
- * Return the name of the given node as a string, if the node
- * doesn't have a name returns an empty string
- *
- * @param node the name to use to retrieve the name
- * @return the name of the node or an empty string
- */
-std::string const treeNodeNameString(tree node);
-
-/**
- * Return the name of the given declaration as a string.  If the declaration
- * node doesn't have a name, returns an empty string
- *
- * @param decl and AST declaration node
- * @return  the name of the declaration or the empty string if the declration doesn't have a name
- */
-std::string const declNameString(tree decl);
-
-/**
- * Return the name of the given type as a string.  If the type node does not have a name
- * return an empty string
- *
- * @param type a type AST Node
- * @return the name of the given type node or an empty string
- */
-std::string const typeNameString(tree type);
 
 
 }  // namespace gcckdm

@@ -32,6 +32,7 @@ extern "C"
 #include <cgraph.h>
 #include <cp/cp-tree.h>
 #include <tree-iterator.h>
+#include <tree-flow.h>
 #include <gimple.h>
 
 }

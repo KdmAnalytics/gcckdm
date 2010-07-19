@@ -1,5 +1,5 @@
 /*
- * KdmTripleWriter.hh
+ * KdmWriter.hh
  *
  *  Created on: Jun 21, 2010
  *      Author: kgirard
@@ -8,16 +8,24 @@
 #ifndef GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 #define GCCKDM_KDMTRIPLEWRITER_KDMTRIPLEWRITER_HH_
 
+#include <iostream>
+#include <queue>
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
-#include <iostream>
 #include <boost/shared_ptr.hpp>
+#include <gcckdm/utilities/unique_ptr.hpp>
 
 #include "gcckdm/GccKdmConfig.hh"
-#include "gcckdm/GccKdmWriter.hh"
+#include "gcckdm/GccAstListener.hh"
 #include "gcckdm/GccKdmUtilities.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/KdmType.hh"
+#include "gcckdm/KdmKind.hh"
+#include "gcckdm/kdmtriplewriter/PathHash.hh"
+#include "gcckdm/kdmtriplewriter/TripleWriter.hh"
+
+
+#include "gcckdm/kdmtriplewriter/KdmTripleWriterFwd.hh"
 
 namespace gcckdm
 {
@@ -29,30 +37,59 @@ namespace kdmtriplewriter
  * This class traverses the Gcc AST nodes passed to it and writes their KDM
  * representation to and output stream
  */
-class KdmTripleWriter: public GccKdmWriter
+class KdmTripleWriter : public GccAstListener, public TripleWriter
 {
 public:
+    static const int KdmTripleVersion = 1;
+
     typedef boost::shared_ptr<std::ostream> KdmSinkPtr;
 
     explicit KdmTripleWriter(KdmSinkPtr const & kdmSink);
-    explicit KdmTripleWriter(boost::filesystem::path const & filename);
+    explicit KdmTripleWriter(Path const & filename);
+
     virtual ~KdmTripleWriter();
 
-    virtual void startTranslationUnit(boost::filesystem::path const & file);
+    virtual void startTranslationUnit(Path const & file);
     virtual void startKdmGimplePass();
-    virtual void processAstNode(tree ast);
+    virtual void processAstNode(tree const ast);
     virtual void finishKdmGimplePass();
     virtual void finishTranslationUnit();
 
-    static const int KdmTripleVersion = 1;
+    /**
+     * @see TripleWriter::writerTriple
+     */
+    virtual void writeTriple(long const subject, KdmPredicate const & predicate, long const object);
+
+    /**
+     * @see TripleWriter::writerTriple
+     */
+    virtual void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object);
+
+    /**
+     * @see TripleWriter::writerTriple
+     */
+    virtual void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object);
+
+
+    void writeTripleKdmType(long const subject, KdmType const & type);
+    void writeTripleName(long const subject, std::string const & name);
+    void writeTripleContains(long const parent, long const child);
+    void writeTripleLinkId(long const subject, std::string const & name);
+    void writeTripleKind(long const subject, KdmKind const & kind);
+    long writeKdmSourceRef(long id, expanded_location const & xloc);
+    bool hasReferenceId(tree const node) const;
+    long getReferenceId(tree const node);
+    long getNextElementId();
 
 private:
-    typedef std::tr1::unordered_map<tree, long> AstNodeReferenceMap;
-    typedef std::tr1::unordered_set<tree> TreeMap;
+    typedef std::tr1::unordered_map<tree, long> TreeMap;
+    typedef std::tr1::unordered_map<Path, long> FileMap;
+    typedef std::tr1::unordered_set<tree> TreeSet;
+    typedef std::queue<tree> TreeQueue;
+    typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
 
-    long getReferenceId(tree node);
-
-    long getSharedUnitReferenceId(tree file);
+    long getSourceFileReferenceId(tree const decl);
+    long getSharedUnitReferenceId(tree const file);
 
     enum
     {
@@ -69,12 +106,12 @@ private:
         KdmElementId_DefaultStart,
     };
 
-    void processAstDeclarationNode(tree decl);
-    void processAstTypeNode(tree decl);
-    void processAstFunctionDeclarationNode(tree functionDecl);
-    void processAstFieldDeclarationNode(tree fieldDecl);
-    void processAstVariableDeclarationNode(tree varDecl);
-
+    void processAstDeclarationNode(tree const decl);
+    void processAstTypeNode(tree const decl);
+    void processAstFunctionDeclarationNode(tree const functionDecl);
+    void processAstFieldDeclarationNode(tree const fieldDecl);
+    void processAstVariableDeclarationNode(tree const varDecl);
+    void processAstIntegerConstantNode(tree const intConst);
 
     void writeVersionHeader();
     void writeDefaultKdmModelElements();
@@ -92,50 +129,33 @@ private:
      *
      * @param file the file to use to populate the SourceFile kdm element
      */
-    void writeKdmSourceFile(boost::filesystem::path const & file);
-    void writeKdmCompilationUnit(boost::filesystem::path const & file);
-    void writeKdmCallableUnit(tree functionDecl);
-    long writeKdmReturnParameterUnit(tree param);
-    long writeKdmParameterUnit(tree param);
-    void writeKdmPrimitiveType(tree type);
-    void writeKdmPointerType(tree type);
-    void writeKdmRecordType(tree type);
-    void writeKdmSharedUnit(tree file);
-    long writeKdmItemUnit(tree item);
-    void writeKdmArrayType(tree array);
-    void writeKdmStorableUnit(tree var);
-
-    void writeTripleKdmType(long const subject, KdmType const & object);
-    void writeTripleName(long const subject, std::string const & name);
-    void writeTripleContains(long const parent, long const child);
-    void writeTripleLinkId(long const subject, std::string const & name);
-
-    /**
-     *
-     */
-    void writeTriple(long const subject, KdmPredicate const & predicate, long const object);
-
-    /**
-     *
-     */
-    void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object);
-
-    /**
-     *
-     */
-    void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object);
-
+    void writeKdmSourceFile(Path const & file);
+    void writeKdmCompilationUnit(Path const & file);
+    void writeKdmCallableUnit(tree const functionDecl);
+    long writeKdmReturnParameterUnit(tree const param);
+    long writeKdmParameterUnit(tree const param);
+    void writeKdmPrimitiveType(tree const type);
+    void writeKdmPointerType(tree const type);
+    void writeKdmRecordType(tree const type);
+    void writeKdmSharedUnit(tree const file);
+    long writeKdmItemUnit(tree const item);
+    void writeKdmArrayType(tree const array);
+    long writeKdmStorableUnit(tree const var);
+    long writeKdmSignature(tree const function);
+    long writeKdmSignatureDeclaration(tree const functionDecl);
+    long writeKdmSignatureType(tree const functionType);
+    long writeKdmSourceRef(long id,tree const var);
+    long writeKdmValue(tree const val);
 
     KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
     long mKdmElementId;     /// The current element id, incremented for each new element
-
-    AstNodeReferenceMap mReferencedNodes;
-    AstNodeReferenceMap mProcessedNodes;
-    AstNodeReferenceMap mReferencedSharedUnits;
-    boost::filesystem::path  mCompilationFile;
-
-    TreeMap mDeclarationNodes;
-    TreeMap mTypeNodes;
+    GimpleWriter mGimpleWriter;
+    TreeMap mReferencedNodes;
+    TreeMap mReferencedSharedUnits;
+    Path  mCompilationFile;
+    FileMap mInventoryMap;
+    TreeSet mProcessedNodes;
+    TreeQueue mNodeQueue;
 };
 
 } // namespace kdmtriplewriter

@@ -468,8 +468,8 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
                 //constants are contained in action elements
                 //assuming everything that gets here is a constant....
                 mKdmWriter.writeTripleContains(actionId, rhsId);
-                writeKdmActionRelation(KdmType::Reads(), actionId, lhsId);
-                writeKdmActionRelation(KdmType::Writes(), actionId, rhsId);
+                writeKdmActionRelation(KdmType::Reads(), actionId, rhsId);
+                writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
                 break;
             }
             else if (rhs_code == BIT_NOT_EXPR)
@@ -509,6 +509,10 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
 
 void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const actionId, gimple const gs)
 {
+    tree lhs = gimple_assign_lhs(gs);
+    tree rhs1 = gimple_assign_rhs1(gs);
+    tree rhs2 = gimple_assign_rhs2(gs);
+
     std::string rhsString;
     enum tree_code code = gimple_assign_rhs_code(gs);
     switch (code)
@@ -542,6 +546,57 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
             {
                 rhsString += gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs)))
                         + " ";
+
+                switch(gimple_assign_rhs_code(gs))
+                {
+                    case PLUS_EXPR:
+                    {
+                        mKdmWriter.writeTripleKind(actionId, KdmKind::Add());
+                        long lhsId = mKdmWriter.getReferenceId(lhs);
+                        long rhs1Id;
+
+                        if (!mKdmWriter.hasReferenceId(rhs1))
+                        {
+                            rhs1Id = mKdmWriter.getReferenceId(rhs1);
+                            mKdmWriter.processAstNode(rhs1);
+                            mKdmWriter.writeTripleContains(actionId, rhs1Id);
+                        }
+                        else
+                        {
+                            rhs1Id = mKdmWriter.getReferenceId(rhs1);
+                            if (TREE_CODE(rhs1) == INTEGER_CST)
+                            {
+                                mKdmWriter.writeTripleContains(actionId, rhs1Id);
+                            }
+                        }
+
+                        long rhs2Id;
+                        if (!mKdmWriter.hasReferenceId(rhs2))
+                        {
+                            rhs2Id = mKdmWriter.getReferenceId(rhs2);
+                            mKdmWriter.processAstNode(rhs2);
+                            mKdmWriter.writeTripleContains(actionId, rhs2Id);
+                        }
+                        else
+                        {
+                            rhs2Id = mKdmWriter.getReferenceId(rhs2);
+                            if (TREE_CODE(rhs2) == INTEGER_CST)
+                            {
+                                mKdmWriter.writeTripleContains(actionId, rhs1Id);
+                            }
+                        }
+
+
+                        writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+                        writeKdmActionRelation(KdmType::Reads(), actionId, rhs1Id);
+                        writeKdmActionRelation(KdmType::Reads(), actionId, rhs2Id);
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
 
 //                switch (gimple_assign_rhs_code(gs))
 //                {
@@ -585,8 +640,9 @@ long GimpleKdmTripleWriter::getBlockReferenceId(location_t const loc)
         blockId = mKdmWriter.getNextElementId();
         mBlockUnitMap.insert(std::make_pair(xloc, blockId));
         mKdmWriter.writeTripleKdmType(blockId, KdmType::BlockUnit());
-        long srcId = mKdmWriter.writeKdmSourceRef(blockId, xloc);
-        mKdmWriter.writeTripleContains(blockId, srcId);
+        mKdmWriter.writeKdmSourceRef(blockId, xloc);
+//        long srcId = mKdmWriter.writeKdmSourceRef(blockId, xloc);
+//        mKdmWriter.writeTripleContains(blockId, srcId);
     }
     else
     {
@@ -601,6 +657,7 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
     mKdmWriter.writeTripleKdmType(arId, type);
     mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
     mKdmWriter.writeTriple(arId, KdmPredicate::To(), toId);
+    mKdmWriter.writeTripleContains(fromId, arId);
     return arId;
 }
 

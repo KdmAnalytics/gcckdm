@@ -10,8 +10,10 @@
 
 namespace gcckdm {
 
+
 class KdmType;
 class KdmPredicate;
+class KdmKind;
 
 }  // namespace gcckdm
 

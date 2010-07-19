@@ -8,6 +8,7 @@
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/KdmKind.hh"
+#include "boost/current_function.hpp"
 
 namespace
 {
@@ -412,10 +413,9 @@ void GimpleKdmTripleWriter::processGimpleAssignStatement(tree const parent, gimp
 void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)
 {
     std::string rhsString;
+    tree rhs = gimple_assign_rhs1(gs);
 
     enum tree_code rhs_code = gimple_assign_rhs_code(gs);
-    tree lhs = gimple_assign_lhs(gs);
-    tree rhs = gimple_assign_rhs1(gs);
     switch (rhs_code)
     {
         case VIEW_CONVERT_EXPR:
@@ -452,24 +452,7 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
             if (TREE_CODE_CLASS(rhs_code) == tcc_declaration || TREE_CODE_CLASS(rhs_code) == tcc_constant || TREE_CODE_CLASS(rhs_code)
                     == tcc_reference || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
             {
-                mKdmWriter.writeTripleKind(actionId, KdmKind::Assign());
-                long lhsId = mKdmWriter.getReferenceId(lhs);
-                long rhsId;
-
-                if (!mKdmWriter.hasReferenceId(rhs))
-                {
-                    rhsId = mKdmWriter.getReferenceId(rhs);
-                    mKdmWriter.processAstNode(rhs);
-                }
-                else
-                {
-                    rhsId = mKdmWriter.getReferenceId(rhs);
-                }
-                //constants are contained in action elements
-                //assuming everything that gets here is a constant....
-                mKdmWriter.writeTripleContains(actionId, rhsId);
-                writeKdmActionRelation(KdmType::Reads(), actionId, rhsId);
-                writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+                writeKdmUnaryOperation(actionId, KdmKind::Assign(), gs);
                 break;
             }
             else if (rhs_code == BIT_NOT_EXPR)
@@ -509,10 +492,6 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
 
 void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const actionId, gimple const gs)
 {
-    tree lhs = gimple_assign_lhs(gs);
-    tree rhs1 = gimple_assign_rhs1(gs);
-    tree rhs2 = gimple_assign_rhs2(gs);
-
     std::string rhsString;
     enum tree_code code = gimple_assign_rhs_code(gs);
     switch (code)
@@ -532,8 +511,7 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
         {
             rhsString += tree_code_name[static_cast<int> (code)];
             std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-            rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs))
-                    + ">";
+            rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ">";
             break;
         }
         default:
@@ -551,45 +529,7 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
                 {
                     case PLUS_EXPR:
                     {
-                        mKdmWriter.writeTripleKind(actionId, KdmKind::Add());
-                        long lhsId = mKdmWriter.getReferenceId(lhs);
-                        long rhs1Id;
-
-                        if (!mKdmWriter.hasReferenceId(rhs1))
-                        {
-                            rhs1Id = mKdmWriter.getReferenceId(rhs1);
-                            mKdmWriter.processAstNode(rhs1);
-                            mKdmWriter.writeTripleContains(actionId, rhs1Id);
-                        }
-                        else
-                        {
-                            rhs1Id = mKdmWriter.getReferenceId(rhs1);
-                            if (TREE_CODE(rhs1) == INTEGER_CST)
-                            {
-                                mKdmWriter.writeTripleContains(actionId, rhs1Id);
-                            }
-                        }
-
-                        long rhs2Id;
-                        if (!mKdmWriter.hasReferenceId(rhs2))
-                        {
-                            rhs2Id = mKdmWriter.getReferenceId(rhs2);
-                            mKdmWriter.processAstNode(rhs2);
-                            mKdmWriter.writeTripleContains(actionId, rhs2Id);
-                        }
-                        else
-                        {
-                            rhs2Id = mKdmWriter.getReferenceId(rhs2);
-                            if (TREE_CODE(rhs2) == INTEGER_CST)
-                            {
-                                mKdmWriter.writeTripleContains(actionId, rhs1Id);
-                            }
-                        }
-
-
-                        writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
-                        writeKdmActionRelation(KdmType::Reads(), actionId, rhs1Id);
-                        writeKdmActionRelation(KdmType::Reads(), actionId, rhs2Id);
+                        writeKdmBinaryOperation(actionId, KdmKind::Add(), gs);
                         break;
                     }
                     default:
@@ -597,19 +537,6 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
                         break;
                     }
                 }
-
-//                switch (gimple_assign_rhs_code(gs))
-//                {
-//                    case GIMPLE_ADD:
-//                    {
-//                        std::cerr << "Here\n";
-//                        break;
-//                    }
-//                    default:
-//                    {
-//
-//                    }
-//                }
             }
             if (op_prio(gimple_assign_rhs2(gs)) <= op_code_prio(code))
             {
@@ -641,8 +568,6 @@ long GimpleKdmTripleWriter::getBlockReferenceId(location_t const loc)
         mBlockUnitMap.insert(std::make_pair(xloc, blockId));
         mKdmWriter.writeTripleKdmType(blockId, KdmType::BlockUnit());
         mKdmWriter.writeKdmSourceRef(blockId, xloc);
-//        long srcId = mKdmWriter.writeKdmSourceRef(blockId, xloc);
-//        mKdmWriter.writeTripleContains(blockId, srcId);
     }
     else
     {
@@ -660,6 +585,78 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
     mKdmWriter.writeTripleContains(fromId, arId);
     return arId;
 }
+
+
+void GimpleKdmTripleWriter::writeKdmUnaryRelationships(long const actionId, long const lhsId, long const rhsId)
+{
+    writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+    writeKdmActionRelation(KdmType::Reads(), actionId, rhsId);
+}
+
+
+
+void GimpleKdmTripleWriter::writeKdmUnaryOperation(long const actionId, KdmKind const & kind, gimple const gs)
+{
+    tree lhs = gimple_assign_lhs(gs);
+    tree rhs = gimple_assign_rhs1(gs);
+
+    mKdmWriter.writeTripleKind(actionId, kind);
+    long lhsId = mKdmWriter.getReferenceId(lhs);
+    long rhsId = getRhsReferenceId(actionId,rhs);
+    writeKdmUnaryRelationships(actionId, lhsId, rhsId);
+
+}
+
+void GimpleKdmTripleWriter::writeKdmBinaryOperation(long const actionId, KdmKind const & kind, gimple const gs)
+{
+    tree lhs = gimple_assign_lhs(gs);
+    tree rhs1 = gimple_assign_rhs1(gs);
+    tree rhs2 = gimple_assign_rhs2(gs);
+
+    mKdmWriter.writeTripleKind(actionId, kind);
+    long lhsId = mKdmWriter.getReferenceId(lhs);
+    long rhs1Id = getRhsReferenceId(actionId,rhs1);
+    long rhs2Id = getRhsReferenceId(actionId,rhs2);
+    writeKdmBinaryRelationships(actionId, lhsId, rhs1Id, rhs2Id);
+
+}
+
+void GimpleKdmTripleWriter::writeKdmBinaryRelationships(long const actionId, long const lhsId, long const rhs1Id, long const rhs2Id)
+{
+    writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+    writeKdmActionRelation(KdmType::Reads(), actionId, rhs1Id);
+    writeKdmActionRelation(KdmType::Reads(), actionId, rhs2Id);
+}
+
+long GimpleKdmTripleWriter::getRhsReferenceId(long const actionId, tree const rhs)
+{
+    long rhsId;
+
+    //If this node isn't referenced we haven't seen this value before and it should be
+    //processed and contained within the ActionElement
+    if (!mKdmWriter.hasReferenceId(rhs))
+    {
+        rhsId = mKdmWriter.getReferenceId(rhs);
+        mKdmWriter.processAstNode(rhs);
+        mKdmWriter.writeTripleContains(actionId, rhsId);
+    }
+    // If this node is referenced we have to check to see it's type before
+    // we say it's contained in the action element.
+    else
+    {
+        rhsId = mKdmWriter.getReferenceId(rhs);
+        if (TREE_CODE(rhs) == INTEGER_CST)
+        {
+            mKdmWriter.writeTripleContains(actionId, rhsId);
+        }
+//        else
+//        {
+//            std::cerr << BOOST_CURRENT_FUNCTION << ": Unsupported RHS :" << tree_code_name[TREE_CODE(rhs)] << std::endl;
+//        }
+    }
+    return rhsId;
+}
+
 
 } // namespace kdmtriplewriter
 

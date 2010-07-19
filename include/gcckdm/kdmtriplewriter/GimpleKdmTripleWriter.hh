@@ -46,6 +46,14 @@ private:
 
     long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
 
+    void writeKdmUnaryRelationships(long const actionId, long lhsId, long rhsId);
+    void writeKdmBinaryRelationships(long const actionId, long lhsId, long rhs1Id, long rhs2Id);
+
+    void writeKdmUnaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
+    void writeKdmBinaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
+
+    long getRhsReferenceId(long actionId, tree const rhs);
+
     /**
      * Reference to the main kdm triple writer
      */

@@ -42,17 +42,55 @@ class KdmTripleWriter : public GccAstListener, public TripleWriter
 public:
     static const int KdmTripleVersion = 1;
 
+    /**
+     * Pointer to the output stream this writer uses to create output
+     */
     typedef boost::shared_ptr<std::ostream> KdmSinkPtr;
 
+    /**
+     * Constructs a KdmTripleWriter which directs it's output to the stream
+     * in the given pointer
+     *
+     * @param kdmSink pointer to a output stream
+     */
     explicit KdmTripleWriter(KdmSinkPtr const & kdmSink);
+
+    /**
+     * Construct a KdmTriplewriter which directs it's output to the file
+     * with the given filename
+     *
+     * @param filename the file contain the kdm output
+     */
     explicit KdmTripleWriter(Path const & filename);
 
+    /**
+     * Destructor
+     */
     virtual ~KdmTripleWriter();
 
+    /**
+     * @see GccAstListener::startTranslationUnit
+     */
     virtual void startTranslationUnit(Path const & file);
+
+    /**
+     * @see GccAstListener::startKdmGimplePass
+     */
     virtual void startKdmGimplePass();
+
+    /**
+     * @see GccAstListener::processAstNode
+     */
     virtual void processAstNode(tree const ast);
+
+    /**
+     * @see GccAstListener::finishKdmGimplePass
+     */
     virtual void finishKdmGimplePass();
+
+    /**
+     * @see GccAstListener::finishTranslationUnit
+     */
     virtual void finishTranslationUnit();
 
     /**
@@ -71,17 +109,94 @@ public:
     virtual void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object);
 
 
+    /**
+     * Convenience method to write the common "kdmType" triple.
+     *
+     * writes  <subject> <kdmType> <type>
+     *
+     * @param subject the subject id
+     * @param type
+     */
     void writeTripleKdmType(long const subject, KdmType const & type);
+
+    /**
+     * Convenience method to write the common "name" triple
+     *
+     * writes: <subject> <name> <name>
+     */
     void writeTripleName(long const subject, std::string const & name);
+
+    /**
+     * Convenience method to write the common "contains" triple
+     *
+     * writes: <subject> <contains> <child>
+     */
     void writeTripleContains(long const parent, long const child);
+
+
+    /**
+     * Convenience method to write the common "LinkId" triple
+     *
+     * writes: <subject> <linkId> <child>
+     */
     void writeTripleLinkId(long const subject, std::string const & name);
+
+
+    /**
+     * Convenience method to write the common "kind" triple
+     *
+     * writes: <subject> <kind> <kind>
+     */
     void writeTripleKind(long const subject, KdmKind const & kind);
+
+    /**
+     * Writes a KDM Source ref using the information contained in the expanded_location
+     *
+     * Writes: <id> <SourceRef> "<file id>;<line number>
+     *
+     * Example:  <44> <SourceRef> "15;6"
+     *
+     * @param id the Id of the element that need a source ref
+     * @param xloc
+     *
+     * @return the id that was passed into the metho
+     */
     long writeKdmSourceRef(long id, expanded_location const & xloc);
+
+    /**
+     * Returns true if the given node has already been encountered and
+     * can be referenced
+     *
+     * @param node the node to test for a reference id
+     */
     bool hasReferenceId(tree const node) const;
+
+    /**
+     * Returns the id for the given node.  If the node
+     * doesn't already have a id, the next available element id is inserted
+     * into the referenceNode map and the node is placed in the process queue
+     *
+     * Note: this method can cause the elementId counter to increase
+     */
     long getReferenceId(tree const node);
+
+    /**
+     * Returns the next available element Id.
+     *
+     * Note: Calling this method causes the element id counter to increase
+     */
     long getNextElementId();
 
+    /**
+     * Writes the given string as comments.  Multiline strings are written as
+     * multiple comments
+     *
+     * @param comment the comment to be inserted into the output stream
+     */
+    void writeComment(std::string const & comment);
+
 private:
+
     typedef std::tr1::unordered_map<tree, long> TreeMap;
     typedef std::tr1::unordered_map<Path, long> FileMap;
     typedef std::tr1::unordered_set<tree> TreeSet;

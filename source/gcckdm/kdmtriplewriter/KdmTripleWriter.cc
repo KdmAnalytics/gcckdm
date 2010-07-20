@@ -13,6 +13,7 @@
 #include "boost/filesystem/fstream.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "boost/lexical_cast.hpp"
+#include "boost/algorithm/string.hpp"
 
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
@@ -56,6 +57,19 @@ namespace gcckdm
 
 namespace kdmtriplewriter
 {
+
+struct CommentWriter
+{
+    CommentWriter(KdmTripleWriter::KdmSinkPtr sink) : mKdmSink(sink){}
+    void operator()(std::string const & str)
+        {
+          *mKdmSink << "# " << str << "\n";
+        }
+    KdmTripleWriter::KdmSinkPtr mKdmSink;
+};
+
+
+
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
     mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
@@ -361,6 +375,14 @@ long KdmTripleWriter::writeKdmSignature(tree const function)
 void KdmTripleWriter::writeVersionHeader()
 {
     *mKdmSink << "KDM_Triple:" << KdmTripleWriter::KdmTripleVersion << "\n";
+}
+
+
+void KdmTripleWriter::writeComment(std::string const & comment)
+{
+    std::vector<std::string> strs;
+    boost::split(strs, comment, boost::is_any_of("\n"));
+    std::for_each(strs.begin(), strs.end(), CommentWriter(mKdmSink));
 }
 
 void KdmTripleWriter::writeDefaultKdmModelElements()

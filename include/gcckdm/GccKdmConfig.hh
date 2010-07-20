@@ -34,7 +34,6 @@ extern "C"
 #include <tree-iterator.h>
 #include <tree-flow.h>
 #include <gimple.h>
-
 }
 
 #endif /* GCCKDM_GCCKDMCONFIG_HH_ */

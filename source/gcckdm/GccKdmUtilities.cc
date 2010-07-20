@@ -301,9 +301,33 @@ std::string getAstNodeName(tree node)
         }
         break;
       }
+      case REAL_CST:
+      {
+          REAL_VALUE_TYPE d;
+          if (TREE_OVERFLOW (node))
+          {
+            nameStr += "Overflow";
+          }
+          d = TREE_REAL_CST (node);
+          if (REAL_VALUE_ISINF (d))
+          {
+            nameStr += "Inf";
+          }
+          else if (REAL_VALUE_ISNAN (d))
+          {
+            nameStr += "Nan";
+          }
+          else
+          {
+            char str[64];
+            real_to_decimal (str, &d, sizeof (str), 0, 1);
+            nameStr += str;
+          }
+        break;
+      }
       default:
       {
-        std::cerr << "gcckdm::getAstNodeName() not implemented yet: " << tree_code_name[TREE_CODE(node)] << std::endl;
+        std::cerr << "gcckdm::getAstNodeName() node type implemented yet: " << tree_code_name[TREE_CODE(node)] << std::endl;
       }
 
     }

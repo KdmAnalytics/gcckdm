@@ -222,7 +222,7 @@ private:
   void processAstFunctionDeclarationNode(tree const functionDecl);
   void processAstFieldDeclarationNode(tree const fieldDecl);
   void processAstVariableDeclarationNode(tree const varDecl);
-  void processAstIntegerConstantNode(tree const intConst);
+  void processAstValueNode(tree const valueConst);
 
   void writeVersionHeader();
   void writeDefaultKdmModelElements();

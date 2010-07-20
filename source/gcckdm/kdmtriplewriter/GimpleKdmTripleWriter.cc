@@ -8,7 +8,6 @@
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/KdmKind.hh"
-#include "boost/current_function.hpp"
 
 namespace
 {

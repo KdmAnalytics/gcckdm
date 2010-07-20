@@ -530,6 +530,16 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
                         writeKdmBinaryOperation(actionId, KdmKind::Add(), gs);
                         break;
                     }
+                    case MINUS_EXPR:
+                    {
+                        writeKdmBinaryOperation(actionId, KdmKind::Subtract(), gs);
+                        break;
+                    }
+                    case MULT_EXPR:
+                    {
+                        writeKdmBinaryOperation(actionId, KdmKind::Multiply(), gs);
+                        break;
+                    }
                     default:
                     {
                         break;

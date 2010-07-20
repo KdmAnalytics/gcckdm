@@ -541,8 +541,16 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
             writeKdmBinaryOperation(actionId, KdmKind::Multiply(), gs);
             break;
           }
+          case TRUNC_DIV_EXPR:
+          case RDIV_EXPR:
+          case EXACT_DIV_EXPR:
+          {
+            writeKdmBinaryOperation(actionId, KdmKind::Divide(), gs);
+            break;
+          }
           default:
           {
+            mKdmWriter.writeComment(std::string("Unsupported rhs op_code: ") + op_symbol_code(gimple_assign_rhs_code(gs)) );
             break;
           }
         }
@@ -638,27 +646,15 @@ long GimpleKdmTripleWriter::getRhsReferenceId(long const actionId, tree const rh
 {
   long rhsId;
 
-  //If this node isn't referenced we haven't seen this value before and it should be
-  //processed and contained within the ActionElement
-  if (!mKdmWriter.hasReferenceId(rhs))
+  //Value types we handle special have to add them to languageUnit
+  if (TREE_CODE(rhs) == INTEGER_CST)
   {
     rhsId = mKdmWriter.getReferenceId(rhs);
     mKdmWriter.processAstNode(rhs);
-    mKdmWriter.writeTripleContains(actionId, rhsId);
   }
-  // If this node is referenced we have to check to see it's type before
-  // we say it's contained in the action element.
   else
   {
     rhsId = mKdmWriter.getReferenceId(rhs);
-    if (TREE_CODE(rhs) == INTEGER_CST)
-    {
-      mKdmWriter.writeTripleContains(actionId, rhsId);
-    }
-    //        else
-    //        {
-    //            std::cerr << BOOST_CURRENT_FUNCTION << ": Unsupported RHS :" << tree_code_name[TREE_CODE(rhs)] << std::endl;
-    //        }
   }
   return rhsId;
 }

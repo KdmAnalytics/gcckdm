@@ -143,7 +143,6 @@ std::string getBinaryRhsString(gimple const gs)
 
 std::string getTernaryRhsString(gimple const gs)
 {
-    std::cerr << "TernaryRhsString not implemented" << std::endl;
     return "<TODO: ternary not implemented>";
     //    ///Might not need this function I don't know
     //
@@ -197,7 +196,7 @@ void GimpleKdmTripleWriter::processGimpleSequence(tree const parent, gimple_seq 
 void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple const gs)
 {
 
-    std::cerr << "================GIMPLE START==========================\n";
+    mKdmWriter.writeComment("================GIMPLE START==========================");
     if (gs)
     {
         switch (gimple_code(gs))
@@ -363,14 +362,14 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
             }
             default:
             {
-                std::cerr << "Gimple statement not handled yet" << std::endl;
+                mKdmWriter.writeComment("UNHANDLED: Gimple statement");
                 break;
             }
 
         }
 
     }
-    std::cerr << "================GIMPLE END==========================\n";
+    mKdmWriter.writeComment("================GIMPLE END==========================");
 
 }
 

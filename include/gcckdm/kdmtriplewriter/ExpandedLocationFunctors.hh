@@ -19,19 +19,19 @@ namespace kdmtriplewriter
 
 struct ExpanedLocationHash
 {
-    size_t operator()(expanded_location const & v) const
-    {
-        std::tr1::hash < std::string > h;
-        return h(std::string(v.file) + boost::lexical_cast<std::string>(v.line));
-    }
+  size_t operator()(expanded_location const & v) const
+  {
+    std::tr1::hash<std::string> h;
+    return h(std::string(v.file) + boost::lexical_cast<std::string>(v.line));
+  }
 };
 
 struct ExpandedLocationEqual
 {
-    bool operator()(expanded_location const & rhs, expanded_location const & lhs) const
-    {
-        return (std::string(rhs.file) == std::string(lhs.file)) && (rhs.line == lhs.line);
-    }
+  bool operator()(expanded_location const & rhs, expanded_location const & lhs) const
+  {
+    return (std::string(rhs.file) == std::string(lhs.file)) && (rhs.line == lhs.line);
+  }
 };
 
 } // namespace kdmtriplewriter

@@ -11,29 +11,24 @@
 #include "gcckdm/GccKdmConfig.hh"
 #include <boost/filesystem/path.hpp>
 
-
-
-
 namespace gcckdm
 {
 
 class GccAstListener
 {
 public:
-    typedef boost::filesystem::path Path;
+  typedef boost::filesystem::path Path;
 
-    virtual ~GccAstListener(){};
+  virtual ~GccAstListener(){};
 
-    virtual void startTranslationUnit(Path const & filename) = 0;
-    virtual void startKdmGimplePass() = 0;
-    virtual void finishKdmGimplePass() = 0;
-    virtual void processAstNode(tree const ast) = 0;
-    virtual void finishTranslationUnit() = 0;
+  virtual void startTranslationUnit(Path const & filename) = 0;
+  virtual void startKdmGimplePass() = 0;
+  virtual void finishKdmGimplePass() = 0;
+  virtual void processAstNode(tree const ast) = 0;
+  virtual void finishTranslationUnit() = 0;
 };
 
 } // namespace gcckdm
-
-
 
 
 #endif /* GCCKDM_GCCASTLISTENER_HH_ */

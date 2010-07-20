@@ -14,8 +14,8 @@ namespace gcckdm
 
 std::ostream & operator<<(std::ostream & sink, KdmPredicate const & pred)
 {
-    sink << pred.name();
-    return sink;
+  sink << pred.name();
+  return sink;
 }
 
 } // namespace gcckdm

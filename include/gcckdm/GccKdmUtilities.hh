@@ -18,7 +18,6 @@ namespace gcckdm
  */
 std::string getAstNodeName(tree node);
 
-
 /**
  * Returns true if the location <code>loc</code> is a known location
  *
@@ -44,7 +43,6 @@ location_t locationOf(tree t);
  */
 std::string const locationString(location_t loc);
 
-
-}  // namespace gcckdm
+} // namespace gcckdm
 
 #endif /* GCCKDM_GCCKDMUTILITIES_HH_ */

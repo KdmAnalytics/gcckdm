@@ -3,9 +3,9 @@
 
 struct null_deleter
 {
-    void operator()(void const *) const
-    {
-    }
+  void operator()(void const *) const
+  {
+  }
 };
 
 #endif //NULL_DELETER_HPP

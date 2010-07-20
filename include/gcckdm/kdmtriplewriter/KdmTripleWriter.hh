@@ -209,7 +209,7 @@ private:
     KdmElementId_WorkbenchExtensionFamily,
     KdmElementId_HiddenStereoType,
     KdmElementId_CodeAssembly,
-    KdmElementId_PrimitiveSharedUnit,
+    KdmElementId_LanguageUnit,
     KdmElementId_DerivedSharedUnit,
     KdmElementId_ClassSharedUnit,
     KdmElementId_InventoryModel,

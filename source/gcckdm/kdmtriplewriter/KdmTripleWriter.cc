@@ -408,11 +408,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
     writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Uid(), "2");
     writeTriple(KdmElementId_CodeAssembly, KdmPredicate::LinkId(), ":code");
     writeTriple(KdmElementId_CodeModel, KdmPredicate::Contains(), KdmElementId_CodeAssembly);
-    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
-    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::Name(), ":primitive");
-    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::Uid(), "3");
-    writeTriple(KdmElementId_PrimitiveSharedUnit, KdmPredicate::LinkId(), ":primitive");
-    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_PrimitiveSharedUnit);
+    writeTriple(KdmElementId_LanguageUnit, KdmPredicate::KdmType(), KdmType::LanguageUnit());
+    writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Name(), ":language");
+    writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Uid(), "3");
+    writeTriple(KdmElementId_LanguageUnit, KdmPredicate::LinkId(), ":language");
+    writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_LanguageUnit);
     writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
     writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Name(), ":derived");
     writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Uid(), "4");
@@ -538,6 +538,7 @@ long KdmTripleWriter::writeKdmValue(tree const val)
     tree type(TYPE_MAIN_VARIANT(TREE_TYPE(val)));
     long ref = getReferenceId(type);
     writeTriple(valueId, KdmPredicate::Type(), ref);
+    writeTripleContains(KdmElementId_LanguageUnit, valueId);
     return valueId;
 }
 
@@ -644,6 +645,7 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
 
     writeTripleKdmType(typeKdmElementId, kdmType);
     writeTripleName(typeKdmElementId, name);
+    writeTripleContains(KdmElementId_LanguageUnit, typeKdmElementId);
 }
 
 void KdmTripleWriter::writeKdmPointerType(tree const pointerType)

@@ -8,13 +8,13 @@
 #ifndef GCCKDMFWD_HH_
 #define GCCKDMFWD_HH_
 
-namespace gcckdm {
-
+namespace gcckdm
+{
 
 class KdmType;
 class KdmPredicate;
 class KdmKind;
 
-}  // namespace gcckdm
+} // namespace gcckdm
 
 #endif /* GCCKDMFWD_HH_ */

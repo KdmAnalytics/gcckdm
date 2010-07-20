@@ -6,9 +6,11 @@
 #include <boost/lexical_cast.hpp>
 #include "gcckdm/GccAstListener.hh"
 
-namespace std {
+namespace std
+{
 
-namespace tr1 {
+namespace tr1
+{
 
 /**
  * Template specialization of the std::tr1::hash structure
@@ -16,20 +18,19 @@ namespace tr1 {
  * containers.  Current defaults to the hashing on the string
  * representation of the given path
  */
-template <>
+template<>
 struct hash<gcckdm::GccAstListener::Path>
 {
-    size_t operator()(gcckdm::GccAstListener::Path const & v) const
-    {
-       hash<gcckdm::GccAstListener::Path::string_type> h;
-       return h(v.string());
-    }
+  size_t operator()(gcckdm::GccAstListener::Path const & v) const
+  {
+    hash<gcckdm::GccAstListener::Path::string_type> h;
+    return h(v.string());
+  }
 };
 
-}  // namespace tr1
+} // namespace tr1
 
-}  // namespace std
-
+} // namespace std
 
 
 #endif

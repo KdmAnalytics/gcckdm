@@ -12,7 +12,6 @@
 #include <gcckdm/KdmPredicate.hh>
 #include <gcckdm/KdmType.hh>
 
-
 namespace gcckdm
 {
 
@@ -26,37 +25,40 @@ class TripleWriter
 {
 public:
 
-    /**
-     * Empty Virtual Destructor to allow proper destruction
-     */
-    virtual ~TripleWriter(){};
+  /**
+   * Empty Virtual Destructor to allow proper destruction
+   */
+  virtual ~TripleWriter()
+  {
+  }
+  ;
 
-    /**
-     * Writes the given three values as a triple
-     *
-     * @param subject - the subject id
-     * @param predicate - the KDM predicate
-     * @param object - the object id
-     */
-    virtual void writeTriple(long const subject, KdmPredicate const & predicate, long const object) = 0;
+  /**
+   * Writes the given three values as a triple
+   *
+   * @param subject - the subject id
+   * @param predicate - the KDM predicate
+   * @param object - the object id
+   */
+  virtual void writeTriple(long const subject, KdmPredicate const & predicate, long const object) = 0;
 
-    /**
-     * Writes the given three values as a triple
-     *
-     * @param subject - the subject id
-     * @param predicate - the KDM predicate
-     * @param object - a KdmType as defined by the KDM specification ie action/ActionElement
-     */
-    virtual void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object) = 0;
+  /**
+   * Writes the given three values as a triple
+   *
+   * @param subject - the subject id
+   * @param predicate - the KDM predicate
+   * @param object - a KdmType as defined by the KDM specification ie action/ActionElement
+   */
+  virtual void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object) = 0;
 
-    /**
-     * Writes the given three values as a triple
-     *
-     * @param subject - the subject id
-     * @param predicate - the KDM predicate
-     * @param object - a free form string (literal)
-     */
-    virtual void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object) = 0;
+  /**
+   * Writes the given three values as a triple
+   *
+   * @param subject - the subject id
+   * @param predicate - the KDM predicate
+   * @param object - a free form string (literal)
+   */
+  virtual void writeTriple(long const subject, KdmPredicate const & predicate, std::string const & object) = 0;
 
 private:
 };

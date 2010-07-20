@@ -10,22 +10,26 @@
 
 #include <typeinfo>
 
-const // It is a const object...
+const// It is a const object...
 class nullptr_t
 {
-  public:
-    template<class T>
-      operator T*() const // convertible to any type of null non-member pointer...
-    { return 0; }
+public:
+  template<class T>
+  operator T*() const // convertible to any type of null non-member pointer...
+  {
+    return 0;
+  }
 
-    template<class C, class T>
-    operator T C::*() const   // or any type of null member pointer...
-    { return 0; }
+  template<class C, class T>
+  operator T C::*() const // or any type of null member pointer...
+  {
+    return 0;
+  }
 
-  private:
-    void operator&() const;  // Can't take address of nullptr
+private:
+  void operator&() const; // Can't take address of nullptr
 
-} nullptr = {};
-
+} nullptr =
+{ };
 
 #endif /* GCCKDM_UTILITIES_NULLPTR_HH_ */

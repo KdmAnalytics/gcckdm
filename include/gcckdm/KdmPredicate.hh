@@ -11,57 +11,104 @@
 #include <string>
 #include <iosfwd>
 
-namespace gcckdm {
+namespace gcckdm
+{
 
 class KdmPredicate
 {
 private:
-    enum
-    {
-        KdmPredicate_KdmType,
-        KdmPredicate_Contains,
-        KdmPredicate_Type,
-        KdmPredicate_Name,
-        KdmPredicate_Kind,
-        KdmPredicate_From,
-        KdmPredicate_To,
-        KdmPredicate_Path,
-        KdmPredicate_LinkId,
-        KdmPredicate_SourceRef,
-        KdmPredicate_Uid,
-        KdmPredicate_LastUid,
-   };
+  enum
+  {
+    KdmPredicate_KdmType,
+    KdmPredicate_Contains,
+    KdmPredicate_Type,
+    KdmPredicate_Name,
+    KdmPredicate_Kind,
+    KdmPredicate_From,
+    KdmPredicate_To,
+    KdmPredicate_Path,
+    KdmPredicate_LinkId,
+    KdmPredicate_SourceRef,
+    KdmPredicate_Uid,
+    KdmPredicate_LastUid,
+  };
 
 public:
-    static const KdmPredicate KdmType() { return KdmPredicate(KdmPredicate_KdmType,"kdmType");}
-    static const KdmPredicate Contains() { return KdmPredicate(KdmPredicate_Contains, "contains");}
-    static const KdmPredicate Type() { return KdmPredicate(KdmPredicate_Type, "type");}
-    static const KdmPredicate Name() { return KdmPredicate(KdmPredicate_Name, "name");}
-    static const KdmPredicate Kind() { return KdmPredicate(KdmPredicate_Kind, "kind");}
-    static const KdmPredicate From() { return KdmPredicate(KdmPredicate_From, "from");}
-    static const KdmPredicate To() { return KdmPredicate(KdmPredicate_To, "to");}
-    static const KdmPredicate Path() { return KdmPredicate(KdmPredicate_Path, "path");}
-    static const KdmPredicate SourceRef() { return KdmPredicate(KdmPredicate_SourceRef, "SourceRef");}
+  static const KdmPredicate KdmType()
+  {
+    return KdmPredicate(KdmPredicate_KdmType, "kdmType");
+  }
+  static const KdmPredicate Contains()
+  {
+    return KdmPredicate(KdmPredicate_Contains, "contains");
+  }
+  static const KdmPredicate Type()
+  {
+    return KdmPredicate(KdmPredicate_Type, "type");
+  }
+  static const KdmPredicate Name()
+  {
+    return KdmPredicate(KdmPredicate_Name, "name");
+  }
+  static const KdmPredicate Kind()
+  {
+    return KdmPredicate(KdmPredicate_Kind, "kind");
+  }
+  static const KdmPredicate From()
+  {
+    return KdmPredicate(KdmPredicate_From, "from");
+  }
+  static const KdmPredicate To()
+  {
+    return KdmPredicate(KdmPredicate_To, "to");
+  }
+  static const KdmPredicate Path()
+  {
+    return KdmPredicate(KdmPredicate_Path, "path");
+  }
+  static const KdmPredicate SourceRef()
+  {
+    return KdmPredicate(KdmPredicate_SourceRef, "SourceRef");
+  }
 
-    static const KdmPredicate LinkId() { return KdmPredicate(KdmPredicate_LinkId, "link::id");}
-    static const KdmPredicate Uid() { return KdmPredicate(KdmPredicate_Uid, "UID");}
-    static const KdmPredicate LastUid() { return KdmPredicate(KdmPredicate_LastUid, "LastUID");}
+  static const KdmPredicate LinkId()
+  {
+    return KdmPredicate(KdmPredicate_LinkId, "link::id");
+  }
+  static const KdmPredicate Uid()
+  {
+    return KdmPredicate(KdmPredicate_Uid, "UID");
+  }
+  static const KdmPredicate LastUid()
+  {
+    return KdmPredicate(KdmPredicate_LastUid, "LastUID");
+  }
 
-
-    int const id() const { return mId; }
-    operator int() const { return mId; }
-    std::string const & name() const { return mName; }
+  int const id() const
+  {
+    return mId;
+  }
+  operator int() const
+  {
+    return mId;
+  }
+  std::string const & name() const
+  {
+    return mName;
+  }
 
 private:
-    KdmPredicate(int const & id, std::string name) : mId(id), mName(name){}
+  KdmPredicate(int const & id, std::string name) :
+    mId(id), mName(name)
+  {
+  }
 
-    int mId;
-    std::string mName;
+  int mId;
+  std::string mName;
 };
 
-std::ostream & operator<< (std::ostream & sink, KdmPredicate const & pred);
+std::ostream & operator<<(std::ostream & sink, KdmPredicate const & pred);
 
-
-}  // namespace gcckdm
+} // namespace gcckdm
 
 #endif /* KDMPREDICATE_HH_ */

@@ -9,13 +9,13 @@
 
 #include <iostream>
 
-namespace gcckdm {
+namespace gcckdm
+{
 
 std::ostream & operator<<(std::ostream & sink, KdmType const & pred)
 {
-    sink << pred.name();
-    return sink;
+  sink << pred.name();
+  return sink;
 }
 
-
-}  // namespace gcckdm
+} // namespace gcckdm

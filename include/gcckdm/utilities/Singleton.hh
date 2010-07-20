@@ -19,33 +19,33 @@ namespace gcckdm
 template<typename T> class Singleton
 {
 public:
-    Singleton()
-    {
-        assert(!mSingleton);
-        mSingleton = static_cast<T*> (this);
-    }
+  Singleton()
+  {
+    assert(!mSingleton);
+    mSingleton = static_cast<T*> (this);
+  }
 
-    ~Singleton()
-    {
-        assert(mSingleton);
-        mSingleton = 0;
-    }
+  ~Singleton()
+  {
+    assert(mSingleton);
+    mSingleton = 0;
+  }
 
-    static T& Instance()
-    {
-        assert(mSingleton);
-        return *mSingleton;
-    }
+  static T& Instance()
+  {
+    assert(mSingleton);
+    return *mSingleton;
+  }
 
-    static T* InstancePtr()
-    {
-        return mSingleton;
-    }
+  static T* InstancePtr()
+  {
+    return mSingleton;
+  }
 private:
-    static T* mSingleton;
+  static T* mSingleton;
 };
 
-template <typename T> T* Singleton<T>::mSingleton = 0;
+template<typename T> T* Singleton<T>::mSingleton = 0;
 
 } // namespace gcckdm
 

@@ -39,6 +39,7 @@ private:
   long getBlockReferenceId(location_t const loc);
   void processGimpleBindStatement(tree const parent, gimple const gs);
   void processGimpleAssignStatement(tree const parent, gimple const gs);
+  void processGimpleReturnStatement(tree const parent, gimple const gs);
 
   void processGimpleUnaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);

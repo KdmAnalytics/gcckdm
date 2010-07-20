@@ -20,7 +20,8 @@ bool isValueNode(tree const node)
 
 void gimple_not_implemented_yet(gimple const gs)
 {
-  std::cerr << "Unknown GIMPLE statement: " << gimple_code_name[static_cast<int> (gimple_code(gs))] << std::endl;
+  std::cerr << "# UNSUPPORTED: GIMPLE statement: " << gimple_code_name[static_cast<int> (gimple_code(gs))] << std::endl;
+  std::cerr << "# UNSUPPORTED: ";
   print_gimple_stmt(stderr, gs, 0, 0);
 }
 
@@ -252,6 +253,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
       case GIMPLE_RETURN:
       {
         gimple_not_implemented_yet(gs);
+//        processGimpleBindStatement(parent, gs);
         break;
       }
       case GIMPLE_SWITCH:
@@ -418,6 +420,11 @@ void GimpleKdmTripleWriter::processGimpleAssignStatement(tree const parent, gimp
   mKdmWriter.writeTripleContains(blockId, actionId);
 }
 
+void GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimple const gs)
+{
+  gimple_not_implemented_yet(gs);
+}
+
 void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)
 {
   std::string rhsString;
@@ -437,17 +444,6 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
     case FLOAT_EXPR:
     CASE_CONVERT
     :
-      //      mKdmWriter.writeComment("Gimple Operation Not Implemented2:" + std::string(tree_code_name[rhs_code]));
-      //      //
-      //                  rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
-      //                  if (op_prio(rhs) < op_code_prio(rhs_code))
-      //                  {
-      //                      rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
-      //                  }
-      //                  else
-      //                      rhsString += gcckdm::getAstNodeName(rhs);
-      //            std::cerr << rhsString << std::endl;
-
       mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
       writeKdmUnaryOperation(actionId, KdmKind::Assign(), gs);
 

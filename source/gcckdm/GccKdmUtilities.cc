@@ -23,10 +23,12 @@ void lang_check_failed(const char* file, int line, const char* function) {
 }
 
 // need to implement this for C compiling
+#ifndef __WIN32__
 tree *
 decl_cloned_function_p(const_tree decl, bool just_testing) {
 	return 0;
 }
+#endif
 
 namespace {
 

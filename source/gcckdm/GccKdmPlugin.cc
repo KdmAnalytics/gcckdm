@@ -19,7 +19,7 @@ int plugin_is_GPL_compatible = 1;
 
 namespace
 {
-
+extern "C" int kdm_plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
 extern "C" void executeStartUnit(void *event_data, void *data);
 extern "C" void executeFinishType(void *event_data, void *data);
@@ -50,6 +50,17 @@ struct opt_pass kdmGimplePass =
         0 // todo_flags_finish
         };
 
+/** This initialization function is used on windows for the "link" plugin.
+ *
+ */
+extern "C" int kdm_plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
+{
+	return plugin_init(plugin_info, version);
+}
+
+/** This initialization function is used on linux for the standard DSO plugin
+ *
+ */
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
 {
     int retValue(0);

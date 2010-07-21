@@ -1,9 +1,25 @@
-/*
- * KdmTripleGimpleWriter.cc
- *
- *  Created on: Jul 13, 2010
- *      Author: kgirard
- */
+//
+// Copyright (c) 2010 KDM Analytics, Inc. All rights reserved.
+// Date: Jul 13, 2010
+// Author: Kyle Girard <kyle@kdmanalytics.com>
+//
+// This file is part of libGccKdm.
+//
+// Foobar is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// libGccKdm is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with libGccKdm.  If not, see <http://www.gnu.org/licenses/>.
+//
+#include <boost/format.hpp>
+#include <boost/current_function.hpp>
 
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
@@ -17,13 +33,15 @@ bool isValueNode(tree const node)
   return TREE_CODE(node) == INTEGER_CST || TREE_CODE(node) == REAL_CST;
 }
 
+//void gimple_not_implemented_yet(gcckdm::kdmtriplewriter::KdmTripleWriter & writer, gimple const gs)
+//{
+//  std::string msg(boost::str(boost::format("GIMPLE statement (%1%")) % gimple_code_name[static_cast<int> (gimple_code(gs))]));
+////  std::cerr << "# UNSUPPORTED: GIMPLE statement: " << gimple_code_name[static_cast<int> (gimple_code(gs))] << std::endl;
+////  std::cerr << "# UNSUPPORTED: ";
+////  print_gimple_stmt(stderr, gs, 0, 0);
+//  writer.writeUnsupportedComment(msg);
+//}
 
-void gimple_not_implemented_yet(gimple const gs)
-{
-  std::cerr << "# UNSUPPORTED: GIMPLE statement: " << gimple_code_name[static_cast<int> (gimple_code(gs))] << std::endl;
-  std::cerr << "# UNSUPPORTED: ";
-  print_gimple_stmt(stderr, gs, 0, 0);
-}
 
 std::string getUnaryRhsString(gimple const gs)
 {
@@ -208,11 +226,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
   {
     switch (gimple_code(gs))
     {
-      case GIMPLE_ASM:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
+      //      case GIMPLE_ASM:
+      //      {
+      //        gimple_not_implemented_yet(mKdmWriter, gs);
+      //        break;
+      //      }
       case GIMPLE_ASSIGN:
       {
         //gimple_not_implemented_yet(gs);
@@ -225,152 +243,156 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
         //debug_gimple_stmt(gs);
         break;
       }
-      case GIMPLE_CALL:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_COND:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_LABEL:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_GOTO:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_NOP:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
+        //      case GIMPLE_CALL:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_COND:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_LABEL:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_GOTO:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_NOP:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
       case GIMPLE_RETURN:
       {
-        gimple_not_implemented_yet(gs);
-//        processGimpleBindStatement(parent, gs);
+        processGimpleReturnStatement(parent, gs);
         break;
       }
-      case GIMPLE_SWITCH:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_TRY:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_PHI:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_PARALLEL:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_TASK:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_ATOMIC_LOAD:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_ATOMIC_STORE:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_FOR:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_CONTINUE:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_SINGLE:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_RETURN:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_SECTIONS:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_SECTIONS_SWITCH:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_MASTER:
-      case GIMPLE_OMP_ORDERED:
-      case GIMPLE_OMP_SECTION:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_OMP_CRITICAL:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_CATCH:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_EH_FILTER:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_EH_MUST_NOT_THROW:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_RESX:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_EH_DISPATCH:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_DEBUG:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
-      case GIMPLE_PREDICT:
-      {
-        gimple_not_implemented_yet(gs);
-        break;
-      }
+        //              case GIMPLE_SWITCH:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_TRY:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_PHI:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_PARALLEL:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_TASK:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_ATOMIC_LOAD:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_ATOMIC_STORE:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_FOR:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_CONTINUE:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_SINGLE:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_RETURN:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_SECTIONS:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_SECTIONS_SWITCH:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_MASTER:
+        //      case GIMPLE_OMP_ORDERED:
+        //      case GIMPLE_OMP_SECTION:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_OMP_CRITICAL:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_CATCH:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_EH_FILTER:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_EH_MUST_NOT_THROW:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_RESX:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_EH_DISPATCH:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_DEBUG:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
+        //      case GIMPLE_PREDICT:
+        //      {
+        //        gimple_not_implemented_yet(gs);
+        //        break;
+        //      }
       default:
       {
-        mKdmWriter.writeComment("UNHANDLED: Gimple statement");
+        std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))]
+            % BOOST_CURRENT_FUNCTION));
+        mKdmWriter.writeUnsupportedComment(msg);
+
+        //        gimple_not_implemented_yet(mKdmWriter, gs);
+        //        mKdmWriter.writeComment("UNHANDLED: Gimple statement");
         break;
       }
 
@@ -422,7 +444,17 @@ void GimpleKdmTripleWriter::processGimpleAssignStatement(tree const parent, gimp
 
 void GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimple const gs)
 {
-  gimple_not_implemented_yet(gs);
+  long actionId = mKdmWriter.getNextElementId();
+  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
+  tree t = gimple_return_retval (gs);
+  long id = mKdmWriter.getReferenceId(t);
+  mKdmWriter.processAstNode(t);
+  writeKdmActionRelation(KdmType::Reads(), actionId, id);
+
+  //figure out what blockunit this statement belongs
+  long blockId = getBlockReferenceId(gimple_location(gs));
+  mKdmWriter.writeTripleContains(blockId, actionId);
 }
 
 void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)
@@ -435,31 +467,42 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
   {
     case VIEW_CONVERT_EXPR:
     case ASSERT_EXPR:
-      mKdmWriter.writeComment("=====Gimple Operation Not Implemented========1");
+    {
+      std::string msg(boost::str(boost::format("GIMPLE assignment statement (%1%) in %2%") % std::string(tree_code_name[rhs_code])
+          % BOOST_CURRENT_FUNCTION));
+      mKdmWriter.writeUnsupportedComment(msg);
       break;
-
+    }
     case FIXED_CONVERT_EXPR:
     case ADDR_SPACE_CONVERT_EXPR:
     case FIX_TRUNC_EXPR:
     case FLOAT_EXPR:
     CASE_CONVERT
     :
+    {
       mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
       writeKdmUnaryOperation(actionId, KdmKind::Assign(), gs);
 
       break;
-
+    }
     case PAREN_EXPR:
-      mKdmWriter.writeComment("=====Gimple Operation Not Implemented========3");
+    {
+      std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
+          % BOOST_CURRENT_FUNCTION));
+      mKdmWriter.writeUnsupportedComment(msg);
       //            rhsString += "((" + gcckdm::getAstNodeName(rhs) + "))";
       break;
-
+    }
     case ABS_EXPR:
-      mKdmWriter.writeComment("=====Gimple Operation Not Implemented========4");
+    {
+      std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
+          % BOOST_CURRENT_FUNCTION));
+      mKdmWriter.writeUnsupportedComment(msg);
       //            rhsString += "ABS_EXPR <" + gcckdm::getAstNodeName(rhs) + ">";
       break;
-
+    }
     default:
+    {
       if (TREE_CODE_CLASS(rhs_code) == tcc_declaration || TREE_CODE_CLASS(rhs_code) == tcc_constant || TREE_CODE_CLASS(rhs_code) == tcc_reference
           || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
       {
@@ -468,7 +511,9 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
       }
       else
       {
-        mKdmWriter.writeComment("Gimple Operation Not Implemented:" + std::string(tree_code_name[rhs_code]));
+        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
+            % BOOST_CURRENT_FUNCTION));
+        mKdmWriter.writeUnsupportedComment(msg);
       }
       //      else if (rhs_code == BIT_NOT_EXPR)
       //      {
@@ -493,17 +538,22 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
 
       if (op_prio(rhs) < op_code_prio(rhs_code))
       {
-        mKdmWriter.writeComment("Gimple Operation Not Implemented:" + std::string(tree_code_name[rhs_code]));
+        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
+            % BOOST_CURRENT_FUNCTION));
+        mKdmWriter.writeUnsupportedComment(msg);
         //        rhsString += "=====Gimple Operation Not Implemented========11";
         //                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
       }
       else
       {
-        mKdmWriter.writeComment("Gimple Operation Not Implemented:" + std::string(tree_code_name[rhs_code]));
+        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
+            % BOOST_CURRENT_FUNCTION));
+        mKdmWriter.writeUnsupportedComment(msg);
         //        rhsString += "=====Gimple Operation Not Implemented========12";
         //                rhsString += gcckdm::getAstNodeName(rhs);
       }
       break;
+    }
   }
 }
 
@@ -588,7 +638,10 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
 
 void GimpleKdmTripleWriter::processGimpleTernaryAssignStatement(long const actionId, gimple const gs)
 {
-  std::cerr << "=====Gimple Operation Not Implemented======== -> processGimpleTernaryAssignStatement" << std::endl;
+  enum tree_code rhs_code = gimple_assign_rhs_code(gs);
+  std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
+      % BOOST_CURRENT_FUNCTION));
+  mKdmWriter.writeUnsupportedComment(msg);
 }
 
 long GimpleKdmTripleWriter::getBlockReferenceId(location_t const loc)

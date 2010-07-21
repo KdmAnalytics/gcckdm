@@ -191,6 +191,8 @@ public:
    */
   void writeComment(std::string const & comment);
 
+
+  void writeUnsupportedComment(std::string const & comment);
 private:
 
   typedef std::tr1::unordered_map<tree, long> TreeMap;

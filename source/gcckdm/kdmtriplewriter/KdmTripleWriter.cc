@@ -10,10 +10,13 @@
 #include <algorithm>
 #include <iterator>
 
-#include "boost/filesystem/fstream.hpp"
-#include "boost/filesystem/operations.hpp"
-#include "boost/lexical_cast.hpp"
-#include "boost/algorithm/string.hpp"
+#include <boost/filesystem/fstream.hpp>
+#include <boost/filesystem/operations.hpp>
+#include <boost/lexical_cast.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/current_function.hpp>
+#include <boost/format.hpp>
+
 
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
@@ -21,6 +24,9 @@
 
 namespace
 {
+std::string const commentPrefix("# ");
+std::string const unsupportedPrefix("UNSUPPORTED: ");
+
 //If a AST node doesn't have a name use this name
 std::string const unamedNode("<unnamed>");
 
@@ -58,18 +64,37 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 
+/**
+ * Functor to write a comment to the kdm sink
+ */
 struct CommentWriter
 {
-  CommentWriter(KdmTripleWriter::KdmSinkPtr sink) :
-    mKdmSink(sink)
+  CommentWriter(KdmTripleWriter::KdmSinkPtr sink, std::string const & prefix = "") :
+    mKdmSink(sink), mPrefixStr(prefix)
   {
   }
+
+  /**
+   * Writes <code>str</code> to the KdmSink
+   */
   void operator()(std::string const & str)
   {
-    *mKdmSink << "# " << str << "\n";
+    *mKdmSink << commentPrefix << mPrefixStr << str << std::endl;
   }
+
   KdmTripleWriter::KdmSinkPtr mKdmSink;
+  std::string mPrefixStr;
 };
+
+
+void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const & msg)
+{
+  std::vector<std::string> strs;
+  boost::split(strs, msg, boost::is_any_of("\n"));
+  std::for_each(strs.begin(), strs.end(), CommentWriter(sink, unsupportedPrefix));
+}
+
+
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
   mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
@@ -153,7 +178,8 @@ void KdmTripleWriter::processAstNode(tree const ast)
     }
     else
     {
-      std::cerr << "KdmTripleWriter: unsupported AST Node " << tree_code_name[treeCode] << std::endl;
+      std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+      writeUnsupportedComment(msg);
     }
     mProcessedNodes.insert(ast);
   }
@@ -188,7 +214,8 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     }
     default:
     {
-      std::cerr << "KdmTripleWriter: unsupported declaration node: " << tree_code_name[treeCode] << std::endl;
+      std::string msg(str(boost::format("AST Declaration Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+      writeUnsupportedComment(msg);
     }
   }
 }
@@ -235,7 +262,8 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
       }
       default:
       {
-        std::cerr << "unsupported AST Type " << tree_code_name[treeCode] << std::endl;
+        std::string msg(str(boost::format("AST Type Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
         break;
       }
     }
@@ -377,12 +405,24 @@ void KdmTripleWriter::writeVersionHeader()
   *mKdmSink << "KDM_Triple:" << KdmTripleWriter::KdmTripleVersion << "\n";
 }
 
-void KdmTripleWriter::writeComment(std::string const & comment)
+void writeCommentWithWriter(CommentWriter const & writer, std::string const & comment)
 {
   std::vector<std::string> strs;
   boost::split(strs, comment, boost::is_any_of("\n"));
-  std::for_each(strs.begin(), strs.end(), CommentWriter(mKdmSink));
+  std::for_each(strs.begin(), strs.end(), writer);
 }
+
+void KdmTripleWriter::writeComment(std::string const & comment)
+{
+  writeCommentWithWriter(CommentWriter(mKdmSink), comment );
+}
+
+void KdmTripleWriter::writeUnsupportedComment(std::string const & comment)
+{
+  writeCommentWithWriter(CommentWriter(mKdmSink, unsupportedPrefix), comment );
+}
+
+
 
 void KdmTripleWriter::writeDefaultKdmModelElements()
 {
@@ -677,12 +717,14 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 
   if (TREE_CODE(mainRecordType) == ENUMERAL_TYPE)
   {
-    std::cerr << "Unhandled Enumeral type" << std::endl;
+    std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(mainRecordType)] % BOOST_CURRENT_FUNCTION));
+    writeUnsupportedComment(msg);
     //enum
   }
   else if (global_namespace && TYPE_LANG_SPECIFIC (mainRecordType) && CLASSTYPE_DECLARED_CLASS (mainRecordType))
   {
-    std::cerr << "Unhandled Class type" << std::endl;
+    std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(mainRecordType)] % BOOST_CURRENT_FUNCTION));
+    writeUnsupportedComment(msg);
     //class
   }
   else //Record or Union
@@ -708,7 +750,8 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
           {
             if (!DECL_SELF_REFERENCE_P(d))
             {
-              std::cerr << "Unimplemented feature" << std::endl;
+              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
+              writeUnsupportedComment(msg);
             }
             break;
           }
@@ -724,7 +767,8 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
           }
           default:
           {
-            std::cerr << "Unimplemented feature" << std::endl;
+            std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
+            writeUnsupportedComment(msg);
             break;
           }
         }

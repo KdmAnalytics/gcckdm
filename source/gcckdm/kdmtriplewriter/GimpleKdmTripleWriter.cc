@@ -268,13 +268,12 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
         //        gimple_not_implemented_yet(gs);
         //        break;
         //      }
-        //      case GIMPLE_RETURN:
-        //      {
-        //        gimple_not_implemented_yet(gs);
-        ////        processGimpleBindStatement(parent, gs);
-        //        break;
-        //      }
-        //      case GIMPLE_SWITCH:
+      case GIMPLE_RETURN:
+      {
+        processGimpleReturnStatement(parent, gs);
+        break;
+      }
+        //              case GIMPLE_SWITCH:
         //      {
         //        gimple_not_implemented_yet(gs);
         //        break;
@@ -445,7 +444,17 @@ void GimpleKdmTripleWriter::processGimpleAssignStatement(tree const parent, gimp
 
 void GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimple const gs)
 {
-  //  gimple_not_implemented_yet(mKdmWriter, gs);
+  long actionId = mKdmWriter.getNextElementId();
+  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
+  tree t = gimple_return_retval (gs);
+  long id = mKdmWriter.getReferenceId(t);
+  mKdmWriter.processAstNode(t);
+  writeKdmActionRelation(KdmType::Reads(), actionId, id);
+
+  //figure out what blockunit this statement belongs
+  long blockId = getBlockReferenceId(gimple_location(gs));
+  mKdmWriter.writeTripleContains(blockId, actionId);
 }
 
 void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)

@@ -33,16 +33,6 @@ bool isValueNode(tree const node)
   return TREE_CODE(node) == INTEGER_CST || TREE_CODE(node) == REAL_CST;
 }
 
-//void gimple_not_implemented_yet(gcckdm::kdmtriplewriter::KdmTripleWriter & writer, gimple const gs)
-//{
-//  std::string msg(boost::str(boost::format("GIMPLE statement (%1%")) % gimple_code_name[static_cast<int> (gimple_code(gs))]));
-////  std::cerr << "# UNSUPPORTED: GIMPLE statement: " << gimple_code_name[static_cast<int> (gimple_code(gs))] << std::endl;
-////  std::cerr << "# UNSUPPORTED: ";
-////  print_gimple_stmt(stderr, gs, 0, 0);
-//  writer.writeUnsupportedComment(msg);
-//}
-
-
 std::string getUnaryRhsString(gimple const gs)
 {
   std::string rhsString;

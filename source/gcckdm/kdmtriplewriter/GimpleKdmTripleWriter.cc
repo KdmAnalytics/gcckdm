@@ -238,11 +238,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
         //        gimple_not_implemented_yet(gs);
         //        break;
         //      }
-        //      case GIMPLE_COND:
-        //      {
-        //        gimple_not_implemented_yet(gs);
-        //        break;
-        //      }
+      case GIMPLE_COND:
+      {
+        processGimpleConditionalStatement(parent, gs);
+        break;
+      }
         //      case GIMPLE_LABEL:
         //      {
         //        gimple_not_implemented_yet(gs);
@@ -445,6 +445,38 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimp
   //figure out what blockunit this statement belongs
   long blockId = getBlockReferenceId(gimple_location(gs));
   mKdmWriter.writeTripleContains(blockId, actionId);
+}
+
+
+void GimpleKdmTripleWriter::processGimpleConditionalStatement(tree const parent, gimple const gs)
+{
+  long actionId = mKdmWriter.getNextElementId();
+  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionId, KdmKind::Condition());
+  mKdmWriter.writeTripleName(actionId, "if");
+
+  if (gimple_cond_true_label (gs))
+  {
+    long trueFlowId = mKdmWriter.getNextElementId();
+    mKdmWriter.writeTripleKdmType(trueFlowId, KdmType::TrueFlow());
+    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::From(), actionId);
+    long trueNodeId = mKdmWriter.getReferenceId(gimple_cond_true_label (gs));
+    tree trueNode(gimple_cond_true_label (gs));
+    mKdmWriter.processAstNode(trueNode);
+    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::To(), trueNodeId);
+  }
+  if (gimple_cond_false_label (gs))
+  {
+    long falseFlowId = mKdmWriter.getNextElementId();
+    mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
+    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(),actionId);
+    tree falseNode(gimple_cond_false_label (gs));
+    long falseNodeId = mKdmWriter.getReferenceId(falseNode);
+    mKdmWriter.processAstNode(falseNode);
+    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
+
+  }
+
 }
 
 void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)

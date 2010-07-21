@@ -73,6 +73,9 @@ private:
     KdmType_Reads,
     KdmType_BlockUnit,
     KdmType_Flow,
+    KdmType_TrueFlow,
+    KdmType_FalseFlow,
+    KdmType_EntryFlow,
   };
 
 public:
@@ -225,6 +228,18 @@ public:
   static const KdmType Flow()
   {
     return KdmType(KdmType_Flow, "action/Flow");
+  }
+  static const KdmType TrueFlow()
+  {
+    return KdmType(KdmType_TrueFlow, "action/TrueFlow");
+  }
+  static const KdmType FalseFlow()
+  {
+    return KdmType(KdmType_FalseFlow, "action/FalseFlow");
+  }
+  static const KdmType EntryFlow()
+  {
+    return KdmType(KdmType_FalseFlow, "action/EntryFlow");
   }
   //static const KdmType () { return KdmType(KdmType_, "action/");}
   //static const KdmType () { return KdmType(KdmType_, "action/");}

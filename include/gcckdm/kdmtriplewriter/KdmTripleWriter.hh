@@ -205,7 +205,11 @@ public:
    */
   void writeComment(std::string const & comment);
 
-
+  /**
+   * Writes <code>comment</code as a comment with the UNSUPPORTED prefix
+   *
+   * @param comment the string to write to output stream
+   */
   void writeUnsupportedComment(std::string const & comment);
 private:
 

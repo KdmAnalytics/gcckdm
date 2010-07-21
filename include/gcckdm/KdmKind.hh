@@ -45,6 +45,7 @@ private:
     KdmKind_PtrCall,
     KdmKind_Regular,
     KdmKind_Local,
+    KdmKind_Condition,
   };
 
 public:
@@ -103,6 +104,10 @@ public:
   static const KdmKind Local()
   {
     return KdmKind(KdmKind_Local, "local");
+  }
+  static const KdmKind Condition()
+  {
+    return KdmKind(KdmKind_Local, "Condition");
   }
 
   int const id() const

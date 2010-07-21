@@ -24,6 +24,14 @@ private:
     KdmKind_Multiply,
     KdmKind_Divide,
     KdmKind_Negate,
+    KdmKind_Return,
+    KdmKind_Register,
+    KdmKind_Ptr,
+    KdmKind_PtrReplace,
+    KdmKind_PtrSelect,
+    KdmKind_PtrCall,
+    KdmKind_Regular,
+    KdmKind_Local,
   };
 
 public:
@@ -50,6 +58,38 @@ public:
   static const KdmKind Negate()
   {
     return KdmKind(KdmKind_Negate, "Negate");
+  }
+  static const KdmKind Return()
+  {
+    return KdmKind(KdmKind_Return, "Return");
+  }
+  static const KdmKind Register()
+  {
+    return KdmKind(KdmKind_Register, "register");
+  }
+  static const KdmKind Ptr()
+  {
+    return KdmKind(KdmKind_Ptr, "Ptr");
+  }
+  static const KdmKind PtrReplace()
+  {
+    return KdmKind(KdmKind_PtrReplace, "PtrReplace");
+  }
+  static const KdmKind PtrSelect()
+  {
+    return KdmKind(KdmKind_PtrSelect, "PtrSelect");
+  }
+  static const KdmKind PtrCall()
+  {
+    return KdmKind(KdmKind_PtrCall, "PtrCall");
+  }
+  static const KdmKind Regular()
+  {
+    return KdmKind(KdmKind_Regular, "regular");
+  }
+  static const KdmKind Local()
+  {
+    return KdmKind(KdmKind_Local, "local");
   }
 
   int const id() const

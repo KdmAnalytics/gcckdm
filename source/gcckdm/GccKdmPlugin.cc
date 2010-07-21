@@ -179,6 +179,7 @@ void registerCallbacks(char const * pluginName)
   register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
 
   // Called when finished with the translation unit
+
   register_callback(pluginName, PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func> (executeFinishUnit), NULL);
 
   //

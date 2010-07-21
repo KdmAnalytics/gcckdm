@@ -55,6 +55,7 @@ private:
     KdmType_CharType,
     KdmType_Signature,
     KdmType_RecordType,
+    KdmType_ClassUnit,
     KdmType_ItemUnit,
     KdmType_ArrayType,
     KdmType_LanguageUnit,
@@ -161,6 +162,10 @@ public:
   static const KdmType RecordType()
   {
     return KdmType(KdmType_RecordType, "code/RecordType");
+  }
+  static const KdmType ClassUnit()
+  {
+    return KdmType(KdmType_ClassUnit, "code/ClassUnit");
   }
   static const KdmType ItemUnit()
   {

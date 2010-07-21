@@ -263,7 +263,12 @@ private:
   long writeKdmParameterUnit(tree const param);
   void writeKdmPrimitiveType(tree const type);
   void writeKdmPointerType(tree const type);
+
+  /**
+   * Handles output of enums, classes, and structs
+   */
   void writeKdmRecordType(tree const type);
+
   void writeKdmSharedUnit(tree const file);
   long writeKdmItemUnit(tree const item);
   void writeKdmArrayType(tree const array);

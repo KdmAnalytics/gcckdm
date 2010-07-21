@@ -725,6 +725,15 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
 
 }
 
+/** Record Types all need to output the following standard information:
+ *
+ *     KDM Type
+ *     Name
+ *     SourceRef
+ *     Containment
+ *     Child fields/methods/etc
+ *
+ */
 void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 {
   tree mainRecordType = TYPE_MAIN_VARIANT (recordType);
@@ -737,9 +746,23 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
   }
   else if (global_namespace && TYPE_LANG_SPECIFIC (mainRecordType) && CLASSTYPE_DECLARED_CLASS (mainRecordType))
   {
+    long compilationUnitId(getSourceFileReferenceId(mainRecordType));
+    //class
+
+    long classId = getReferenceId(mainRecordType);
+    writeTripleKdmType(classId, KdmType::ClassUnit());
+    std::string name;
+    //check to see if we are an anonymous class
+    name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
+    writeTripleName(classId, name);
+
+    // FIXME: Remove this once complete
     std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(mainRecordType)] % BOOST_CURRENT_FUNCTION));
     writeUnsupportedComment(msg);
-    //class
+
+    writeKdmSourceRef(classId, mainRecordType);
+
+    writeTripleContains(compilationUnitId, classId);
   }
   else //Record or Union
 
@@ -750,7 +773,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     long structId = getReferenceId(mainRecordType);
     writeTripleKdmType(structId, KdmType::RecordType());
     std::string name;
-    //check to see if we are an annonymous struct
+    //check to see if we are an anonymous struct
     name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
     writeTripleName(structId, name);
 

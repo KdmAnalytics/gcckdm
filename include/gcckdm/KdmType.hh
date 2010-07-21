@@ -72,7 +72,7 @@ private:
     KdmType_Reads,
     KdmType_BlockUnit,
     KdmType_Flow,
-    KdmType_TreeFlow,
+    KdmType_TrueFlow,
     KdmType_FalseFlow,
     KdmType_EntryFlow,
   };

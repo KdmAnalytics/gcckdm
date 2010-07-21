@@ -174,7 +174,13 @@ void KdmTripleWriter::processAstNode(tree const ast)
   {
     int treeCode(TREE_CODE(ast));
 
+    //As far as I can tell this is everything but labels
     if (DECL_P(ast) && !DECL_IS_BUILTIN(ast))
+    {
+      processAstDeclarationNode(ast);
+    }
+    //this is labels
+    else if (DECL_P(ast))
     {
       processAstDeclarationNode(ast);
     }
@@ -223,7 +229,12 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     }
     case PARM_DECL:
     {
-      //Not implemented yet but put here to prevent breakage
+      writeComment("FIXME: Do we need these parm_decls?");
+      break;
+    }
+    case LABEL_DECL:
+    {
+      processAstLabelDeclarationNode(decl);
       break;
     }
     default:
@@ -297,6 +308,11 @@ void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl)
 void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
 {
   writeKdmItemUnit(fieldDecl);
+}
+
+void KdmTripleWriter::processAstLabelDeclarationNode(tree const labelDecl)
+{
+  //writeKdm
 }
 
 void KdmTripleWriter::processAstValueNode(tree const val)

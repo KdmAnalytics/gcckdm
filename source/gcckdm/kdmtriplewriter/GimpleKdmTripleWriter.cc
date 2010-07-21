@@ -243,11 +243,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
         processGimpleConditionalStatement(parent, gs);
         break;
       }
-        //      case GIMPLE_LABEL:
-        //      {
-        //        gimple_not_implemented_yet(gs);
-        //        break;
-        //      }
+      case GIMPLE_LABEL:
+      {
+        processGimpleLabelStatement(parent, gs);
+        break;
+      }
         //      case GIMPLE_GOTO:
         //      {
         //        gimple_not_implemented_yet(gs);
@@ -447,6 +447,12 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimp
   mKdmWriter.writeTripleContains(blockId, actionId);
 }
 
+void GimpleKdmTripleWriter::processGimpleLabelStatement(tree const parent, gimple const gs)
+{
+  tree label = gimple_label_label (gs);
+  mKdmWriter.processAstNode(label);
+
+}
 
 void GimpleKdmTripleWriter::processGimpleConditionalStatement(tree const parent, gimple const gs)
 {

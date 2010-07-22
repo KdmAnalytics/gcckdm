@@ -62,7 +62,17 @@ struct opt_pass kdmGimplePass =
     0, // properties_destroyed
     0, // todo_flags_start
     0 // todo_flags_finish
-    };
+};
+
+/**
+ * Return true if we are parsing c++
+ *
+ * FIXME: This always returns true
+ */
+bool is_cpp()
+{
+  return true;
+}
 
 /** This initialization function is used on windows for the "link" plugin.
  *
@@ -167,21 +177,22 @@ void registerCallbacks(char const * pluginName)
   //    //Called at the start of a translation unit
   //    register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
 
-  // Called whenever a type has been parsed
-  register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
+  if(!is_cpp())
+  {
+    // Called whenever a type has been parsed
+    register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
 
-  //Attempt to get the very first gimple AST before any optimizations, called for every function
-  struct register_pass_info pass_info;
-  pass_info.pass = &kdmGimplePass;
-  pass_info.reference_pass_name = all_lowering_passes->name;
-  pass_info.ref_pass_instance_number = 0;
-  pass_info.pos_op = PASS_POS_INSERT_AFTER;
-  register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+    //Attempt to get the very first gimple AST before any optimizations, called for every function
+    struct register_pass_info pass_info;
+    pass_info.pass = &kdmGimplePass;
+    pass_info.reference_pass_name = all_lowering_passes->name;
+    pass_info.ref_pass_instance_number = 0;
+    pass_info.pos_op = PASS_POS_INSERT_AFTER;
+    register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+  }
 
   // Called when finished with the translation unit
-
   register_callback(pluginName, PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func> (executeFinishUnit), NULL);
-
   //
   //
   //
@@ -206,6 +217,66 @@ extern "C" void executeStartUnit(void *event_data, void *data)
 
 extern "C" void executeAllPassStart(void *event_data, void *data)
 {
+}
+
+/**
+ * Function used for debug purposes.
+ */
+void print_decl (tree decl)
+{
+  int tc (TREE_CODE (decl));
+  tree id (DECL_NAME (decl));
+  const char* name (id
+                    ? IDENTIFIER_POINTER (id)
+                    : "<unnamed>");
+
+  std::cerr << tree_code_name[tc] << " " << name << " at "
+       << DECL_SOURCE_FILE (decl) << ":"
+       << DECL_SOURCE_LINE (decl) << std::endl;
+}
+
+/**
+ * Traverse the namespaces, pushing all found types onto the process queue
+ */
+void traverse (tree ns)
+{
+  tree decl;
+  cp_binding_level* level (NAMESPACE_LEVEL (ns));
+
+  // Traverse declarations.
+  //
+  for (decl = level->names;
+      decl != 0;
+      decl = TREE_CHAIN (decl))
+  {
+    if (DECL_IS_BUILTIN (decl))
+      continue;
+
+    //Appending nodes to the queue instead of processing them immediately is
+    //because gcc is overly lazy and does some things (like setting annonymous struct names)
+    //sometime after completing the type
+    // taken from dehyra_plugin.c
+    VEC_safe_push(tree, heap, treeQueueVec, decl);
+    print_decl(decl);
+  }
+
+  // Traverse namespaces.
+  //
+  for(decl = level->namespaces;
+      decl != 0;
+      decl = TREE_CHAIN (decl))
+  {
+    if (DECL_IS_BUILTIN (decl))
+      continue;
+
+    //Appending nodes to the queue instead of processing them immediately is
+    //because gcc is overly lazy and does some things (like setting annonymous struct names)
+    //sometime after completing the type
+    // taken from dehyra_plugin.c
+    VEC_safe_push(tree, heap, treeQueueVec, decl);
+    print_decl(decl);
+    traverse (decl);
+  }
 }
 
 extern "C" void executeFinishType(void *event_data, void *data)
@@ -245,6 +316,12 @@ extern "C" unsigned int executeKdmGimplePass()
 
 extern "C" void executeFinishUnit(void *event_data, void *data)
 {
+  if(is_cpp())
+  {
+    // Scan for all types defined in the global namespace, recursing through any other namespaces.
+    traverse(global_namespace);
+  }
+
   if (!errorcount && !sorrycount)
   {
 
@@ -260,6 +337,5 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
   int retValue(0);
   exit(retValue);
 }
-
 }
 

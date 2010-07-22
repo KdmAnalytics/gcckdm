@@ -111,13 +111,13 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
-  mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
+      mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-  mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+      mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -362,10 +362,15 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
   tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
   while (argType && (argType != void_list_node))
   {
-    long refId = writeKdmParameterUnit(arg);
-    writeTripleContains(signatureId, refId);
+    // Sometimes ARG is null. I do not know why this is happenning, but
+    // for now I will refuse to try to write a null parameter because
+    // it causes a segfault and/or garbage data further down the line.
+    //
+    // FIXME: What does it mean when arg is null?
     if (arg)
     {
+      long refId = writeKdmParameterUnit(arg);
+      writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }
     argType = TREE_CHAIN (argType);

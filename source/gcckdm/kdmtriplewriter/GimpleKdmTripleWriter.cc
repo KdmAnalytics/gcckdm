@@ -20,7 +20,6 @@
 //
 #include <boost/format.hpp>
 #include <boost/current_function.hpp>
-#include <boost/exception.hpp>
 
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"

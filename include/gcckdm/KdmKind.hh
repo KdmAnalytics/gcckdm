@@ -46,6 +46,8 @@ private:
     KdmKind_Regular,
     KdmKind_Local,
     KdmKind_Condition,
+    KdmKind_Goto,
+    KdmKind_Nop,
   };
 
 public:
@@ -108,6 +110,14 @@ public:
   static const KdmKind Condition()
   {
     return KdmKind(KdmKind_Local, "Condition");
+  }
+  static const KdmKind Nop()
+  {
+    return KdmKind(KdmKind_Nop, "Nop");
+  }
+  static const KdmKind Goto()
+  {
+    return KdmKind(KdmKind_Goto, "Goto");
   }
 
   int const id() const

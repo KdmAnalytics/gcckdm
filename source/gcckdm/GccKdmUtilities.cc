@@ -23,6 +23,7 @@
 #include "gcckdm/GccKdmUtilities.hh"
 
 #include <boost/lexical_cast.hpp>
+#include <boost/current_function.hpp>
 #include <iostream>
 #include <sstream>
 #include <boost/format.hpp>
@@ -237,6 +238,7 @@ std::string getAstNodeName(tree node)
       case FIELD_DECL:
       case CONST_DECL:
       case FUNCTION_DECL:
+      case LABEL_DECL:
       {
         nameStr = getAstDeclarationNodeName(node);
         break;
@@ -341,7 +343,7 @@ std::string getAstNodeName(tree node)
       }
       default:
       {
-        std::cerr << "gcckdm::getAstNodeName() node type implemented yet: " << tree_code_name[TREE_CODE(node)] << std::endl;
+        std::cerr << "UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;
       }
 
     }

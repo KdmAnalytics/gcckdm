@@ -90,7 +90,6 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   //      break;
   //    }
 
-
   //Recommended version check
   if (plugin_default_version_check(version, &gcc_version))
   {
@@ -99,13 +98,14 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
       // Process any plugin arguments
       int argc = plugin_info->argc;
       struct plugin_argument *argv = plugin_info->argv;
+      gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink;
+      bool processFunctionBodies = true;
 
       for (int i = 0; i < argc; ++i)
       {
         std::string key(argv[i].key);
         if (key == "output")
         {
-          gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink;
           std::string value(argv[i].value);
           if (value == "stdout")
           {
@@ -124,10 +124,13 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
             warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, value.c_str());
             continue;
           }
-
-          if (kdmSink)
+        }
+        if (key == "bodies")
+        {
+          std::string value(argv[i].value);
+          if (value == "false")
           {
-            gccAstListener.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+            processFunctionBodies = false;
           }
         }
         else
@@ -135,6 +138,14 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
           warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, key.c_str());
         }
       }
+
+      if (kdmSink)
+      {
+        boost::unique_ptr<gcckdm::kdmtriplewriter::KdmTripleWriter> pWriter(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+        pWriter->bodies(processFunctionBodies);
+        gccAstListener.reset(pWriter.release());
+      }
+
 
       //default to file output
       if (!gccAstListener)
@@ -199,13 +210,13 @@ void registerCallbacks(char const * pluginName)
   //
 }
 
-extern "C" void executeStartUnit(void *event_data, void *data)
-{
-}
-
-extern "C" void executeAllPassStart(void *event_data, void *data)
-{
-}
+//extern "C" void executeStartUnit(void *event_data, void *data)
+//{
+//}
+//
+//extern "C" void executeAllPassStart(void *event_data, void *data)
+//{
+//}
 
 extern "C" void executeFinishType(void *event_data, void *data)
 {
@@ -222,10 +233,10 @@ extern "C" void executeFinishType(void *event_data, void *data)
   }
 }
 
-extern "C" void executePreGeneric(void *event_data, void *data)
-{
-  gccAstListener->processAstNode(static_cast<tree> (event_data));
-}
+//extern "C" void executePreGeneric(void *event_data, void *data)
+//{
+//  gccAstListener->processAstNode(static_cast<tree> (event_data));
+//}
 
 extern "C" unsigned int executeKdmGimplePass()
 {

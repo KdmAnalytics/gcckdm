@@ -90,7 +90,6 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   //      break;
   //    }
 
-
   //Recommended version check
   if (plugin_default_version_check(version, &gcc_version))
   {
@@ -199,13 +198,13 @@ void registerCallbacks(char const * pluginName)
   //
 }
 
-extern "C" void executeStartUnit(void *event_data, void *data)
-{
-}
-
-extern "C" void executeAllPassStart(void *event_data, void *data)
-{
-}
+//extern "C" void executeStartUnit(void *event_data, void *data)
+//{
+//}
+//
+//extern "C" void executeAllPassStart(void *event_data, void *data)
+//{
+//}
 
 extern "C" void executeFinishType(void *event_data, void *data)
 {
@@ -222,10 +221,10 @@ extern "C" void executeFinishType(void *event_data, void *data)
   }
 }
 
-extern "C" void executePreGeneric(void *event_data, void *data)
-{
-  gccAstListener->processAstNode(static_cast<tree> (event_data));
-}
+//extern "C" void executePreGeneric(void *event_data, void *data)
+//{
+//  gccAstListener->processAstNode(static_cast<tree> (event_data));
+//}
 
 extern "C" unsigned int executeKdmGimplePass()
 {

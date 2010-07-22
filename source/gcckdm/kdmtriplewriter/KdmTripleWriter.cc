@@ -108,7 +108,7 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 }
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
-  mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
+  mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart), mBodies(true)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -122,6 +122,17 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename) :
 KdmTripleWriter::~KdmTripleWriter()
 {
   mKdmSink->flush();
+}
+
+
+bool KdmTripleWriter::bodies() const
+{
+  return mBodies;
+}
+
+void KdmTripleWriter::bodies(bool const value)
+{
+  mBodies = value;
 }
 
 void KdmTripleWriter::startTranslationUnit(Path const & file)
@@ -385,10 +396,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   long signatureId = writeKdmSignature(functionDecl);
   writeTripleContains(callableUnitId, signatureId);
 
-  if (gimple_has_body_p(functionDecl))
+  if (mBodies)
   {
-    gimple_seq seq = gimple_body(functionDecl);
-    mGimpleWriter->processGimpleSequence(functionDecl, seq);
+    if (gimple_has_body_p(functionDecl))
+    {
+      gimple_seq seq = gimple_body(functionDecl);
+      mGimpleWriter->processGimpleSequence(functionDecl, seq);
+    }
   }
 }
 

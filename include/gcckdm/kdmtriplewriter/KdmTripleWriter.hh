@@ -211,6 +211,20 @@ public:
    * @param comment the string to write to output stream
    */
   void writeUnsupportedComment(std::string const & comment);
+
+  /**
+   * Returns true if this writer decends into function/method bodies
+   * to process GIMPLE statements
+   */
+  bool bodies() const;
+
+  /**
+   * Enables or disables the decent into function/method bodies
+   *
+   * @param value if true this writer will process GIMPLE statements
+   */
+  void bodies(bool value);
+
 private:
 
   typedef std::tr1::unordered_map<tree, long> TreeMap;
@@ -287,6 +301,8 @@ private:
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
+
+  bool mBodies;
 };
 
 } // namespace kdmtriplewriter

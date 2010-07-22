@@ -52,15 +52,16 @@ private:
 
   long getBlockReferenceId(location_t const loc);
   void processGimpleBindStatement(tree const parent, gimple const gs);
-  void processGimpleAssignStatement(tree const parent, gimple const gs);
-  void processGimpleReturnStatement(tree const parent, gimple const gs);
-  void processGimpleConditionalStatement(tree const parent, gimple const gs);
-  void processGimpleLabelStatement(tree const parent, gimple const gs);
+  long processGimpleAssignStatement(tree const parent, gimple const gs);
+  long processGimpleReturnStatement(tree const parent, gimple const gs);
+  long processGimpleConditionalStatement(tree const parent, gimple const gs);
+  long processGimpleLabelStatement(tree const parent, gimple const gs);
 
   void processGimpleUnaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleTernaryAssignStatement(long const actionId, gimple const gs);
 
+  long writeKdmNopForLabel(tree const label);
   long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
 
   void writeKdmUnaryRelationships(long const actionId, long lhsId, long rhsId);
@@ -81,6 +82,9 @@ private:
    */
   LocationMap mBlockUnitMap;
 
+
+  bool mLabelFlag;
+  long mLastLabelId;
 };
 
 } // namespace kdmtriplewriter

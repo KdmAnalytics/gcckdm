@@ -206,6 +206,11 @@ void KdmTripleWriter::processAstNode(tree const ast)
       {
         processAstDeclarationNode(ast);
       }
+      //
+      else if (treeCode == LABEL_DECL)
+      {
+        //Not required.. . labels are handled in the gimple
+      }
       else if (treeCode == TREE_LIST)
       {
         //Not implemented yet but put here to prevent breakage

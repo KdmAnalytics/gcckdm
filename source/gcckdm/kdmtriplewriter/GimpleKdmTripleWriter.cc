@@ -387,6 +387,10 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
       }
 
     }
+    //If the last gimple statement we processed was a label
+    // we have to do a little magic here to get the flows
+    // correct... labels don't have line numbers so we add
+    // the label to the next actionElement after the label
     if (mLabelFlag and hasActionId)
     {
       long blockId = getBlockReferenceId(gimple_location(gs));

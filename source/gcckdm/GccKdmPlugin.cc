@@ -177,19 +177,16 @@ void registerCallbacks(char const * pluginName)
   //    //Called at the start of a translation unit
   //    register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
 
-  if(!is_cpp())
-  {
-    // Called whenever a type has been parsed
-    register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
+  // Called whenever a type has been parsed
+  register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
 
-    //Attempt to get the very first gimple AST before any optimizations, called for every function
-    struct register_pass_info pass_info;
-    pass_info.pass = &kdmGimplePass;
-    pass_info.reference_pass_name = all_lowering_passes->name;
-    pass_info.ref_pass_instance_number = 0;
-    pass_info.pos_op = PASS_POS_INSERT_AFTER;
-    register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
-  }
+  //Attempt to get the very first gimple AST before any optimizations, called for every function
+  struct register_pass_info pass_info;
+  pass_info.pass = &kdmGimplePass;
+  pass_info.reference_pass_name = all_lowering_passes->name;
+  pass_info.ref_pass_instance_number = 0;
+  pass_info.pos_op = PASS_POS_INSERT_AFTER;
+  register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
 
   // Called when finished with the translation unit
   register_callback(pluginName, PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func> (executeFinishUnit), NULL);
@@ -322,11 +319,11 @@ extern "C" unsigned int executeKdmGimplePass()
 
 extern "C" void executeFinishUnit(void *event_data, void *data)
 {
-  if(is_cpp())
-  {
-    // Scan for all types defined in the global namespace, recursing through any other namespaces.
-    traverse_namespace(global_namespace);
-  }
+  //  if(is_cpp())
+  //  {
+  //    // Scan for all types defined in the global namespace, recursing through any other namespaces.
+  //    traverse_namespace(global_namespace);
+  //  }
 
   if (!errorcount && !sorrycount)
   {

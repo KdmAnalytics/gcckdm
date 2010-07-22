@@ -31,10 +31,10 @@
 #include <boost/current_function.hpp>
 #include <boost/format.hpp>
 
-
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
+#include "gcckdm/kdmtriplewriter/Exception.hh"
 
 namespace
 {
@@ -100,15 +100,12 @@ struct CommentWriter
   std::string mPrefixStr;
 };
 
-
 void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const & msg)
 {
   std::vector<std::string> strs;
   boost::split(strs, msg, boost::is_any_of("\n"));
   std::for_each(strs.begin(), strs.end(), CommentWriter(sink, unsupportedPrefix));
 }
-
-
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
   mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart)
@@ -129,79 +126,109 @@ KdmTripleWriter::~KdmTripleWriter()
 
 void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
-  mCompilationFile = file;
-  writeVersionHeader();
-  writeDefaultKdmModelElements();
-  writeKdmSourceFile(mCompilationFile);
+  try
+  {
+    mCompilationFile = file;
+    writeVersionHeader();
+    writeDefaultKdmModelElements();
+    writeKdmSourceFile(mCompilationFile);
+  }
+  catch (KdmTripleWriterException & e)
+  {
+    std::cerr << boost::diagnostic_information(e);
+  }
 }
 
 void KdmTripleWriter::startKdmGimplePass()
 {
-  //C Support..variables are stored in varpool... C++ we can use global_namespace
-  struct varpool_node *pNode;
-  for ((pNode) = varpool_nodes_queue; (pNode); (pNode) = (pNode)->next_needed)
+  try
   {
-    long unitId = writeKdmStorableUnit(pNode->decl);
-    writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
+    //C Support..variables are stored in varpool... C++ we can use global_namespace
+    struct varpool_node *pNode;
+    for ((pNode) = varpool_nodes_queue; (pNode); (pNode) = (pNode)->next_needed)
+    {
+      long unitId = writeKdmStorableUnit(pNode->decl);
+      writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
+    }
+  }
+  catch (KdmTripleWriterException & e)
+  {
+    std::cerr << boost::diagnostic_information(e);
   }
 }
 
 void KdmTripleWriter::finishKdmGimplePass()
 {
-  for (; !mNodeQueue.empty(); mNodeQueue.pop())
+  try
   {
-    processAstNode(mNodeQueue.front());
+    for (; !mNodeQueue.empty(); mNodeQueue.pop())
+    {
+      processAstNode(mNodeQueue.front());
+    }
+  }
+  catch (KdmTripleWriterException & e)
+  {
+    std::cerr << boost::diagnostic_information(e);
   }
 }
 
 void KdmTripleWriter::finishTranslationUnit()
 {
-  for (; !mNodeQueue.empty(); mNodeQueue.pop())
+  try
   {
-    processAstNode(mNodeQueue.front());
-  }
+    for (; !mNodeQueue.empty(); mNodeQueue.pop())
+    {
+      processAstNode(mNodeQueue.front());
+    }
 
-  for (TreeMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
+    for (TreeMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
+    {
+      writeKdmSharedUnit(i->first);
+    }
+  }
+  catch (KdmTripleWriterException & e)
   {
-    writeKdmSharedUnit(i->first);
+    std::cerr << boost::diagnostic_information(e);
   }
 }
 
 void KdmTripleWriter::processAstNode(tree const ast)
 {
-  //Ensure we haven't processed this node node before
-  if (mProcessedNodes.find(ast) == mProcessedNodes.end())
+  try
   {
-    int treeCode(TREE_CODE(ast));
+    //Ensure we haven't processed this node node before
+    if (mProcessedNodes.find(ast) == mProcessedNodes.end())
+    {
+      int treeCode(TREE_CODE(ast));
 
-    //As far as I can tell this is everything but labels
-    if (DECL_P(ast) && !DECL_IS_BUILTIN(ast))
-    {
-      processAstDeclarationNode(ast);
+      //As far as I can tell this is everything but labels
+      if (DECL_P(ast) && !DECL_IS_BUILTIN(ast))
+      {
+        processAstDeclarationNode(ast);
+      }
+      else if (treeCode == TREE_LIST)
+      {
+        //Not implemented yet but put here to prevent breakage
+      }
+      else if (TYPE_P(ast))
+      {
+        processAstTypeNode(ast);
+      }
+      else if (treeCode == INTEGER_CST || treeCode == REAL_CST)
+      {
+        processAstValueNode(ast);
+      }
+      else
+      {
+        std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+      }
+      mProcessedNodes.insert(ast);
     }
-    //this is labels
-    else if (DECL_P(ast))
-    {
-      processAstDeclarationNode(ast);
-    }
-    else if (treeCode == TREE_LIST)
-    {
-      //Not implemented yet but put here to prevent breakage
-    }
-    else if (TYPE_P(ast))
-    {
-      processAstTypeNode(ast);
-    }
-    else if (treeCode == INTEGER_CST || treeCode == REAL_CST)
-    {
-      processAstValueNode(ast);
-    }
-    else
-    {
-      std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-      writeUnsupportedComment(msg);
-    }
-    mProcessedNodes.insert(ast);
+  }
+  catch (KdmTripleWriterException & e)
+  {
+    std::cerr << boost::diagnostic_information(e);
   }
 }
 
@@ -232,11 +259,11 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       writeComment("FIXME: Do we need these parm_decls?");
       break;
     }
-    case LABEL_DECL:
-    {
-      processAstLabelDeclarationNode(decl);
-      break;
-    }
+//    case LABEL_DECL:
+//    {
+//      processAstLabelDeclarationNode(decl);
+//      break;
+//    }
     default:
     {
       std::string msg(str(boost::format("AST Declaration Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
@@ -310,10 +337,10 @@ void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
   writeKdmItemUnit(fieldDecl);
 }
 
-void KdmTripleWriter::processAstLabelDeclarationNode(tree const labelDecl)
-{
-  //writeKdm
-}
+//void KdmTripleWriter::processAstLabelDeclarationNode(tree const labelDecl)
+//{
+//  //mGimpleWriter ->//writeKdm
+//}
 
 void KdmTripleWriter::processAstValueNode(tree const val)
 {
@@ -444,15 +471,13 @@ void writeCommentWithWriter(CommentWriter const & writer, std::string const & co
 
 void KdmTripleWriter::writeComment(std::string const & comment)
 {
-  writeCommentWithWriter(CommentWriter(mKdmSink), comment );
+  writeCommentWithWriter(CommentWriter(mKdmSink), comment);
 }
 
 void KdmTripleWriter::writeUnsupportedComment(std::string const & comment)
 {
-  writeCommentWithWriter(CommentWriter(mKdmSink, unsupportedPrefix), comment );
+  writeCommentWithWriter(CommentWriter(mKdmSink, unsupportedPrefix), comment);
 }
-
-
 
 void KdmTripleWriter::writeDefaultKdmModelElements()
 {
@@ -848,4 +873,5 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
 
 } // namespace kdmtriplewriter
 
-} // namespace gcckdm
+}
+// namespace gcckdm

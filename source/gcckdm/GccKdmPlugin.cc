@@ -33,6 +33,7 @@ int plugin_is_GPL_compatible = 1;
 
 namespace
 {
+
 extern "C" int kdm_plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
 extern "C" void executeStartUnit(void *event_data, void *data);
@@ -74,15 +75,16 @@ bool is_cpp()
   return true;
 }
 
-/** This initialization function is used on windows for the "link" plugin.
- *
+/**
+ * This initialization function is used on windows for the "link" plugin.
  */
 extern "C" int kdm_plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
 {
   return plugin_init(plugin_info, version);
 }
 
-/** This initialization function is used on linux for the standard DSO plugin
+/**
+ * This initialization function is used on linux for the standard DSO plugin
  *
  */
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
@@ -135,7 +137,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
             continue;
           }
         }
-        if (key == "bodies")
+        else if (key == "bodies")
         {
           std::string value(argv[i].value);
           if (value == "false")
@@ -183,10 +185,13 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   return retValue;
 }
 
+/**
+ * Convenience function to register all gcc plugin callback functions
+ */
 void registerCallbacks(char const * pluginName)
 {
-  //    //Called at the start of a translation unit
-  //    register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
+  //Called Once at the start of a translation unit
+  register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
 
   // Called whenever a type has been parsed
   register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
@@ -219,9 +224,17 @@ void registerCallbacks(char const * pluginName)
   //
 }
 
-//extern "C" void executeStartUnit(void *event_data, void *data)
-//{
-//}
+/**
+ * Called once as GCC start parsing the the translation unit
+ *
+ */
+extern "C" void executeStartUnit(void *event_data, void *data)
+{
+  boost::filesystem::path filename(main_input_filename);
+  gccAstListener->startTranslationUnit(boost::filesystem::complete(filename));
+}
+
+
 //
 //extern "C" void executeAllPassStart(void *event_data, void *data)
 //{
@@ -293,6 +306,9 @@ void traverse_namespace (tree ns)
   }
 }
 
+/**
+ * Called after GCC finishes parsing a type
+ */
 extern "C" void executeFinishType(void *event_data, void *data)
 {
   tree type(static_cast<tree> (event_data));
@@ -313,14 +329,15 @@ extern "C" void executeFinishType(void *event_data, void *data)
 //  gccAstListener->processAstNode(static_cast<tree> (event_data));
 //}
 
+/**
+ * Called once for each function that is parsed by GCC
+ */
 extern "C" unsigned int executeKdmGimplePass()
 {
   unsigned int retValue(0);
 
   if (!errorcount && !sorrycount)
   {
-    boost::filesystem::path filename(main_input_filename);
-    gccAstListener->startTranslationUnit(boost::filesystem::complete(filename));
     gccAstListener->startKdmGimplePass();
     gccAstListener->processAstNode(current_function_decl);
     gccAstListener->finishKdmGimplePass();
@@ -328,6 +345,9 @@ extern "C" unsigned int executeKdmGimplePass()
   return retValue;
 }
 
+/**
+ *  Called once after GCC has finished processing the translation unit
+ */
 extern "C" void executeFinishUnit(void *event_data, void *data)
 {
   //  if(is_cpp())

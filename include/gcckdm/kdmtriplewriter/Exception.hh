@@ -22,7 +22,7 @@
 #define GCCKDM_KDMTRIPLEWRITER_EXCEPTION_HH_
 
 #include <exception>
-#include <boost/exception.hpp>
+#include <boost/exception/all.hpp>
 
 namespace gcckdm {
 

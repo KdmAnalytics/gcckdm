@@ -227,18 +227,18 @@ void print_decl (tree decl)
   int tc (TREE_CODE (decl));
   tree id (DECL_NAME (decl));
   const char* name (id
-                    ? IDENTIFIER_POINTER (id)
-                    : "<unnamed>");
+      ? IDENTIFIER_POINTER (id)
+          : "<unnamed>");
 
   std::cerr << tree_code_name[tc] << " " << name << " at "
-       << DECL_SOURCE_FILE (decl) << ":"
-       << DECL_SOURCE_LINE (decl) << std::endl;
+      << DECL_SOURCE_FILE (decl) << ":"
+      << DECL_SOURCE_LINE (decl) << std::endl;
 }
 
 /**
  * Traverse the namespaces, pushing all found types onto the process queue
  */
-void traverse (tree ns)
+void traverse_namespace (tree ns)
 {
   tree decl;
   cp_binding_level* level (NAMESPACE_LEVEL (ns));
@@ -252,12 +252,15 @@ void traverse (tree ns)
     if (DECL_IS_BUILTIN (decl))
       continue;
 
-    //Appending nodes to the queue instead of processing them immediately is
-    //because gcc is overly lazy and does some things (like setting annonymous struct names)
-    //sometime after completing the type
-    // taken from dehyra_plugin.c
-    VEC_safe_push(tree, heap, treeQueueVec, decl);
-    print_decl(decl);
+    if (!errorcount)
+    {
+      //Appending nodes to the queue instead of processing them immediately is
+      //because gcc is overly lazy and does some things (like setting annonymous struct names)
+      //sometime after completing the type
+      // taken from dehyra_plugin.c
+      VEC_safe_push(tree, heap, treeQueueVec, decl);
+      //    print_decl(decl);
+    }
   }
 
   // Traverse namespaces.
@@ -269,13 +272,16 @@ void traverse (tree ns)
     if (DECL_IS_BUILTIN (decl))
       continue;
 
-    //Appending nodes to the queue instead of processing them immediately is
-    //because gcc is overly lazy and does some things (like setting annonymous struct names)
-    //sometime after completing the type
-    // taken from dehyra_plugin.c
-    VEC_safe_push(tree, heap, treeQueueVec, decl);
-    print_decl(decl);
-    traverse (decl);
+    if (!errorcount)
+    {
+      //Appending nodes to the queue instead of processing them immediately is
+      //because gcc is overly lazy and does some things (like setting annonymous struct names)
+      //sometime after completing the type
+      // taken from dehyra_plugin.c
+      VEC_safe_push(tree, heap, treeQueueVec, decl);
+      //    print_decl(decl);
+      traverse_namespace (decl);
+    }
   }
 }
 
@@ -319,7 +325,7 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
   if(is_cpp())
   {
     // Scan for all types defined in the global namespace, recursing through any other namespaces.
-    traverse(global_namespace);
+    traverse_namespace(global_namespace);
   }
 
   if (!errorcount && !sorrycount)

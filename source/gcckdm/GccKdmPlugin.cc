@@ -151,21 +151,25 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
         }
       }
 
+      boost::unique_ptr<gcckdm::kdmtriplewriter::KdmTripleWriter> pWriter;
+      //User specified non-default output
       if (kdmSink)
       {
-        boost::unique_ptr<gcckdm::kdmtriplewriter::KdmTripleWriter> pWriter(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
-        pWriter->bodies(processFunctionBodies);
-        gccAstListener.reset(pWriter.release());
+        pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
       }
-
-
-      //default to file output
-      if (!gccAstListener)
+      // default output is file
+      else
       {
         boost::filesystem::path filename(main_input_filename);
         filename.replace_extension(".tkdm");
-        gccAstListener.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
+        pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
       }
+
+      //Set if we are to process bodies or not...
+      pWriter->bodies(processFunctionBodies);
+
+      //Set out listener pointer
+      gccAstListener.reset(pWriter.release());
 
       //Disable assembly output
       asm_file_name = HOST_BIT_BUCKET;

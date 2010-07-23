@@ -386,7 +386,10 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   writeTripleLinkId(callableUnitId, name);
 
   std::string sourceFile(DECL_SOURCE_FILE(functionDecl));
-  long unitId = (sourceFile == mCompilationFile.string()) ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit;
+  std::string t(mCompilationFile.string());
+  std::cerr << sourceFile << std::endl;
+  std::cerr << t << std::endl;
+  long unitId(sourceFile == mCompilationFile.string() ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
   writeTripleContains(unitId, callableUnitId);
 
   writeKdmSourceRef(callableUnitId, functionDecl);

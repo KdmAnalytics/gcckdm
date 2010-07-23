@@ -428,10 +428,10 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
   tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
   while (argType && (argType != void_list_node))
   {
-    long refId = writeKdmParameterUnit(arg);
-    writeTripleContains(signatureId, refId);
     if (arg)
     {
+      long refId = writeKdmParameterUnit(arg);
+      writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }
     argType = TREE_CHAIN (argType);

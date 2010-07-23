@@ -170,6 +170,11 @@ void KdmTripleWriter::startKdmGimplePass()
 
 void KdmTripleWriter::finishKdmGimplePass()
 {
+}
+
+void KdmTripleWriter::finishTranslationUnit()
+{
+  //Process any nodes that are still left on the queue
   try
   {
     for (; !mNodeQueue.empty(); mNodeQueue.pop())
@@ -181,17 +186,10 @@ void KdmTripleWriter::finishKdmGimplePass()
   {
     std::cerr << boost::diagnostic_information(e);
   }
-}
 
-void KdmTripleWriter::finishTranslationUnit()
-{
+  //Write any left over shared units
   try
   {
-    for (; !mNodeQueue.empty(); mNodeQueue.pop())
-    {
-      processAstNode(mNodeQueue.front());
-    }
-
     for (TreeMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
     {
       writeKdmSharedUnit(i->first);

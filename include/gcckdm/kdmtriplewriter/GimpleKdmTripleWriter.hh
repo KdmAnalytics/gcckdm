@@ -73,6 +73,8 @@ private:
 
   long getRhsReferenceId(long actionId, tree const rhs);
 
+  tree resolveCall(tree const tree);
+
   /**
    * Reference to the main kdm triple writer
    */

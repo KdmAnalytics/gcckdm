@@ -527,11 +527,49 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
   mKdmWriter.writeTripleKdmType(actionId, KdmType::Call());
   mKdmWriter.writeTriple(callId, KdmPredicate::From(),actionId);
 
-  //tree lhs = gimple_call_lhs (gs);
-  long callableId = mKdmWriter.getReferenceId(gimple_call_fn (gs));
+  tree op0 = gimple_call_fn (gs);
+  if (TREE_CODE (op0) == NON_LVALUE_EXPR)
+  {
+    op0 = TREE_OPERAND (op0, 0);
+  }
+  tree t(resolveCall(op0));
+  mKdmWriter.writeComment(gcckdm::getAstNodeName(t));
+//  long callableId(mKdmWriter.hasReferenceId(t) ? mKdmWriter.getReferenceId(t)) : mKdmWriter.nextElementId());
+  long callableId(mKdmWriter.getReferenceId(t));
   mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
+  mKdmWriter.writeTripleContains(actionId, callId);
   return actionId;
 }
+
+
+tree GimpleKdmTripleWriter::resolveCall(tree const node)
+{
+  tree op0 = node;
+  tree_code code = TREE_CODE (op0);
+  switch (code)
+  {
+    case FUNCTION_DECL:
+    {
+      break;
+    }
+    case ADDR_EXPR:
+    {
+      op0 = TREE_OPERAND(op0, 0);
+      resolveCall(op0);
+      break;
+    }
+    default:
+    {
+      std::string msg(boost::str(boost::format("GIMPLE call statement (%1%) in %2%") % std::string(tree_code_name[TREE_CODE(op0)])
+          % BOOST_CURRENT_FUNCTION));
+      mKdmWriter.writeUnsupportedComment(msg);
+    }
+      break;
+  }
+  return op0;
+}
+
+
 
 void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)
 {

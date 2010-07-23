@@ -29,43 +29,43 @@ namespace gcckdm {
 namespace kdmtriplewriter {
 
 /**
- * Generic
+ * Generic Base KdmTripleWriter Exception
  */
 class KdmTripleWriterException : public boost::exception, public std::exception
 {
 public:
-  KdmTripleWriterException()
-  : mWhat("KdmTripleWriter has thrown an exception")
-  {
-  }
-
-  virtual ~KdmTripleWriterException() throw(){};
-
-  virtual char const * what() const throw()
-  {
-    return mWhat.c_str();
-  }
+  KdmTripleWriterException() : mWhat("KdmTripleWriter has thrown an exception") {}
+  virtual ~KdmTripleWriterException() throw() {};
+  virtual char const * what() const throw() { return mWhat.c_str(); }
 
 private:
   std::string mWhat;
 };
 
-
+/**
+ * Throw this when a null location in encountered and you cannot
+ * use an invalid return value
+ */
 class NullLocationException : public KdmTripleWriterException
 {
 public:
-  NullLocationException()
-  : mWhat("Location was null")
-  {
+  NullLocationException() : mWhat("Location was null") {}
+  virtual ~NullLocationException() throw() {};
+  virtual char const * what() const throw() { return mWhat.c_str(); }
+private:
+  std::string mWhat;
+};
 
-  }
-  virtual ~NullLocationException() throw(){};
-
-  virtual char const * what() const throw()
-  {
-    return mWhat.c_str();
-  }
-
+/**
+ * Throw this when a null tree node was encountered and you cannot
+ * use an invalid return value
+ */
+class NullAstNodeException : public KdmTripleWriterException
+{
+public:
+  NullAstNodeException() : mWhat("AST Node was null") {}
+  virtual ~NullAstNodeException() throw() {};
+  virtual char const * what() const throw()  {    return mWhat.c_str();  }
 private:
   std::string mWhat;
 };

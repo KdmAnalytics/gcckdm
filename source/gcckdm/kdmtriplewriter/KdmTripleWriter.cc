@@ -170,6 +170,11 @@ void KdmTripleWriter::startKdmGimplePass()
 
 void KdmTripleWriter::finishKdmGimplePass()
 {
+}
+
+void KdmTripleWriter::finishTranslationUnit()
+{
+  //Process any nodes that are still left on the queue
   try
   {
     for (; !mNodeQueue.empty(); mNodeQueue.pop())
@@ -181,17 +186,10 @@ void KdmTripleWriter::finishKdmGimplePass()
   {
     std::cerr << boost::diagnostic_information(e);
   }
-}
 
-void KdmTripleWriter::finishTranslationUnit()
-{
+  //Write any left over shared units
   try
   {
-    for (; !mNodeQueue.empty(); mNodeQueue.pop())
-    {
-      processAstNode(mNodeQueue.front());
-    }
-
     for (TreeMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
     {
       writeKdmSharedUnit(i->first);
@@ -387,8 +385,12 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   writeTripleName(callableUnitId, name);
   writeTripleLinkId(callableUnitId, name);
 
-  std::string sourceFile(DECL_SOURCE_FILE(functionDecl));
-  long unitId = (sourceFile == mCompilationFile.string()) ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit;
+  Path sourceFile(DECL_SOURCE_FILE(functionDecl));
+  if (!sourceFile.is_complete())
+  {
+    sourceFile = boost::filesystem::complete(sourceFile);
+  }
+  long unitId(sourceFile == mCompilationFile ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
   writeTripleContains(unitId, callableUnitId);
 
   writeKdmSourceRef(callableUnitId, functionDecl);
@@ -400,8 +402,10 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   {
     if (gimple_has_body_p(functionDecl))
     {
+      writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(functionDecl) + "==========================");
       gimple_seq seq = gimple_body(functionDecl);
       mGimpleWriter->processGimpleSequence(functionDecl, seq);
+      writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(functionDecl) + "==========================");
     }
   }
 }
@@ -424,10 +428,10 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
   tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
   while (argType && (argType != void_list_node))
   {
-    long refId = writeKdmParameterUnit(arg);
-    writeTripleContains(signatureId, refId);
     if (arg)
     {
+      long refId = writeKdmParameterUnit(arg);
+      writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }
     argType = TREE_CHAIN (argType);
@@ -603,6 +607,11 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 
 long KdmTripleWriter::writeKdmParameterUnit(tree const param)
 {
+  if (!param)
+  {
+    BOOST_THROW_EXCEPTION(NullAstNodeException());
+  }
+
   long parameterUnitId = getReferenceId(param);
   writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
 

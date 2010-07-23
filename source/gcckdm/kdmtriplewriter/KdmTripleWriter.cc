@@ -607,6 +607,11 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 
 long KdmTripleWriter::writeKdmParameterUnit(tree const param)
 {
+  if (!param)
+  {
+    BOOST_THROW_EXCEPTION(NullAstNodeException());
+  }
+
   long parameterUnitId = getReferenceId(param);
   writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
 

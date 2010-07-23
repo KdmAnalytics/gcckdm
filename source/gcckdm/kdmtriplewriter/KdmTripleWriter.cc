@@ -400,8 +400,10 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   {
     if (gimple_has_body_p(functionDecl))
     {
+      writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(functionDecl) + "==========================");
       gimple_seq seq = gimple_body(functionDecl);
       mGimpleWriter->processGimpleSequence(functionDecl, seq);
+      writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(functionDecl) + "==========================");
     }
   }
 }

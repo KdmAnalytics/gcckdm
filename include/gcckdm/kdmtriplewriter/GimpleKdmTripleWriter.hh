@@ -50,12 +50,13 @@ public:
 private:
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
 
-  long getBlockReferenceId(location_t const loc);
+  long getBlockReferenceId(tree const parent, location_t const loc);
   void processGimpleBindStatement(tree const parent, gimple const gs);
   long processGimpleAssignStatement(tree const parent, gimple const gs);
   long processGimpleReturnStatement(tree const parent, gimple const gs);
   long processGimpleConditionalStatement(tree const parent, gimple const gs);
   long processGimpleLabelStatement(tree const parent, gimple const gs);
+  long processGimpleCallStatement(tree const parent, gimple const gs);
 
   void processGimpleUnaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);

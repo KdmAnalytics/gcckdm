@@ -385,11 +385,12 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   writeTripleName(callableUnitId, name);
   writeTripleLinkId(callableUnitId, name);
 
-  std::string sourceFile(DECL_SOURCE_FILE(functionDecl));
-  std::string t(mCompilationFile.string());
-  std::cerr << sourceFile << std::endl;
-  std::cerr << t << std::endl;
-  long unitId(sourceFile == mCompilationFile.string() ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
+  Path sourceFile(DECL_SOURCE_FILE(functionDecl));
+  if (!sourceFile.is_complete())
+  {
+    sourceFile = boost::filesystem::complete(sourceFile);
+  }
+  long unitId(sourceFile == mCompilationFile ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
   writeTripleContains(unitId, callableUnitId);
 
   writeKdmSourceRef(callableUnitId, functionDecl);

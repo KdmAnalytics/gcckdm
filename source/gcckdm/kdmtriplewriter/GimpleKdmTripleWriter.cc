@@ -533,8 +533,6 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
     op0 = TREE_OPERAND (op0, 0);
   }
   tree t(resolveCall(op0));
-  mKdmWriter.writeComment(gcckdm::getAstNodeName(t));
-//  long callableId(mKdmWriter.hasReferenceId(t) ? mKdmWriter.getReferenceId(t)) : mKdmWriter.nextElementId());
   long callableId(mKdmWriter.getReferenceId(t));
   mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
   mKdmWriter.writeTripleContains(actionId, callId);

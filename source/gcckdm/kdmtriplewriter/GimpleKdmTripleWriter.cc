@@ -537,6 +537,18 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
   mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
   mKdmWriter.writeTripleContains(actionId, callId);
 
+  //Read each parameter
+  if (gimple_call_num_args (gs) > 0)
+  {
+    for (size_t i = 0; i < gimple_call_num_args (gs); i++)
+    {
+      long paramId(mKdmWriter.getReferenceId(gimple_call_arg (gs, i)));
+      writeKdmActionRelation(KdmType::Reads(), actionId, paramId);
+    }
+  }
+
+
+  //optional write
   tree lhs = gimple_call_lhs (gs);
   if (lhs)
   {

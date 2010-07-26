@@ -45,6 +45,8 @@ BinaryOperationKindMap treeCodeToKind =
                               (TRUTH_AND_EXPR, gcckdm::KdmKind::And())
                               (TRUTH_OR_EXPR, gcckdm::KdmKind::Or())
                               (TRUTH_XOR_EXPR, gcckdm::KdmKind::Xor())
+                              (LSHIFT_EXPR, gcckdm::KdmKind::LeftShift())
+                              (RSHIFT_EXPR, gcckdm::KdmKind::RightShift())
                               ;
 
 bool isValueNode(tree const node)
@@ -749,7 +751,9 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
           case GE_EXPR:
           case EQ_EXPR:
           case NE_EXPR:
-         {
+          case LSHIFT_EXPR:
+          case RSHIFT_EXPR:
+          {
             writeKdmBinaryOperation(actionId, treeCodeToKind.find(gimple_assign_rhs_code(gs))->second, gs);
             break;
           }

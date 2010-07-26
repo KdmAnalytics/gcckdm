@@ -33,6 +33,7 @@ typedef std::map<tree_code, gcckdm::KdmKind> BinaryOperationKindMap;
 
 BinaryOperationKindMap treeCodeToKind =
     boost::assign::map_list_of(PLUS_EXPR, gcckdm::KdmKind::Add())
+                              (POINTER_PLUS_EXPR, gcckdm::KdmKind::Add())
                               (MINUS_EXPR, gcckdm::KdmKind::Subtract())
                               (MULT_EXPR, gcckdm::KdmKind::Multiply())
                               (RDIV_EXPR, gcckdm::KdmKind::Divide())
@@ -760,6 +761,7 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
         switch (gimple_assign_rhs_code(gs))
         {
           case PLUS_EXPR:
+          case POINTER_PLUS_EXPR:
           case MINUS_EXPR:
           case MULT_EXPR:
           case RDIV_EXPR:

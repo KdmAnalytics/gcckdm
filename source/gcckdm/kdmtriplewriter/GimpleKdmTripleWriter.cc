@@ -271,11 +271,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
         hasActionId = false;
         break;
       }
-        //      case GIMPLE_GOTO:
-        //      {
-        //        gimple_not_implemented_yet(gs);
-        //        break;
-        //      }
+      case GIMPLE_GOTO:
+      {
+        actionId = processGimpleGotoStatement(parent, gs);
+        break;
+      }
         //      case GIMPLE_NOP:
         //      {
         //        gimple_not_implemented_yet(gs);
@@ -575,6 +575,24 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
     writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
   }
 
+  return actionId;
+}
+
+
+long GimpleKdmTripleWriter::processGimpleGotoStatement(tree const parent, gimple const gs)
+{
+  long actionId = mKdmWriter.getNextElementId();
+  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionId, KdmKind::Goto());
+
+  tree label(gimple_goto_dest (gs));
+  long destId(mKdmWriter.getReferenceId(label));
+  mKdmWriter.writeTriple(actionId, KdmPredicate::From(), actionId);
+  mKdmWriter.writeTriple(actionId, KdmPredicate::To(), destId);
+
+  //figure out what blockunit this statement belongs
+  long blockId = getBlockReferenceId(parent, gimple_location(gs));
+  mKdmWriter.writeTripleContains(blockId, actionId);
   return actionId;
 }
 

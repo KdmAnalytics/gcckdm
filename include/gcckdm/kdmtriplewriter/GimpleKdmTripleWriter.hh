@@ -57,6 +57,7 @@ private:
   long processGimpleConditionalStatement(tree const parent, gimple const gs);
   long processGimpleLabelStatement(tree const parent, gimple const gs);
   long processGimpleCallStatement(tree const parent, gimple const gs);
+  long processGimpleGotoStatement(tree const parent, gimple const gs);
 
   void processGimpleUnaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);

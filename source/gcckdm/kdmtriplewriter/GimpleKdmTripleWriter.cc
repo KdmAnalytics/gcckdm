@@ -20,7 +20,7 @@
 //
 #include <boost/format.hpp>
 #include <boost/current_function.hpp>
-
+#include <boost/assign/list_of.hpp> // for 'map_list_of()'
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/KdmKind.hh"
@@ -28,6 +28,24 @@
 
 namespace
 {
+
+typedef std::map<tree_code, gcckdm::KdmKind> BinaryOperationKindMap;
+
+BinaryOperationKindMap treeCodeToKind =
+    boost::assign::map_list_of(PLUS_EXPR, gcckdm::KdmKind::Add())
+                              (MINUS_EXPR, gcckdm::KdmKind::Subtract())
+                              (MULT_EXPR, gcckdm::KdmKind::Multiply())
+                              (RDIV_EXPR, gcckdm::KdmKind::Divide())
+                              (GT_EXPR, gcckdm::KdmKind::GreaterThan())
+                              (GE_EXPR, gcckdm::KdmKind::GreaterThanOrEqual())
+                              (LE_EXPR, gcckdm::KdmKind::LessThanOrEqual())
+                              (LT_EXPR, gcckdm::KdmKind::LessThan())
+                              (EQ_EXPR, gcckdm::KdmKind::Equals())
+                              (NE_EXPR, gcckdm::KdmKind::NotEqual())
+                              (TRUTH_AND_EXPR, gcckdm::KdmKind::And())
+                              (TRUTH_OR_EXPR, gcckdm::KdmKind::Or())
+                              (TRUTH_XOR_EXPR, gcckdm::KdmKind::Xor())
+                              ;
 
 bool isValueNode(tree const node)
 {
@@ -447,7 +465,7 @@ long GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimp
   long actionId = mKdmWriter.getNextElementId();
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
-  tree t = gimple_return_retval (gs);
+  tree t = gimple_return_retval(gs);
   long id = mKdmWriter.getReferenceId(t);
   mKdmWriter.processAstNode(t);
   writeKdmActionRelation(KdmType::Reads(), actionId, id);
@@ -460,19 +478,19 @@ long GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimp
 
 long GimpleKdmTripleWriter::processGimpleLabelStatement(tree const parent, gimple const gs)
 {
-  tree label = gimple_label_label (gs);
+  tree label = gimple_label_label(gs);
 
   long actionId;
-//  if (mKdmWriter.hasReferenceId(label))
-//  {
-    actionId = writeKdmNopForLabel(label);
-    mLastLabelId = actionId;
-    mLabelFlag = true;
-//  }
-//  else
-//  {
-//    actionId = writeKdmNopForLabel(label);
-//  }
+  //  if (mKdmWriter.hasReferenceId(label))
+  //  {
+  actionId = writeKdmNopForLabel(label);
+  mLastLabelId = actionId;
+  mLabelFlag = true;
+  //  }
+  //  else
+  //  {
+  //    actionId = writeKdmNopForLabel(label);
+  //  }
   return actionId;
   //mKdmWriter.processAstNode(label);
 }
@@ -493,9 +511,9 @@ long GimpleKdmTripleWriter::processGimpleConditionalStatement(tree const parent,
   mKdmWriter.writeTripleKind(actionId, KdmKind::Condition());
   mKdmWriter.writeTripleName(actionId, "if");
 
-  if (gimple_cond_true_label (gs))
+  if (gimple_cond_true_label(gs))
   {
-    tree trueNode(gimple_cond_true_label (gs));
+    tree trueNode(gimple_cond_true_label(gs));
     long trueFlowId(mKdmWriter.getNextElementId());
     long trueNodeId(mKdmWriter.getReferenceId(trueNode));
 
@@ -504,13 +522,13 @@ long GimpleKdmTripleWriter::processGimpleConditionalStatement(tree const parent,
     mKdmWriter.writeTriple(trueFlowId, KdmPredicate::To(), trueNodeId);
     mKdmWriter.writeTripleContains(actionId, trueFlowId);
   }
-  if (gimple_cond_false_label (gs))
+  if (gimple_cond_false_label(gs))
   {
-    tree falseNode(gimple_cond_false_label (gs));
+    tree falseNode(gimple_cond_false_label(gs));
     long falseFlowId(mKdmWriter.getNextElementId());
     long falseNodeId(mKdmWriter.getReferenceId(falseNode));
     mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
-    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(),actionId);
+    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionId);
     mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
     mKdmWriter.writeTripleContains(actionId, falseFlowId);
   }
@@ -525,9 +543,9 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
 
   long callId = mKdmWriter.getNextElementId();
   mKdmWriter.writeTripleKdmType(actionId, KdmType::Call());
-  mKdmWriter.writeTriple(callId, KdmPredicate::From(),actionId);
+  mKdmWriter.writeTriple(callId, KdmPredicate::From(), actionId);
 
-  tree op0 = gimple_call_fn (gs);
+  tree op0 = gimple_call_fn(gs);
   if (TREE_CODE (op0) == NON_LVALUE_EXPR)
   {
     op0 = TREE_OPERAND (op0, 0);
@@ -536,9 +554,27 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
   long callableId(mKdmWriter.getReferenceId(t));
   mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
   mKdmWriter.writeTripleContains(actionId, callId);
+
+  //Read each parameter
+  if (gimple_call_num_args(gs) > 0)
+  {
+    for (size_t i = 0; i < gimple_call_num_args(gs); i++)
+    {
+      long paramId(mKdmWriter.getReferenceId(gimple_call_arg(gs, i)));
+      writeKdmActionRelation(KdmType::Reads(), actionId, paramId);
+    }
+  }
+
+  //optional write
+  tree lhs = gimple_call_lhs(gs);
+  if (lhs)
+  {
+    long lhsId(mKdmWriter.getReferenceId(lhs));
+    writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+  }
+
   return actionId;
 }
-
 
 tree GimpleKdmTripleWriter::resolveCall(tree const node)
 {
@@ -566,8 +602,6 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
   }
   return op0;
 }
-
-
 
 void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionId, gimple const gs)
 {
@@ -621,10 +655,15 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
         writeKdmUnaryOperation(actionId, KdmKind::Assign(), gs);
         break;
       }
+      else if (rhs_code == NEGATE_EXPR)
+      {
+        writeKdmUnaryOperation(actionId, KdmKind::Negate(), gs);
+        break;
+      }
       else
       {
-        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
-            % BOOST_CURRENT_FUNCTION));
+        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[rhs_code])
+            % BOOST_CURRENT_FUNCTION % __LINE__));
         mKdmWriter.writeUnsupportedComment(msg);
       }
       //      else if (rhs_code == BIT_NOT_EXPR)
@@ -637,12 +676,7 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
       //        mKdmWriter.writeComment("=====Gimple Operation Not Implemented========8");
       //        //                rhsString += '!';
       //      }
-      //      else if (rhs_code == NEGATE_EXPR)
-      //      {
-      //        mKdmWriter.writeComment("=====Gimple Operation Not Implemented========9");
-      //        //                rhsString += "-";
-      //      }
-      //      else
+//            else
       //      {
       //        rhsString += "=====Gimple Operation Not Implemented========10";
       //        //                rhsString += "[" + std::string(tree_code_name[rhs_code]) + "]";
@@ -650,16 +684,16 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
 
       if (op_prio(rhs) < op_code_prio(rhs_code))
       {
-        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
-            % BOOST_CURRENT_FUNCTION));
+        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[rhs_code])
+            % BOOST_CURRENT_FUNCTION % __LINE__));
         mKdmWriter.writeUnsupportedComment(msg);
         //        rhsString += "=====Gimple Operation Not Implemented========11";
         //                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
       }
       else
       {
-        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code])
-            % BOOST_CURRENT_FUNCTION));
+        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[rhs_code])
+            % BOOST_CURRENT_FUNCTION % __LINE__));
         mKdmWriter.writeUnsupportedComment(msg);
         //        rhsString += "=====Gimple Operation Not Implemented========12";
         //                rhsString += gcckdm::getAstNodeName(rhs);
@@ -706,30 +740,22 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
         switch (gimple_assign_rhs_code(gs))
         {
           case PLUS_EXPR:
-          {
-            writeKdmBinaryOperation(actionId, KdmKind::Add(), gs);
-            break;
-          }
           case MINUS_EXPR:
-          {
-            writeKdmBinaryOperation(actionId, KdmKind::Subtract(), gs);
-            break;
-          }
           case MULT_EXPR:
-          {
-            writeKdmBinaryOperation(actionId, KdmKind::Multiply(), gs);
-            break;
-          }
-          case TRUNC_DIV_EXPR:
           case RDIV_EXPR:
-          case EXACT_DIV_EXPR:
-          {
-            writeKdmBinaryOperation(actionId, KdmKind::Divide(), gs);
+          case LT_EXPR:
+          case LE_EXPR:
+          case GT_EXPR:
+          case GE_EXPR:
+          case EQ_EXPR:
+          case NE_EXPR:
+         {
+            writeKdmBinaryOperation(actionId, treeCodeToKind.find(gimple_assign_rhs_code(gs))->second, gs);
             break;
           }
           default:
           {
-            mKdmWriter.writeComment(std::string("Unsupported rhs op_code: ") + op_symbol_code(gimple_assign_rhs_code(gs)));
+            mKdmWriter.writeUnsupportedComment(std::string("rhs op_code: (") + op_symbol_code(gimple_assign_rhs_code(gs)) + ") in " + BOOST_CURRENT_FUNCTION );
             break;
           }
         }
@@ -744,7 +770,7 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
       }
     }
   }
-  std::cerr << "rhsbinaryString: " << rhsString << std::endl;
+  //std::cerr << "rhsbinaryString: " << rhsString << std::endl;
 
 }
 

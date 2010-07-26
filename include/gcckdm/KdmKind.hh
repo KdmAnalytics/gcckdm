@@ -49,6 +49,7 @@ private:
     KdmKind_Goto,
     KdmKind_Nop,
     KdmKind_Call,
+    KdmKind_MethodCall,
     KdmKind_Equals,
     KdmKind_NotEqual,
     KdmKind_LessThanOrEqual,
@@ -59,6 +60,13 @@ private:
     KdmKind_And,
     KdmKind_Or,
     KdmKind_Xor,
+    KdmKind_BitAnd,
+    KdmKind_BitOr,
+    KdmKind_BitNot,
+    KdmKind_BitXor,
+    KdmKind_LeftShift,
+    KdmKind_RightShift,
+    KdmKind_BitRightShift,
   };
 
 public:
@@ -81,6 +89,7 @@ public:
   static const KdmKind Nop()                  { return KdmKind(KdmKind_Nop, "Nop"); }
   static const KdmKind Goto()                 { return KdmKind(KdmKind_Goto, "Goto"); }
   static const KdmKind Call()                 { return KdmKind(KdmKind_Call, "Call"); }
+  static const KdmKind MethodCall()           { return KdmKind(KdmKind_MethodCall, "MethodCall"); }
   static const KdmKind Equals()               { return KdmKind(KdmKind_Equals, "Equals"); }
   static const KdmKind NotEqual()             { return KdmKind(KdmKind_NotEqual, "NotEqual"); }
   static const KdmKind LessThanOrEqual()      { return KdmKind(KdmKind_LessThanOrEqual, "LessThanOrEqual"); }
@@ -90,7 +99,13 @@ public:
   static const KdmKind And()                  { return KdmKind(KdmKind_And, "And"); }
   static const KdmKind Or()                   { return KdmKind(KdmKind_Or, "Or"); }
   static const KdmKind Xor()                  { return KdmKind(KdmKind_Xor, "Xor"); }
-
+  static const KdmKind BitAnd()               { return KdmKind(KdmKind_BitAnd, "BitAnd"); }
+  static const KdmKind BitOr()                { return KdmKind(KdmKind_BitOr, "BitOr"); }
+  static const KdmKind BitNot()               { return KdmKind(KdmKind_BitNot, "BitNot"); }
+  static const KdmKind BitXor()               { return KdmKind(KdmKind_BitXor, "BitXor"); }
+  static const KdmKind LeftShift()            { return KdmKind(KdmKind_LeftShift, "LeftShift"); }
+  static const KdmKind RightShift()           { return KdmKind(KdmKind_RightShift, "RightShift"); }
+  static const KdmKind BitRightShift()        { return KdmKind(KdmKind_BitRightShift, "BitRightShift"); }
 
   int const id() const
   {

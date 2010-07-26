@@ -49,28 +49,48 @@ private:
     KdmKind_Goto,
     KdmKind_Nop,
     KdmKind_Call,
+    KdmKind_Equals,
+    KdmKind_NotEqual,
+    KdmKind_LessThanOrEqual,
+    KdmKind_LessThan,
+    KdmKind_GreaterThan,
+    KdmKind_GreaterThanOrEqual,
+    KdmKind_Not,
+    KdmKind_And,
+    KdmKind_Or,
+    KdmKind_Xor,
   };
 
 public:
 
-  static const KdmKind Assign()     { return KdmKind(KdmKind_Assign, "Assign");  }
-  static const KdmKind Add()        { return KdmKind(KdmKind_Add, "Add");  }
-  static const KdmKind Subtract()   { return KdmKind(KdmKind_Subtract, "Subtract");  }
-  static const KdmKind Multiply()   { return KdmKind(KdmKind_Multiply, "Multiply");  }
-  static const KdmKind Divide()     { return KdmKind(KdmKind_Divide, "Divide");  }
-  static const KdmKind Negate()     { return KdmKind(KdmKind_Negate, "Negate");  }
-  static const KdmKind Return()     { return KdmKind(KdmKind_Return, "Return");  }
-  static const KdmKind Register()   { return KdmKind(KdmKind_Register, "register"); }
-  static const KdmKind Ptr()        { return KdmKind(KdmKind_Ptr, "Ptr"); }
-  static const KdmKind PtrReplace() { return KdmKind(KdmKind_PtrReplace, "PtrReplace"); }
-  static const KdmKind PtrSelect()  { return KdmKind(KdmKind_PtrSelect, "PtrSelect");  }
-  static const KdmKind PtrCall()    { return KdmKind(KdmKind_PtrCall, "PtrCall");  }
-  static const KdmKind Regular()    { return KdmKind(KdmKind_Regular, "regular");  }
-  static const KdmKind Local()      { return KdmKind(KdmKind_Local, "local");  }
-  static const KdmKind Condition()  { return KdmKind(KdmKind_Local, "Condition"); }
-  static const KdmKind Nop()        { return KdmKind(KdmKind_Nop, "Nop"); }
-  static const KdmKind Goto()       { return KdmKind(KdmKind_Goto, "Goto"); }
-  static const KdmKind Call()       { return KdmKind(KdmKind_Call, "Call"); }
+  static const KdmKind Assign()               { return KdmKind(KdmKind_Assign, "Assign");  }
+  static const KdmKind Add()                  { return KdmKind(KdmKind_Add, "Add");  }
+  static const KdmKind Subtract()             { return KdmKind(KdmKind_Subtract, "Subtract");  }
+  static const KdmKind Multiply()             { return KdmKind(KdmKind_Multiply, "Multiply");  }
+  static const KdmKind Divide()               { return KdmKind(KdmKind_Divide, "Divide");  }
+  static const KdmKind Negate()               { return KdmKind(KdmKind_Negate, "Negate");  }
+  static const KdmKind Return()               { return KdmKind(KdmKind_Return, "Return");  }
+  static const KdmKind Register()             { return KdmKind(KdmKind_Register, "register"); }
+  static const KdmKind Ptr()                  { return KdmKind(KdmKind_Ptr, "Ptr"); }
+  static const KdmKind PtrReplace()           { return KdmKind(KdmKind_PtrReplace, "PtrReplace"); }
+  static const KdmKind PtrSelect()            { return KdmKind(KdmKind_PtrSelect, "PtrSelect");  }
+  static const KdmKind PtrCall()              { return KdmKind(KdmKind_PtrCall, "PtrCall");  }
+  static const KdmKind Regular()              { return KdmKind(KdmKind_Regular, "regular");  }
+  static const KdmKind Local()                { return KdmKind(KdmKind_Local, "local");  }
+  static const KdmKind Condition()            { return KdmKind(KdmKind_Local, "Condition"); }
+  static const KdmKind Nop()                  { return KdmKind(KdmKind_Nop, "Nop"); }
+  static const KdmKind Goto()                 { return KdmKind(KdmKind_Goto, "Goto"); }
+  static const KdmKind Call()                 { return KdmKind(KdmKind_Call, "Call"); }
+  static const KdmKind Equals()               { return KdmKind(KdmKind_Equals, "Equals"); }
+  static const KdmKind NotEqual()             { return KdmKind(KdmKind_NotEqual, "NotEqual"); }
+  static const KdmKind LessThanOrEqual()      { return KdmKind(KdmKind_LessThanOrEqual, "LessThanOrEqual"); }
+  static const KdmKind LessThan()             { return KdmKind(KdmKind_LessThan, "LessThan"); }
+  static const KdmKind GreaterThan()          { return KdmKind(KdmKind_GreaterThan, "GreaterThan"); }
+  static const KdmKind GreaterThanOrEqual()   { return KdmKind(KdmKind_GreaterThanOrEqual, "GreaterThanOrEqual"); }
+  static const KdmKind And()                  { return KdmKind(KdmKind_And, "And"); }
+  static const KdmKind Or()                   { return KdmKind(KdmKind_Or, "Or"); }
+  static const KdmKind Xor()                  { return KdmKind(KdmKind_Xor, "Xor"); }
+
 
   int const id() const
   {

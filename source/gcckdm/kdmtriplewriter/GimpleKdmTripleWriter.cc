@@ -536,6 +536,14 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
   long callableId(mKdmWriter.getReferenceId(t));
   mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
   mKdmWriter.writeTripleContains(actionId, callId);
+
+  tree lhs = gimple_call_lhs (gs);
+  if (lhs)
+  {
+    long lhsId(mKdmWriter.getReferenceId(lhs));
+    writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+  }
+
   return actionId;
 }
 
@@ -744,7 +752,7 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
       }
     }
   }
-  std::cerr << "rhsbinaryString: " << rhsString << std::endl;
+  //std::cerr << "rhsbinaryString: " << rhsString << std::endl;
 
 }
 

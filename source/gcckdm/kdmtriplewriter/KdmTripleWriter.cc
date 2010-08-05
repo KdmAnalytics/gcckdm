@@ -273,11 +273,12 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       writeComment("FIXME: Do we need these parm_decls?");
       break;
     }
-//    case LABEL_DECL:
-//    {
+    case LABEL_DECL:
+    {
+      writeComment("FIXME: We are skipping a label_decl here is it needed?");
 //      processAstLabelDeclarationNode(decl);
-//      break;
-//    }
+      break;
+    }
     default:
     {
       std::string msg(str(boost::format("AST Declaration Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));

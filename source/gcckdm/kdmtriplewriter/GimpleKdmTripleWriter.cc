@@ -469,9 +469,12 @@ long GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimp
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
   tree t = gimple_return_retval(gs);
-  long id = mKdmWriter.getReferenceId(t);
-  mKdmWriter.processAstNode(t);
-  writeKdmActionRelation(KdmType::Reads(), actionId, id);
+  if (t)
+  {
+    long id = mKdmWriter.getReferenceId(t);
+    mKdmWriter.processAstNode(t);
+    writeKdmActionRelation(KdmType::Reads(), actionId, id);
+  }
 
   //figure out what blockunit this statement belongs
   long blockId = getBlockReferenceId(parent, gimple_location(gs));

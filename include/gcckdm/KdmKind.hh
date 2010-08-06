@@ -77,6 +77,12 @@ private:
     KdmKind_MemberReplace,
     KdmKind_New,
     KdmKind_NewArray,
+    KdmKind_VirtualCall,
+    KdmKind_Throw,
+    KdmKind_Incr,
+    KdmKind_Decr,
+    KdmKind_Switch,
+    KdmKind_Compound,
   };
 
 public:
@@ -126,7 +132,12 @@ public:
   static const KdmKind MemberReplace()        { return KdmKind(KdmKind_MemberReplace, "MemberReplace"); }
   static const KdmKind New()                  { return KdmKind(KdmKind_New, "New"); }
   static const KdmKind NewArray()             { return KdmKind(KdmKind_NewArray, "NewArray"); }
-
+  static const KdmKind VirtualCall()          { return KdmKind(KdmKind_VirtualCall, "VirtualCall"); }
+  static const KdmKind Throw()                { return KdmKind(KdmKind_Throw, "Throw"); }
+  static const KdmKind Incr()                 { return KdmKind(KdmKind_Incr, "Incr"); }
+  static const KdmKind Decr()                 { return KdmKind(KdmKind_Decr, "Decr"); }
+  static const KdmKind Switch()               { return KdmKind(KdmKind_Switch, "Switch"); }
+  static const KdmKind Compound()             { return KdmKind(KdmKind_Compound, "Compound"); }
 
   int const id() const
   {

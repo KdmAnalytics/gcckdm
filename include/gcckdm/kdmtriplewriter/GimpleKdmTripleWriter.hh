@@ -58,6 +58,7 @@ private:
   long processGimpleLabelStatement(tree const parent, gimple const gs);
   long processGimpleCallStatement(tree const parent, gimple const gs);
   long processGimpleGotoStatement(tree const parent, gimple const gs);
+  void processGimpleSwitchStatement(tree const parent, gimple const gs);
 
   void processGimpleUnaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);
@@ -96,6 +97,7 @@ private:
 
   bool mLabelFlag;
   long mLastLabelId;
+  long mRegisterVariableIndex;
 };
 
 } // namespace kdmtriplewriter

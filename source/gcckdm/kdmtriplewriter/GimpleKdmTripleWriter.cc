@@ -355,7 +355,8 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
       case GIMPLE_GOTO:
       {
-        actionId = processGimpleGotoStatement(gs);
+        processGimpleGotoStatement(gs);
+        hasActionId = false;
         break;
       }
       //      case GIMPLE_NOP:
@@ -490,10 +491,12 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
 
     }
-    //If the last gimple statement we processed was a label
+    // If the last gimple statement we processed was a label or some goto's
     // we have to do a little magic here to get the flows
-    // correct... labels don't have line numbers so we add
+    // correct... some labels/goto's don't have line numbers so we add
     // the label to the next actionElement after the label
+    // mLabelFlag is set in the processGimpleLabelStatement and processGimpleGotoStatement methods
+    //
     if (mLabelFlag and hasActionId)
     {
       long blockId = getBlockReferenceId(gimple_location(gs));
@@ -612,6 +615,10 @@ long GimpleKdmTripleWriter::processGimpleConditionalStatement(gimple const gs)
     mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
     mKdmWriter.writeTripleContains(actionId, falseFlowId);
   }
+
+  long blockId = getBlockReferenceId(gimple_location(gs));
+  mKdmWriter.writeTripleContains(blockId, actionId);
+
   return actionId;
 }
 
@@ -685,6 +692,8 @@ long GimpleKdmTripleWriter::processGimpleGotoStatement(gimple const gs)
   {
     //this goto doesn't have a location.... use the destination location?
     mKdmWriter.writeComment("FIXME: This GOTO doesn't have a location... what should we use instead");
+    mLastLabelId = actionId;
+    mLabelFlag = true;
   }
   else
   {

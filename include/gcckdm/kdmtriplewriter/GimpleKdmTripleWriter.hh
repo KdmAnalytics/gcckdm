@@ -105,8 +105,53 @@ private:
    */
   long getBlockReferenceId(long const callableUnitId, location_t const loc);
 
+
+  /**
+   * Taken from GCC Doc's....
+   *
+   *  GIMPLE_BIND <VARS, BLOCK, BODY> represents a lexical scope.
+   *  VARS is the set of variables declared in that scope.
+   *  BLOCK is the symbol binding block used for debug information.
+   *  BODY is the sequence of statements in the scope.
+   *
+   *  We iterate through each variable in VARS and send those
+   *  variables to be processed by the KDM writer
+   *
+   *  And then process all statements in the BODY by sendin the
+   *  sequence to processGimpleSequence
+   *
+   *  @param gs the gimple bind statement to be processed
+   */
   void processGimpleBindStatement(gimple const gs);
+
+  /**
+   * Info taken from GCC Doc's....
+   *
+   * GIMPLE_ASSIGN <SUBCODE, LHS, RHS1[, RHS2]> represents the assignment
+   * statement
+   *
+   * LHS = RHS1 SUBCODE RHS2.
+   *
+   * SUBCODE is the tree code for the expression computed by the RHS of the
+   * assignment.  It must be one of the tree codes accepted by
+   * get_gimple_rhs_class.  If LHS is not a gimple register according to
+   * is_gimple_reg, SUBCODE must be of class GIMPLE_SINGLE_RHS.
+   *
+   * LHS is the operand on the LHS of the assignment.  It must be a tree node
+   * accepted by is_gimple_lvalue.
+   *
+   * RHS1 is the first operand on the RHS of the assignment.  It must always be
+   * present.  It must be a tree node accepted by is_gimple_val.
+   *
+   * RHS2 is the second operand on the RHS of the assignment.  It must be a tree
+   * node accepted by is_gimple_val.  This argument exists only if SUBCODE is
+   * of class GIMPLE_BINARY_RHS.
+   *
+   *
+   */
   long processGimpleAssignStatement(gimple const gs);
+
+
   long processGimpleReturnStatement(gimple const gs);
   long processGimpleConditionalStatement(gimple const gs);
   long processGimpleLabelStatement(gimple const gs);

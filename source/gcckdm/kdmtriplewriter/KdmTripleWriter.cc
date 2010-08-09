@@ -1,4 +1,3 @@
-//
 // Copyright (c) 2010 KDM Analytics, Inc. All rights reserved.
 // Date: Jun 21, 2010
 // Author: Kyle Girard <kyle@kdmanalytics.com>
@@ -107,14 +106,13 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
   std::for_each(strs.begin(), strs.end(), CommentWriter(sink, unsupportedPrefix));
 }
 
-KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) :
-  mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart), mBodies(true)
+KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart), mBodies(true)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-  mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+      mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -226,7 +224,11 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else if (treeCode == TREE_LIST)
       {
-        //Not implemented yet but put here to prevent breakage
+        writeComment("FIXME: Skipping TREE_LIST.");
+      }
+      else if (treeCode == ERROR_MARK)
+      {
+        writeComment("FIXME: Skipping ERROR_MARK. Is this a compiler error that needs logging?");
       }
       else if (TYPE_P(ast))
       {
@@ -841,9 +843,40 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
     writeTripleName(classId, name);
 
-    // FIXME: Remove this once complete
-    std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(mainRecordType)] % BOOST_CURRENT_FUNCTION));
-    writeUnsupportedComment(msg);
+    if (COMPLETE_TYPE_P (mainRecordType))
+    {
+      for (tree d(TYPE_FIELDS(mainRecordType)); d; d = TREE_CHAIN(d))
+      {
+        switch (TREE_CODE(d))
+        {
+          case TYPE_DECL:
+          {
+            if (!DECL_SELF_REFERENCE_P(d))
+            {
+              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
+              writeUnsupportedComment(msg);
+            }
+            break;
+          }
+          case FIELD_DECL:
+          {
+            if (!DECL_ARTIFICIAL(d))
+            {
+              long itemId = getReferenceId(d);
+              processAstNode(d);
+              writeTripleContains(classId, itemId);
+            }
+            break;
+          }
+          default:
+          {
+            std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
+            writeUnsupportedComment(msg);
+            break;
+          }
+        }
+      }
+    }
 
     writeKdmSourceRef(classId, mainRecordType);
 

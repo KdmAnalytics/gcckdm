@@ -67,6 +67,16 @@ private:
     KdmKind_LeftShift,
     KdmKind_RightShift,
     KdmKind_BitRightShift,
+    KdmKind_FieldSelect,
+    KdmKind_FieldReplace,
+    KdmKind_ChoiceSelect,
+    KdmKind_ChoiceReplace,
+    KdmKind_ArraySelect,
+    KdmKind_ArrayReplace,
+    KdmKind_MemberSelect,
+    KdmKind_MemberReplace,
+    KdmKind_New,
+    KdmKind_NewArray,
   };
 
 public:
@@ -106,6 +116,17 @@ public:
   static const KdmKind LeftShift()            { return KdmKind(KdmKind_LeftShift, "LeftShift"); }
   static const KdmKind RightShift()           { return KdmKind(KdmKind_RightShift, "RightShift"); }
   static const KdmKind BitRightShift()        { return KdmKind(KdmKind_BitRightShift, "BitRightShift"); }
+  static const KdmKind FieldSelect()          { return KdmKind(KdmKind_FieldSelect, "FieldSelect"); }
+  static const KdmKind FieldReplace()         { return KdmKind(KdmKind_FieldReplace, "FieldReplace"); }
+  static const KdmKind ChoiceSelect()         { return KdmKind(KdmKind_ChoiceSelect, "ChoiceSelect"); }
+  static const KdmKind ChoiceReplace()        { return KdmKind(KdmKind_ChoiceReplace, "ChoiceReplace"); }
+  static const KdmKind ArraySelect()          { return KdmKind(KdmKind_ArraySelect, "ArraySelect"); }
+  static const KdmKind ArrayReplace()         { return KdmKind(KdmKind_ArrayReplace, "ArrayReplace"); }
+  static const KdmKind MemberSelect()         { return KdmKind(KdmKind_MemberSelect, "MemberSelect"); }
+  static const KdmKind MemberReplace()        { return KdmKind(KdmKind_MemberReplace, "MemberReplace"); }
+  static const KdmKind New()                  { return KdmKind(KdmKind_New, "New"); }
+  static const KdmKind NewArray()             { return KdmKind(KdmKind_NewArray, "NewArray"); }
+
 
   int const id() const
   {

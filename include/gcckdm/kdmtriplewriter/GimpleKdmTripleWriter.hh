@@ -57,10 +57,13 @@ private:
   long processGimpleConditionalStatement(tree const parent, gimple const gs);
   long processGimpleLabelStatement(tree const parent, gimple const gs);
   long processGimpleCallStatement(tree const parent, gimple const gs);
+  long processGimpleGotoStatement(tree const parent, gimple const gs);
 
   void processGimpleUnaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleBinaryAssignStatement(long const actionId, gimple const gs);
   void processGimpleTernaryAssignStatement(long const actionId, gimple const gs);
+
+  void processRhsAstNode(long const actionId, tree ast);
 
   long writeKdmNopForLabel(tree const label);
   long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
@@ -70,6 +73,11 @@ private:
 
   void writeKdmUnaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
   void writeKdmBinaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
+  void writeKdmArraySelect(long const actionId, gimple const gs);
+  void writeKdmPtr(long const actionId, gimple const gs);
+  void writeKdmPtrReplace(long const actionId, gimple const gs);
+
+  long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
 
   long getRhsReferenceId(long actionId, tree const rhs);
 

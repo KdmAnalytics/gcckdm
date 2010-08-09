@@ -232,7 +232,7 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else
       {
-        std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast)));
         writeUnsupportedComment(msg);
       }
       mProcessedNodes.insert(ast);
@@ -271,11 +271,12 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       writeComment("FIXME: Do we need these parm_decls?");
       break;
     }
-//    case LABEL_DECL:
-//    {
+    case LABEL_DECL:
+    {
+      writeComment("FIXME: We are skipping a label_decl here is it needed?");
 //      processAstLabelDeclarationNode(decl);
-//      break;
-//    }
+      break;
+    }
     default:
     {
       std::string msg(str(boost::format("AST Declaration Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
@@ -574,16 +575,23 @@ void KdmTripleWriter::writeTripleKind(long const subject, KdmKind const & type)
   writeTriple(subject, KdmPredicate::Kind(), type.name());
 }
 
-void KdmTripleWriter::writeKdmSourceFile(Path const & file)
+KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path const & file)
 {
+  Path sourceFile(file);
+  if (!sourceFile.is_complete())
+  {
+    sourceFile = boost::filesystem::complete(sourceFile);
+  }
+
   writeTripleKdmType(++mKdmElementId, KdmType::SourceFile());
   writeTripleName(mKdmElementId, file.filename());
-  writeTriple(mKdmElementId, KdmPredicate::Path(), file.string());
-  writeTripleLinkId(mKdmElementId, file.string());
+  writeTriple(mKdmElementId, KdmPredicate::Path(), sourceFile.string());
+  writeTripleLinkId(mKdmElementId, sourceFile.string());
   writeTripleContains(KdmElementId_InventoryModel, mKdmElementId);
 
   //Keep track of all files inserted into the inventory model
-  mInventoryMap.insert(std::make_pair(file, mKdmElementId));
+  std::pair<FileMap::iterator, bool> result = mInventoryMap.insert(std::make_pair(sourceFile, mKdmElementId));
+  return result.first;
 }
 
 void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
@@ -937,14 +945,17 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const tree node)
 
 long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
 {
-  Path filename(eloc.file);
-  FileMap::iterator i = mInventoryMap.find(filename);
-  if (i == mInventoryMap.end())
+  Path sourceFile(eloc.file);
+  if (!sourceFile.is_complete())
   {
-    writeKdmSourceFile(filename);
-    i = mInventoryMap.find(filename);
+    sourceFile = boost::filesystem::complete(sourceFile);
   }
 
+  FileMap::iterator i = mInventoryMap.find(sourceFile);
+  if (i == mInventoryMap.end())
+  {
+    i = writeKdmSourceFile(sourceFile);
+  }
   std::string srcRef = boost::lexical_cast<std::string>(i->second) + ";" + boost::lexical_cast<std::string>(eloc.line);
   writeTriple(id, KdmPredicate::SourceRef(), srcRef);
 

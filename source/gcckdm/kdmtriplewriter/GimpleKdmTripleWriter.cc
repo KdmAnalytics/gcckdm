@@ -33,6 +33,7 @@ typedef std::map<tree_code, gcckdm::KdmKind> BinaryOperationKindMap;
 
 BinaryOperationKindMap treeCodeToKind =
     boost::assign::map_list_of(PLUS_EXPR, gcckdm::KdmKind::Add())
+                              (POINTER_PLUS_EXPR, gcckdm::KdmKind::Add())
                               (MINUS_EXPR, gcckdm::KdmKind::Subtract())
                               (MULT_EXPR, gcckdm::KdmKind::Multiply())
                               (RDIV_EXPR, gcckdm::KdmKind::Divide())
@@ -271,11 +272,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(tree const parent, gimple con
         hasActionId = false;
         break;
       }
-        //      case GIMPLE_GOTO:
-        //      {
-        //        gimple_not_implemented_yet(gs);
-        //        break;
-        //      }
+      case GIMPLE_GOTO:
+      {
+        actionId = processGimpleGotoStatement(parent, gs);
+        break;
+      }
         //      case GIMPLE_NOP:
         //      {
         //        gimple_not_implemented_yet(gs);
@@ -468,9 +469,12 @@ long GimpleKdmTripleWriter::processGimpleReturnStatement(tree const parent, gimp
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
   tree t = gimple_return_retval(gs);
-  long id = mKdmWriter.getReferenceId(t);
-  mKdmWriter.processAstNode(t);
-  writeKdmActionRelation(KdmType::Reads(), actionId, id);
+  if (t)
+  {
+    long id = mKdmWriter.getReferenceId(t);
+    mKdmWriter.processAstNode(t);
+    writeKdmActionRelation(KdmType::Reads(), actionId, id);
+  }
 
   //figure out what blockunit this statement belongs
   long blockId = getBlockReferenceId(parent, gimple_location(gs));
@@ -578,6 +582,24 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(tree const parent, gimple
   return actionId;
 }
 
+
+long GimpleKdmTripleWriter::processGimpleGotoStatement(tree const parent, gimple const gs)
+{
+  long actionId = mKdmWriter.getNextElementId();
+  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionId, KdmKind::Goto());
+
+  tree label(gimple_goto_dest (gs));
+  long destId(mKdmWriter.getReferenceId(label));
+  mKdmWriter.writeTriple(actionId, KdmPredicate::From(), actionId);
+  mKdmWriter.writeTriple(actionId, KdmPredicate::To(), destId);
+
+  //figure out what blockunit this statement belongs
+  long blockId = getBlockReferenceId(parent, gimple_location(gs));
+  mKdmWriter.writeTripleContains(blockId, actionId);
+  return actionId;
+}
+
 tree GimpleKdmTripleWriter::resolveCall(tree const node)
 {
   tree op0 = node;
@@ -651,10 +673,31 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
     }
     default:
     {
-      if (TREE_CODE_CLASS(rhs_code) == tcc_declaration || TREE_CODE_CLASS(rhs_code) == tcc_constant || TREE_CODE_CLASS(rhs_code) == tcc_reference
-          || rhs_code == SSA_NAME || rhs_code == ADDR_EXPR || rhs_code == CONSTRUCTOR)
+      if (TREE_CODE_CLASS(rhs_code) == tcc_declaration || TREE_CODE_CLASS(rhs_code) == tcc_constant
+          || rhs_code == SSA_NAME || rhs_code == CONSTRUCTOR)
       {
-        writeKdmUnaryOperation(actionId, KdmKind::Assign(), gs);
+        tree lhs = gimple_assign_lhs(gs);
+        if (TREE_CODE(lhs) == INDIRECT_REF)
+        {
+          writeKdmPtrReplace(actionId, gs);
+        }
+        else
+        {
+          writeKdmUnaryOperation(actionId, KdmKind::Assign(), gs);
+        }
+        break;
+      }
+      else if (TREE_CODE_CLASS(rhs_code) == tcc_reference)
+      {
+        if (rhs_code == ARRAY_REF)
+        {
+          writeKdmArraySelect(actionId, gs);
+          break;
+        }
+      }
+      else if (rhs_code == ADDR_EXPR)
+      {
+        writeKdmPtr(actionId, gs);
         break;
       }
       else if (rhs_code == NEGATE_EXPR)
@@ -742,6 +785,7 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
         switch (gimple_assign_rhs_code(gs))
         {
           case PLUS_EXPR:
+          case POINTER_PLUS_EXPR:
           case MINUS_EXPR:
           case MULT_EXPR:
           case RDIV_EXPR:
@@ -839,6 +883,22 @@ void GimpleKdmTripleWriter::writeKdmUnaryOperation(long const actionId, KdmKind 
 
 }
 
+void GimpleKdmTripleWriter::writeKdmPtrReplace(long const actionId, gimple const gs)
+{
+  tree lhs = gimple_assign_lhs(gs);
+  tree rhs = gimple_assign_rhs1(gs);
+
+  tree lhsOp0 = TREE_OPERAND (lhs, 0);
+  mKdmWriter.writeTripleKind(actionId, KdmKind::PtrReplace());
+  long lhsId = mKdmWriter.getReferenceId(lhsOp0);
+  long rhsId = getRhsReferenceId(actionId, rhs);
+
+  writeKdmActionRelation(KdmType::Reads(), actionId, rhsId);
+  writeKdmActionRelation(KdmType::Addresses(), actionId, lhsId);
+  mKdmWriter.writeComment("FIXME: There could be a writes relationship here.. ");
+  //writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+}
+
 void GimpleKdmTripleWriter::writeKdmBinaryOperation(long const actionId, KdmKind const & kind, gimple const gs)
 {
   tree lhs = gimple_assign_lhs(gs);
@@ -852,6 +912,78 @@ void GimpleKdmTripleWriter::writeKdmBinaryOperation(long const actionId, KdmKind
   writeKdmBinaryRelationships(actionId, lhsId, rhs1Id, rhs2Id);
 
 }
+
+//D.1989 = a[23];
+void GimpleKdmTripleWriter::writeKdmArraySelect(long const actionId, gimple const gs)
+{
+  tree lhs = gimple_assign_lhs(gs);
+  tree rhs = gimple_assign_rhs1(gs);
+  tree op0 = TREE_OPERAND (rhs, 0);
+  tree op1 = TREE_OPERAND (rhs, 1);
+
+  mKdmWriter.writeTripleKind(actionId, KdmKind::ArraySelect());
+  long lhsId = mKdmWriter.getReferenceId(lhs);
+  long op0Id = getRhsReferenceId(actionId, op0);
+  long op1Id = getRhsReferenceId(actionId, op1);
+
+  writeKdmActionRelation(KdmType::Reads(), actionId, op1Id);
+  writeKdmActionRelation(KdmType::Addresses(), actionId, op0Id);
+  writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+}
+
+//ptr = &a[0];
+void GimpleKdmTripleWriter::writeKdmPtr(long const actionId, gimple const gs)
+{
+  tree lhs = gimple_assign_lhs(gs);
+  tree rhs = gimple_assign_rhs1(gs);
+
+  tree op0 = TREE_OPERAND (rhs, 0);
+
+  if (TREE_CODE(op0) == ARRAY_REF)
+  {
+    tree refOp0 = TREE_OPERAND (op0, 0);
+    tree refOp1 = TREE_OPERAND (op0, 1);
+    long refOp0Id = getRhsReferenceId(actionId, refOp0);
+    long refOp1Id = getRhsReferenceId(actionId, refOp1);
+
+    long ptrActionId = mKdmWriter.getNextElementId();
+
+    //we have to create a temp variable
+    long storableId = writeKdmStorableUnit(mKdmWriter.getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gimple_location(gs)));
+    mKdmWriter.writeTripleContains(ptrActionId, storableId);
+
+    mKdmWriter.writeTripleKind(actionId, KdmKind::ArraySelect());
+    writeKdmActionRelation(KdmType::Reads(), actionId, refOp1Id);
+    writeKdmActionRelation(KdmType::Addresses(), actionId, refOp0Id);
+    writeKdmActionRelation(KdmType::Writes(), actionId, storableId);
+
+    mKdmWriter.writeTripleKdmType(ptrActionId, KdmType::ActionElement());
+    mKdmWriter.writeTripleKind(ptrActionId, KdmKind::Ptr());
+    writeKdmActionRelation(KdmType::Addresses(), ptrActionId, storableId);
+    tree lhs = gimple_assign_lhs(gs);
+    long lhsId = mKdmWriter.getReferenceId(lhs);
+    writeKdmActionRelation(KdmType::Writes(), ptrActionId, lhsId);
+  }
+  else
+  {
+    long lhsId = mKdmWriter.getReferenceId(lhs);
+    long rhsId = getRhsReferenceId(actionId, op0);
+    mKdmWriter.writeTripleKind(actionId, KdmKind::Ptr());
+    writeKdmActionRelation(KdmType::Addresses(), actionId, rhsId);
+    writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+  }
+}
+
+long GimpleKdmTripleWriter::writeKdmStorableUnit(long const typeId, expanded_location const & xloc)
+{
+    long unitId = mKdmWriter.getNextElementId();
+    mKdmWriter.writeTripleKdmType(unitId, KdmType::StorableUnit());
+    mKdmWriter.writeTripleName(unitId, "M.1");
+    mKdmWriter.writeTriple(unitId, KdmPredicate::Type(), typeId);
+    mKdmWriter.writeKdmSourceRef(unitId, xloc);
+    return unitId;
+}
+
 
 void GimpleKdmTripleWriter::writeKdmBinaryRelationships(long const actionId, long const lhsId, long const rhs1Id, long const rhs2Id)
 {

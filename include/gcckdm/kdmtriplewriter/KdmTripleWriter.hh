@@ -274,7 +274,7 @@ private:
    *
    * @param file the file to use to populate the SourceFile kdm element
    */
-  void writeKdmSourceFile(Path const & file);
+  FileMap::iterator writeKdmSourceFile(Path const & file);
   void writeKdmCompilationUnit(Path const & file);
   void writeKdmCallableUnit(tree const functionDecl);
   long writeKdmReturnParameterUnit(tree const param);

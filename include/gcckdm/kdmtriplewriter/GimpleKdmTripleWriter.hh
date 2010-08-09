@@ -129,6 +129,9 @@ private:
   void writeKdmUnaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
   void writeKdmBinaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
   void writeKdmArraySelect(long const actionId, gimple const gs);
+  /** D.1716 = this->m_bar;
+   */
+  void writeKdmComponentSelect(long const actionId, gimple const gs);
   void writeKdmPtr(long const actionId, gimple const gs);
   long writeKdmPtrParam(long const actionId, tree const callNode, tree const addrExpr, gimple const gs);
   void writeKdmPtrReplace(long const actionId, gimple const gs);

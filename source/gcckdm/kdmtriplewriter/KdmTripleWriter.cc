@@ -224,7 +224,11 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else if (treeCode == TREE_LIST)
       {
-        //Not implemented yet but put here to prevent breakage
+        writeComment("FIXME: Skipping TREE_LIST.");
+      }
+      else if (treeCode == ERROR_MARK)
+      {
+        writeComment("FIXME: Skipping ERROR_MARK. Is this a compiler error that needs logging?");
       }
       else if (TYPE_P(ast))
       {

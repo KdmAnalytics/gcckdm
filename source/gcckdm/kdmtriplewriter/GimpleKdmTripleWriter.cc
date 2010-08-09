@@ -355,7 +355,8 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
       case GIMPLE_GOTO:
       {
-        actionId = processGimpleGotoStatement(gs);
+        processGimpleGotoStatement(gs);
+        hasActionId = false;
         break;
       }
       //      case GIMPLE_NOP:
@@ -771,6 +772,11 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
           writeKdmArraySelect(actionId, gs);
           break;
         }
+        else if(gimpleRhsCode == COMPONENT_REF)
+        {
+          writeKdmComponentSelect(actionId, gs);
+          break;
+        }
         else
         {
           std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[gimpleRhsCode])
@@ -1102,6 +1108,29 @@ void GimpleKdmTripleWriter::writeKdmArraySelect(long const actionId, gimple cons
   tree op1 = TREE_OPERAND (rhs, 1);
 
   mKdmWriter.writeTripleKind(actionId, KdmKind::ArraySelect());
+  long lhsId = mKdmWriter.getReferenceId(lhs);
+  long op0Id = getRhsReferenceId(op0);
+  long op1Id = getRhsReferenceId(op1);
+
+  writeKdmActionRelation(KdmType::Reads(), actionId, op1Id);
+  writeKdmActionRelation(KdmType::Addresses(), actionId, op0Id);
+  writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+}
+
+/** Write to LHS
+ * Addresses object
+ * Reads member
+ *
+ */
+//D.1716 = this->m_bar;
+void GimpleKdmTripleWriter::writeKdmComponentSelect(long const actionId, gimple const gs)
+{
+  tree lhs = gimple_assign_lhs(gs);
+  tree rhs = gimple_assign_rhs1(gs);
+  tree op0 = TREE_OPERAND (rhs, 0);
+  tree op1 = TREE_OPERAND (rhs, 1);
+
+  mKdmWriter.writeTripleKind(actionId, KdmKind::MemberSelect());
   long lhsId = mKdmWriter.getReferenceId(lhs);
   long op0Id = getRhsReferenceId(op0);
   long op1Id = getRhsReferenceId(op1);

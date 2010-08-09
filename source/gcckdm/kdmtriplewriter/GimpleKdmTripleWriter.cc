@@ -778,7 +778,6 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
         if (gimpleRhsCode == ARRAY_REF)
         {
           writeKdmArraySelect(actionId, gs);
-          break;
         }
         else
         {
@@ -786,6 +785,7 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
           % BOOST_CURRENT_FUNCTION));
           mKdmWriter.writeUnsupportedComment(msg);
         }
+        break;
       }
       else if (gimpleRhsCode == ADDR_EXPR)
       {
@@ -802,6 +802,7 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
         std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
         % BOOST_CURRENT_FUNCTION % __LINE__));
         mKdmWriter.writeUnsupportedComment(msg);
+        break;
       }
       //      else if (rhs_code == BIT_NOT_EXPR)
       //      {

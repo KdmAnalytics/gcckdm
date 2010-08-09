@@ -321,6 +321,8 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
         //Fall through
       case REAL_TYPE:
         //Fall through
+      case BOOLEAN_TYPE:
+        //Fall through
       case INTEGER_TYPE:
       {
         writeKdmPrimitiveType(typeNode);
@@ -778,6 +780,10 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   else if (name.find("char") != std::string::npos)
   {
     kdmType = KdmType::CharType();
+  }
+  else if (name.find("bool") != std::string::npos)
+  {
+    kdmType = KdmType::BooleanType();
   }
 
   writeTripleKdmType(typeKdmElementId, kdmType);

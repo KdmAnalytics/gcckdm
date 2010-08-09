@@ -76,6 +76,7 @@ private:
     KdmType_TrueFlow,
     KdmType_FalseFlow,
     KdmType_EntryFlow,
+    KdmType_GuardedFlow,
     KdmType_Calls,
   };
 
@@ -128,7 +129,8 @@ public:
   static const KdmType TrueFlow()         { return KdmType(KdmType_TrueFlow, "action/TrueFlow");  }
   static const KdmType FalseFlow()        { return KdmType(KdmType_FalseFlow, "action/FalseFlow");  }
   static const KdmType EntryFlow()        { return KdmType(KdmType_EntryFlow, "action/EntryFlow");  }
-  static const KdmType Call()             { return KdmType(KdmType_Calls, "action/Calls");  }
+  static const KdmType GuardedFlow()      { return KdmType(KdmType_GuardedFlow, "action/GuardedFlow");}
+  static const KdmType Calls()            { return KdmType(KdmType_Calls, "action/Calls");  }
   //static const KdmType () { return KdmType(KdmType_, "action/");}
   //static const KdmType () { return KdmType(KdmType_, "action/");}
 

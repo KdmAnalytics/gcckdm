@@ -70,6 +70,20 @@ private:
   std::string mWhat;
 };
 
+
+/**
+ * Throw this when a function is passed an invalid parameter
+ */
+class InvalidParameterException : public KdmTripleWriterException
+{
+public:
+  InvalidParameterException(std::string const & msg) : mWhat(msg) {}
+  virtual ~InvalidParameterException() throw() {};
+  virtual char const * what() const throw()  {    return mWhat.c_str();  }
+private:
+  std::string mWhat;
+};
+
 }  // namespace kdmtriplewriter
 
 }  // namespace gcckdm

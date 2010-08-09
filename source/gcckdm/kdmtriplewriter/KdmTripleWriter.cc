@@ -208,10 +208,14 @@ void KdmTripleWriter::processAstNode(tree const ast)
     {
       int treeCode(TREE_CODE(ast));
 
-      //As far as I can tell this is everything but labels
+      //All non built-in delcarations go here...
       if (DECL_P(ast) && !DECL_IS_BUILTIN(ast))
       {
         processAstDeclarationNode(ast);
+      }
+      else if (DECL_P(ast) && DECL_IS_BUILTIN(ast))
+      {
+        // SKIP all built-in declarations??
       }
       //
       else if (treeCode == LABEL_DECL)
@@ -226,7 +230,7 @@ void KdmTripleWriter::processAstNode(tree const ast)
       {
         processAstTypeNode(ast);
       }
-      else if (treeCode == INTEGER_CST || treeCode == REAL_CST)
+      else if (treeCode == INTEGER_CST || treeCode == REAL_CST || treeCode == STRING_CST)
       {
         processAstValueNode(ast);
       }
@@ -399,13 +403,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   if (mBodies)
   {
-    if (gimple_has_body_p(functionDecl))
-    {
-      writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(functionDecl) + "==========================");
-      gimple_seq seq = gimple_body(functionDecl);
-      mGimpleWriter->processGimpleSequence(functionDecl, seq);
-      writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(functionDecl) + "==========================");
-    }
+    mGimpleWriter->processAstFunctionDeclarationNode(functionDecl);
   }
 }
 
@@ -678,6 +676,16 @@ bool KdmTripleWriter::hasReferenceId(tree const node) const
 
 long KdmTripleWriter::getReferenceId(tree const node)
 {
+//  if (TREE_CODE(node) == INDIRECT_REF)
+//  {
+//    int i = 0;
+//  }
+//  if (TREE_CODE(node) == ADDR_EXPR)
+//  {
+//    int i = 0;
+//  }
+
+
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
   if (result.second)

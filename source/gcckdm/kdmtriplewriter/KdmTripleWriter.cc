@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-      mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -282,7 +282,7 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     case LABEL_DECL:
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
-//      processAstLabelDeclarationNode(decl);
+      //      processAstLabelDeclarationNode(decl);
       break;
     }
     default:
@@ -385,12 +385,43 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
+/** Handle all of the different callable situations:
+ *   Function
+ *   Method
+ *     Destructor
+ *     Constructor
+ *     Operator
+ *   etc.
+ *
+ */
 void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 {
   std::string name(nodeName(functionDecl));
 
   long callableUnitId = getReferenceId(functionDecl);
-  writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
+
+  tree context = CP_DECL_CONTEXT (functionDecl);
+  //
+  if(DECL_CONSTRUCTOR_P(functionDecl))
+  {
+    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+  }
+  else if(DECL_DESTRUCTOR_P(functionDecl))
+  {
+    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+  }
+  else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
+  {
+    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+  }
+  else if(DECL_FUNCTION_MEMBER_P(functionDecl))
+  {
+    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+  }
+  else
+  {
+    writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
+  }
   writeTripleName(callableUnitId, name);
   writeTripleLinkId(callableUnitId, name);
 
@@ -682,14 +713,14 @@ bool KdmTripleWriter::hasReferenceId(tree const node) const
 
 long KdmTripleWriter::getReferenceId(tree const node)
 {
-//  if (TREE_CODE(node) == INDIRECT_REF)
-//  {
-//    int i = 0;
-//  }
-//  if (TREE_CODE(node) == ADDR_EXPR)
-//  {
-//    int i = 0;
-//  }
+  //  if (TREE_CODE(node) == INDIRECT_REF)
+  //  {
+  //    int i = 0;
+  //  }
+  //  if (TREE_CODE(node) == ADDR_EXPR)
+  //  {
+  //    int i = 0;
+  //  }
 
 
   long retValue(-1);

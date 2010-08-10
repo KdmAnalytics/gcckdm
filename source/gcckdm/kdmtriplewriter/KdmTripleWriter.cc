@@ -385,6 +385,7 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
+
 /** Handle all of the different callable situations:
  *   Function
  *   Method
@@ -400,28 +401,36 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   long callableUnitId = getReferenceId(functionDecl);
 
-  tree context = CP_DECL_CONTEXT (functionDecl);
-  //
-  if(DECL_CONSTRUCTOR_P(functionDecl))
+  if (isFrontendCxx())
   {
-    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-  }
-  else if(DECL_DESTRUCTOR_P(functionDecl))
-  {
-    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-  }
-  else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
-  {
-    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-  }
-  else if(DECL_FUNCTION_MEMBER_P(functionDecl))
-  {
-    writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+    tree context = CP_DECL_CONTEXT (functionDecl);
+    //
+    if(DECL_CONSTRUCTOR_P(functionDecl))
+    {
+      writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+    }
+    else if(DECL_DESTRUCTOR_P(functionDecl))
+    {
+      writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+    }
+    else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
+    {
+      writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+    }
+    else if(DECL_FUNCTION_MEMBER_P(functionDecl))
+    {
+      writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+    }
+    else
+    {
+      writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
+    }
   }
   else
   {
     writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
   }
+
   writeTripleName(callableUnitId, name);
   writeTripleLinkId(callableUnitId, name);
 

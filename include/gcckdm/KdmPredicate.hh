@@ -45,6 +45,7 @@ private:
     KdmPredicate_SourceRef,
     KdmPredicate_Uid,
     KdmPredicate_LastUid,
+    KdmPredicate_Export,
   };
 
 public:
@@ -96,6 +97,10 @@ public:
   static const KdmPredicate LastUid()
   {
     return KdmPredicate(KdmPredicate_LastUid, "LastUID");
+  }
+  static const KdmPredicate Export()
+  {
+    return KdmPredicate(KdmPredicate_Export, "export");
   }
 
   int const id() const

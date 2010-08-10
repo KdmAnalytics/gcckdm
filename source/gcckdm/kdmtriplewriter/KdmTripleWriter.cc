@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+                              mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -385,45 +385,78 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
-
+/** We do not currently use the following tests from GCCXML that provide additional information:
+ *
+ *   Explicit:   DECL_NONCONVERTING_P (d)
+ *   Const:      DECL_CONST_MEMFUNC_P (fd)
+ *   Static:     !DECL_NONSTATIC_MEMBER_FUNCTION_P (fd)
+ *   Artificial: DECL_ARTIFICIAL (d)
+ *   Inline:
+ *   Friends:
+ *   Extern:
+ *
+ */
 void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 {
   std::string name(nodeName(functionDecl));
+  std::string kind;
 
   long callableUnitId = getReferenceId(functionDecl);
 
   if (isFrontendCxx())
   {
-    tree context = CP_DECL_CONTEXT (functionDecl);
-    //
     if(DECL_CONSTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+      kind.append(KdmKind::Constructor().name());
     }
     else if(DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+      kind.append(KdmKind::Destructor().name());
     }
     else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+      kind.append(KdmKind::Operator().name());
     }
     else if(DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
+      kind.append(KdmKind::Method().name());
     }
     else
     {
       writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
     }
+    if (DECL_VIRTUAL_P (functionDecl))
+    {
+      if(kind.empty()) kind.append(" ");
+      kind.append(KdmKind::Virtual().name());
+    }
+    // C++ uses the mangled name for link:id, if possible
+    if (HAS_DECL_ASSEMBLER_NAME_P(functionDecl) &&
+        DECL_NAME (functionDecl) &&
+        DECL_ASSEMBLER_NAME (functionDecl) &&
+        DECL_ASSEMBLER_NAME (functionDecl) != DECL_NAME (functionDecl))
+    {
+      tree asmNode = DECL_ASSEMBLER_NAME (functionDecl);
+      if(asmNode) writeTripleLinkId(callableUnitId, IDENTIFIER_POINTER (asmNode));
+      else writeTripleLinkId(callableUnitId, name); // Emergency fall back
+    }
+    else
+    {
+      writeTripleLinkId(callableUnitId, name);
+    }
   }
   else
   {
     writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
+    // Standard C does not require mangled names for link:id
+    writeTripleLinkId(callableUnitId, name);
   }
 
   writeTripleName(callableUnitId, name);
-  writeTripleLinkId(callableUnitId, name);
 
   Path sourceFile(DECL_SOURCE_FILE(functionDecl));
   if (!sourceFile.is_complete())
@@ -431,8 +464,40 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     sourceFile = boost::filesystem::complete(sourceFile);
   }
   long unitId(sourceFile == mCompilationFile ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
-  writeTripleContains(unitId, callableUnitId);
 
+  // If this is c++, the method/function is written in the class first, otherwise in the compilation unit
+  if (isFrontendCxx())
+  {
+    tree context = CP_DECL_CONTEXT (functionDecl);
+    // If the context is a type, then get the visibility
+    if(context)
+    {
+      if (TYPE_P(context))
+      {
+        if (TREE_PRIVATE (functionDecl)) writeTripleExport(callableUnitId, "private");
+        else if (TREE_PROTECTED (functionDecl)) writeTripleExport(callableUnitId, "protected");
+        else writeTripleExport(callableUnitId, "public");
+      }
+
+      // If the method belongs to a class, then the class is the parent
+      int treeCode(TREE_CODE(context));
+      if(treeCode == RECORD_TYPE)
+      {
+        long classUnitId = getReferenceId(context);
+        writeTripleContains(classUnitId, callableUnitId);
+      }
+      // Otherwise the file is the parent
+      else
+      {
+        writeTripleContains(unitId, callableUnitId);
+      }
+    }
+  }
+  // In straight C, it is always written in the CompilationUnit
+  else
+  {
+    writeTripleContains(unitId, callableUnitId);
+  }
   writeKdmSourceRef(callableUnitId, functionDecl);
 
   long signatureId = writeKdmSignature(functionDecl);
@@ -608,6 +673,11 @@ void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & 
 void KdmTripleWriter::writeTripleKind(long const subject, KdmKind const & type)
 {
   writeTriple(subject, KdmPredicate::Kind(), type.name());
+}
+
+void KdmTripleWriter::writeTripleExport(long const subject, std::string const & exportName)
+{
+  writeTriple(subject, KdmPredicate::Export(), exportName);
 }
 
 KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path const & file)

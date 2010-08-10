@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2010 KDM Analytics, Inc. All rights reserved.
 // Date: Jul 13, 2010
-// Author: Kyle Girard <kyle@kdmanalytics.com>
+// Author: Kyle Girard <kyle@kdmanalytics.com>, Ken Duck
 //
 // This file is part of libGccKdm.
 //

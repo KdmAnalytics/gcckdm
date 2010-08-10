@@ -1,6 +1,6 @@
 // Copyright (c) 2010 KDM Analytics, Inc. All rights reserved.
 // Date: Jun 21, 2010
-// Author: Kyle Girard <kyle@kdmanalytics.com>
+// Author: Kyle Girard <kyle@kdmanalytics.com>, Ken Duck
 //
 // This file is part of libGccKdm.
 //
@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-                              mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -213,6 +213,10 @@ void KdmTripleWriter::processAstNode(tree const ast)
       {
         processAstDeclarationNode(ast);
       }
+      else if(treeCode == NAMESPACE_DECL)
+      {
+        processAstNamespaceNode(ast);
+      }
       else if (DECL_P(ast) && DECL_IS_BUILTIN(ast))
       {
         // SKIP all built-in declarations??
@@ -279,6 +283,11 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       writeComment("FIXME: Do we need these parm_decls?");
       break;
     }
+    case TYPE_DECL:
+    {
+      processAstTypeDecl(decl);
+      break;
+    }
     case LABEL_DECL:
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
@@ -291,6 +300,42 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       writeUnsupportedComment(msg);
     }
   }
+}
+
+/**
+ * Type declarations may be typedefs, classes, or enumerations
+ */
+void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
+{
+  tree typeNode = TREE_TYPE (typeDecl);
+  int treeCode = TREE_CODE (typeDecl);
+
+  if(typeNode)
+  {
+    int typeCode = TREE_CODE(typeNode);
+    if(treeCode == TYPE_DECL && typeCode == RECORD_TYPE)
+    {
+      // If this is artificial then it is a class declaration, otherwise a typedef.
+      if(DECL_ARTIFICIAL(typeDecl))
+      {
+        processAstNode(typeNode);
+      }
+    }
+  }
+
+  // Otherwise it is a typedef
+  long typedefKdmElementId = getReferenceId(typeDecl);
+  writeTripleKdmType(typedefKdmElementId, KdmType::TypeUnit());
+
+  // Get the name for the typedef, if available
+  tree id (DECL_NAME (typeDecl));
+  std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
+  writeTripleName(typedefKdmElementId, name);
+
+  long typeKdmElementId = getReferenceId(typeNode);
+  writeTriple(typedefKdmElementId, KdmPredicate::Type(), typeKdmElementId);
+
+  writeKdmCxxContains(typeDecl);
 }
 
 void KdmTripleWriter::processAstTypeNode(tree const typeNode)
@@ -368,6 +413,45 @@ void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
 void KdmTripleWriter::processAstValueNode(tree const val)
 {
   writeKdmValue(val);
+}
+
+/**
+ *
+ */
+void KdmTripleWriter::processAstNamespaceNode(tree const namespaceDecl)
+{
+  tree decl;
+  cp_binding_level* level (NAMESPACE_LEVEL (namespaceDecl));
+
+  // Traverse declarations.
+  //
+  for (decl = level->names;
+      decl != 0;
+      decl = TREE_CHAIN (decl))
+  {
+    if (DECL_IS_BUILTIN (decl))
+      continue;
+
+    if (!errorcount)
+    {
+      processAstNode(decl);
+    }
+  }
+
+  // Traverse namespaces.
+  //
+  for(decl = level->namespaces;
+      decl != 0;
+      decl = TREE_CHAIN (decl))
+  {
+    if (DECL_IS_BUILTIN (decl))
+      continue;
+
+    if (!errorcount)
+    {
+      processAstNamespaceNode(decl);
+    }
+  }
 }
 
 void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predicate, long const object)
@@ -478,20 +562,8 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
         else if (TREE_PROTECTED (functionDecl)) writeTripleExport(callableUnitId, "protected");
         else writeTripleExport(callableUnitId, "public");
       }
-
-      // If the method belongs to a class, then the class is the parent
-      int treeCode(TREE_CODE(context));
-      if(treeCode == RECORD_TYPE)
-      {
-        long classUnitId = getReferenceId(context);
-        writeTripleContains(classUnitId, callableUnitId);
-      }
-      // Otherwise the file is the parent
-      else
-      {
-        writeTripleContains(unitId, callableUnitId);
-      }
     }
+    writeKdmCxxContains(functionDecl);
   }
   // In straight C, it is always written in the CompilationUnit
   else
@@ -507,6 +579,43 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   {
     mGimpleWriter->processAstFunctionDeclarationNode(functionDecl);
   }
+}
+
+/**
+ * C++ containment is more complicated then standard C containment. In KDM we follow
+ * the following procedure:
+ *
+ *   If the context is a class, the parent is a class
+ *   Otherwise the parent is the compilation/shared unit
+ */
+void KdmTripleWriter::writeKdmCxxContains(tree const decl)
+{
+  long id = getReferenceId(decl);
+  if (isFrontendCxx())
+  {
+    tree context = CP_DECL_CONTEXT (decl);
+    // If the context is a type, then get the visibility
+    if(context)
+    {
+      // If the item belongs to a class, then the class is the parent
+      int treeCode(TREE_CODE(context));
+      if(treeCode == RECORD_TYPE)
+      {
+        long classUnitId = getReferenceId(context);
+        writeTripleContains(classUnitId, id);
+        return;
+      }
+    }
+  }
+
+  // Otherwise the file is the parent
+  Path sourceFile(DECL_SOURCE_FILE(decl));
+  if (!sourceFile.is_complete())
+  {
+    sourceFile = boost::filesystem::complete(sourceFile);
+  }
+  long unitId(sourceFile == mCompilationFile ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
+  writeTripleContains(unitId, id);
 }
 
 long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)

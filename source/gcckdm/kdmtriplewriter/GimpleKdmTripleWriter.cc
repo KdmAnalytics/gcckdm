@@ -671,6 +671,9 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
     writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
   }
 
+  long blockId = getBlockReferenceId(gimple_location(gs));
+  mKdmWriter.writeTripleContains(blockId, actionId);
+
   return actionId;
 }
 

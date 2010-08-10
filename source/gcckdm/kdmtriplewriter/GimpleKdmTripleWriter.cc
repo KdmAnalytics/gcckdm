@@ -784,6 +784,10 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
           writeKdmComponentSelect(actionId, gs);
           break;
         }
+        else if (gimpleRhsCode == INDIRECT_REF)
+        {
+          writeKdmPtr(actionId, gs);
+        }
         else
         {
           std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])

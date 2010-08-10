@@ -30,7 +30,7 @@ private:
 private:
   enum
   {
-    //Kdm Group
+    //Micro Kdm Group
     KdmKind_Assign,
     KdmKind_Add,
     KdmKind_Subtract,
@@ -83,6 +83,15 @@ private:
     KdmKind_Decr,
     KdmKind_Switch,
     KdmKind_Compound,
+
+    // Method kinds
+    KdmKind_Method,
+    KdmKind_Constructor,
+    KdmKind_Destructor,
+    KdmKind_Operator,
+    KdmKind_Virtual,
+    KdmKind_Abstract,
+    KdmKind_Unknown,
   };
 
 public:
@@ -138,6 +147,15 @@ public:
   static const KdmKind Decr()                 { return KdmKind(KdmKind_Decr, "Decr"); }
   static const KdmKind Switch()               { return KdmKind(KdmKind_Switch, "Switch"); }
   static const KdmKind Compound()             { return KdmKind(KdmKind_Compound, "Compound"); }
+
+  // Method Kind
+  static const KdmKind Method()               { return KdmKind(KdmKind_Method, "method"); }
+  static const KdmKind Constructor()          { return KdmKind(KdmKind_Constructor, "constructor"); }
+  static const KdmKind Destructor()           { return KdmKind(KdmKind_Destructor, "destructor"); }
+  static const KdmKind Operator()             { return KdmKind(KdmKind_Operator, "operator"); }
+  static const KdmKind Virtual()              { return KdmKind(KdmKind_Virtual, "virtual"); }
+  static const KdmKind Abstract()             { return KdmKind(KdmKind_Abstract, "abstract"); }
+  static const KdmKind Unknown()              { return KdmKind(KdmKind_Unknown, "unknown"); }
 
   int const id() const
   {

@@ -159,6 +159,11 @@ public:
    */
   void writeTripleKind(long const subject, KdmKind const & kind);
 
+  /** Convenience method to write the "export" triple
+   *
+   */
+  void writeTripleExport(long const subject, std::string const & exportName);
+
   /**
    * Writes a KDM Source ref using the information contained in the expanded_location
    *

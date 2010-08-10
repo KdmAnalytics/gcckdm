@@ -386,15 +386,6 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
 }
 
 
-/** Handle all of the different callable situations:
- *   Function
- *   Method
- *     Destructor
- *     Constructor
- *     Operator
- *   etc.
- *
- */
 void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 {
   std::string name(nodeName(functionDecl));

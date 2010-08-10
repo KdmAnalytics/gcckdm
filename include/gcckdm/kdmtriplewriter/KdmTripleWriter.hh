@@ -276,7 +276,21 @@ private:
    */
   FileMap::iterator writeKdmSourceFile(Path const & file);
   void writeKdmCompilationUnit(Path const & file);
-  void writeKdmCallableUnit(tree const functionDecl);
+
+  /**
+   * Write a CallableUnit kdm element to the KdmSink stream using the
+   * given 'callable' delcaration currently supported 'callables'
+   *
+   *   Function
+   *   Method
+   *     Destructor
+   *     Constructor
+   *     Operator
+   *
+   * @param callableDecl an ast node of a function or method
+   */
+  void writeKdmCallableUnit(tree const callableDecl);
+
   long writeKdmReturnParameterUnit(tree const param);
   long writeKdmParameterUnit(tree const param);
   void writeKdmPrimitiveType(tree const type);

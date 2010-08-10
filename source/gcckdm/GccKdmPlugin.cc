@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2010 KDM Analytics, Inc. All rights reserved.
 // Date: Jun 7, 2010
-// Author: Kyle Girard <kyle@kdmanalytics.com>
+// Author: Kyle Girard <kyle@kdmanalytics.com>, Ken Duck
 //
 // This file is part of libGccKdm.
 //
@@ -64,16 +64,6 @@ struct opt_pass kdmGimplePass =
     0, // todo_flags_start
     0 // todo_flags_finish
 };
-
-/**
- * Return true if we are parsing c++
- *
- * FIXME: This always returns true
- */
-bool is_cpp()
-{
-  return true;
-}
 
 /**
  * This initialization function is used on windows for the "link" plugin.
@@ -197,16 +187,21 @@ void registerCallbacks(char const * pluginName)
   //Called Once at the start of a translation unit
   register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
 
-  // Called whenever a type has been parsed
-  register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
+  // In C we require notification of all types and functions so that we know to add them to the KDM. In
+  // C++ we can just parse through the global namespace. The following callbacks are for C only.
+  if(gcckdm::isFrontendC())
+  {
+    // Called whenever a type has been parsed
+    register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
 
-  //Attempt to get the very first gimple AST before any optimizations, called for every function
-  struct register_pass_info pass_info;
-  pass_info.pass = &kdmGimplePass;
-  pass_info.reference_pass_name = all_lowering_passes->name;
-  pass_info.ref_pass_instance_number = 0;
-  pass_info.pos_op = PASS_POS_INSERT_AFTER;
-  register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+    //Attempt to get the very first gimple AST before any optimizations, called for every function
+    struct register_pass_info pass_info;
+    pass_info.pass = &kdmGimplePass;
+    pass_info.reference_pass_name = all_lowering_passes->name;
+    pass_info.ref_pass_instance_number = 0;
+    pass_info.pos_op = PASS_POS_INSERT_AFTER;
+    register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
+  }
 
   // Called when finished with the translation unit
   register_callback(pluginName, PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func> (executeFinishUnit), NULL);
@@ -340,7 +335,7 @@ extern "C" unsigned int executeKdmGimplePass()
 {
   unsigned int retValue(0);
 
-  if (!errorcount && !sorrycount)
+  if (gcckdm::isFrontendC() && !errorcount && !sorrycount)
   {
     gccAstListener->startKdmGimplePass();
     gccAstListener->processAstNode(current_function_decl);
@@ -354,11 +349,12 @@ extern "C" unsigned int executeKdmGimplePass()
  */
 extern "C" void executeFinishUnit(void *event_data, void *data)
 {
-  //  if(is_cpp())
-  //  {
-  //    // Scan for all types defined in the global namespace, recursing through any other namespaces.
-  //    traverse_namespace(global_namespace);
-  //  }
+  // If we are processing C++, then start the processing from the global namespace, which
+  // will provide access to all data in the system.
+  if(gcckdm::isFrontendCxx())
+  {
+    gccAstListener->processAstNode(global_namespace);
+  }
 
   if (!errorcount && !sorrycount)
   {

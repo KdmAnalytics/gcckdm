@@ -1,7 +1,7 @@
 //
 // Copyright (c) 2010 KDM Analytics, Inc. All rights reserved.
 // Date: Jun 21, 2010
-// Author: Kyle Girard <kyle@kdmanalytics.com>
+// Author: Kyle Girard <kyle@kdmanalytics.com>, Ken Duck
 //
 // This file is part of libGccKdm.
 //
@@ -258,10 +258,21 @@ private:
 
   void processAstDeclarationNode(tree const decl);
   void processAstTypeNode(tree const decl);
+
+  /**
+   * A type declaration may be a typedef, a new class, or an enumeration
+   */
+  void processAstTypeDecl(tree const typeNode);
   void processAstFunctionDeclarationNode(tree const functionDecl);
   void processAstFieldDeclarationNode(tree const fieldDecl);
   void processAstVariableDeclarationNode(tree const varDecl);
   void processAstValueNode(tree const valueConst);
+
+  /**
+   * Process the namespace
+   */
+  void processAstNamespaceNode(tree const val);
+
 //  void processAstLabelDeclarationNode(tree const labelDecl);
   void writeVersionHeader();
   void writeDefaultKdmModelElements();
@@ -295,6 +306,12 @@ private:
    * @param callableDecl an ast node of a function or method
    */
   void writeKdmCallableUnit(tree const callableDecl);
+
+  /**
+   * In C++ containment of various elements depends on whether the definition's "context" is
+   * a class or not. This method determines containment in these more complex situations.
+   */
+  void writeKdmCxxContains(tree const decl);
 
   long writeKdmReturnParameterUnit(tree const param);
   long writeKdmParameterUnit(tree const param);

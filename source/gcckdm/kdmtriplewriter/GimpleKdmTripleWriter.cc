@@ -234,7 +234,7 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   if (gimple_has_body_p(functionDeclNode))
   {
     mCurrentFunctionDeclarationNode = functionDeclNode;
-    mCurrentCallableUnitId = mKdmWriter.getReferenceId(mCurrentFunctionDeclarationNode);
+    mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
 
     mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
@@ -272,6 +272,17 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
   return op0;
 }
 
+
+long GimpleKdmTripleWriter::getReferenceId(tree const ast)
+{
+  if (TREE_CODE(ast) == COMPONENT_REF)
+  {
+    int i = 0;
+  }
+
+  long retVal = mKdmWriter.getReferenceId(ast);
+  return retVal;
+}
 
 long GimpleKdmTripleWriter::getRhsReferenceId(tree const rhs)
 {
@@ -513,7 +524,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
   tree var;
   for (var = gimple_bind_vars(gs); var; var = TREE_CHAIN(var))
   {
-    long declId = mKdmWriter.getReferenceId(var);
+    long declId = getReferenceId(var);
     mKdmWriter.processAstNode(var);
     mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
   }
@@ -558,7 +569,7 @@ long GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
   tree t = gimple_return_retval(gs);
   if (t)
   {
-    long id = mKdmWriter.getReferenceId(t);
+    long id = getReferenceId(t);
     mKdmWriter.processAstNode(t);
     writeKdmActionRelation(KdmType::Reads(), actionId, id);
   }
@@ -582,7 +593,7 @@ long GimpleKdmTripleWriter::processGimpleLabelStatement(gimple const gs)
 
 long GimpleKdmTripleWriter::writeKdmNopForLabel(tree const label)
 {
-  long actionId = mKdmWriter.getReferenceId(label);
+  long actionId = getReferenceId(label);
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::Nop());
   mKdmWriter.writeTripleName(actionId, gcckdm::getAstNodeName(label));
@@ -600,7 +611,7 @@ long GimpleKdmTripleWriter::processGimpleConditionalStatement(gimple const gs)
   {
     tree trueNode(gimple_cond_true_label(gs));
     long trueFlowId(mKdmWriter.getNextElementId());
-    long trueNodeId(mKdmWriter.getReferenceId(trueNode));
+    long trueNodeId(getReferenceId(trueNode));
 
     mKdmWriter.writeTripleKdmType(trueFlowId, KdmType::TrueFlow());
     mKdmWriter.writeTriple(trueFlowId, KdmPredicate::From(), actionId);
@@ -611,7 +622,7 @@ long GimpleKdmTripleWriter::processGimpleConditionalStatement(gimple const gs)
   {
     tree falseNode(gimple_cond_false_label(gs));
     long falseFlowId(mKdmWriter.getNextElementId());
-    long falseNodeId(mKdmWriter.getReferenceId(falseNode));
+    long falseNodeId(getReferenceId(falseNode));
     mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
     mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionId);
     mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
@@ -640,7 +651,7 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
     op0 = TREE_OPERAND (op0, 0);
   }
   tree t(resolveCall(op0));
-  long callableId(mKdmWriter.getReferenceId(t));
+  long callableId(getReferenceId(t));
   mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
   mKdmWriter.writeTripleContains(actionId, callId);
 
@@ -658,7 +669,7 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
       }
       else
       {
-        paramId = (mKdmWriter.getReferenceId(gimple_call_arg(gs, i)));
+        paramId = (getReferenceId(gimple_call_arg(gs, i)));
       }
 
       writeKdmActionRelation(KdmType::Reads(), actionId, paramId);
@@ -669,7 +680,7 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
   tree lhs = gimple_call_lhs(gs);
   if (lhs)
   {
-    long lhsId(mKdmWriter.getReferenceId(lhs));
+    long lhsId(getReferenceId(lhs));
     writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
   }
 
@@ -687,7 +698,7 @@ long GimpleKdmTripleWriter::processGimpleGotoStatement(gimple const gs)
   mKdmWriter.writeTripleKind(actionId, KdmKind::Goto());
 
   tree label(gimple_goto_dest (gs));
-  long destId(mKdmWriter.getReferenceId(label));
+  long destId(getReferenceId(label));
   mKdmWriter.writeTriple(actionId, KdmPredicate::From(), actionId);
   mKdmWriter.writeTriple(actionId, KdmPredicate::To(), destId);
 
@@ -772,6 +783,10 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
         {
           writeKdmPtrReplace(actionElementId, gs);
         }
+        else if (TREE_CODE(lhs) == COMPONENT_REF)
+        {
+          writeKdmMemberSelect(actionElementId, gs);
+        }
         else
         {
           writeKdmUnaryOperation(actionElementId, KdmKind::Assign(), gs);
@@ -786,7 +801,7 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
         }
         else if(gimpleRhsCode == COMPONENT_REF)
         {
-          writeKdmComponentSelect(actionElementId, gs);
+          writeKdmMemberSelect(actionElementId, gs);
           break;
         }
         else if (gimpleRhsCode == INDIRECT_REF)
@@ -973,7 +988,7 @@ void GimpleKdmTripleWriter::processGimpleSwitchStatement(gimple const gs)
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   //switch variable
 
-  long indexId = mKdmWriter.getReferenceId(gimple_switch_index (gs));
+  long indexId = getReferenceId(gimple_switch_index (gs));
   mKdmWriter.writeTripleKind(actionId, KdmKind::Switch());
   writeKdmActionRelation(KdmType::Reads(), actionId, indexId);
   if (gimple_location(gs))
@@ -1000,7 +1015,7 @@ void GimpleKdmTripleWriter::processGimpleSwitchStatement(gimple const gs)
     else if (CASE_LOW(caseLabel))
     {
       tree caseNode(CASE_LABEL (caseLabel));
-      long caseNodeId(mKdmWriter.getReferenceId(caseNode));
+      long caseNodeId(getReferenceId(caseNode));
       long readsId = writeKdmActionRelation(KdmType::Reads(), actionId, caseNodeId);
 
       long gurardedFlowId(mKdmWriter.getNextElementId());
@@ -1014,7 +1029,7 @@ void GimpleKdmTripleWriter::processGimpleSwitchStatement(gimple const gs)
       //default is the false flow
       tree falseNode(CASE_LABEL (caseLabel));
       long falseFlowId(mKdmWriter.getNextElementId());
-      long falseNodeId(mKdmWriter.getReferenceId(falseNode));
+      long falseNodeId(getReferenceId(falseNode));
       mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
       mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionId);
       mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
@@ -1026,7 +1041,7 @@ void GimpleKdmTripleWriter::processGimpleSwitchStatement(gimple const gs)
 
 
 //    long caseLabel(mKdmWriter.getNextElementId());
-//    long trueNodeId(mKdmWriter.getReferenceId(trueNode));
+//    long trueNodeId(getReferenceId(trueNode));
 //
 //    mKdmWriter.processAstNode(caseLabel);
 //    mKdmWriter.processAstNode(CASE_LABEL (caseLabel));
@@ -1081,7 +1096,7 @@ void GimpleKdmTripleWriter::writeKdmUnaryOperation(long const actionId, KdmKind 
   tree rhs = gimple_assign_rhs1(gs);
 
   mKdmWriter.writeTripleKind(actionId, kind);
-  long lhsId = mKdmWriter.getReferenceId(lhs);
+  long lhsId = getReferenceId(lhs);
   long rhsId = getRhsReferenceId(rhs);
   writeKdmUnaryRelationships(actionId, lhsId, rhsId);
 
@@ -1094,7 +1109,7 @@ void GimpleKdmTripleWriter::writeKdmPtrReplace(long const actionId, gimple const
 
   tree lhsOp0 = TREE_OPERAND (lhs, 0);
   mKdmWriter.writeTripleKind(actionId, KdmKind::PtrReplace());
-  long lhsId = mKdmWriter.getReferenceId(lhsOp0);
+  long lhsId = getReferenceId(lhsOp0);
   long rhsId = getRhsReferenceId(rhs);
 
   writeKdmActionRelation(KdmType::Reads(), actionId, rhsId);
@@ -1112,7 +1127,7 @@ void GimpleKdmTripleWriter::writeKdmBinaryOperation(long const actionId, KdmKind
   tree rhs2 = gimple_assign_rhs2(gs);
 
   mKdmWriter.writeTripleKind(actionId, kind);
-  long lhsId = mKdmWriter.getReferenceId(lhs);
+  long lhsId = getReferenceId(lhs);
   long rhs1Id = getRhsReferenceId(rhs1);
   long rhs2Id = getRhsReferenceId(rhs2);
   writeKdmBinaryRelationships(actionId, lhsId, rhs1Id, rhs2Id);
@@ -1127,7 +1142,7 @@ void GimpleKdmTripleWriter::writeKdmArraySelect(long const actionElementId, gimp
   tree op1 = TREE_OPERAND (rhs, 1);
 
   mKdmWriter.writeTripleKind(actionElementId, KdmKind::ArraySelect());
-  long lhsId = mKdmWriter.getReferenceId(lhs);
+  long lhsId = getReferenceId(lhs);
   long op0Id = getRhsReferenceId(op0);
   long op1Id = getRhsReferenceId(op1);
 
@@ -1142,7 +1157,7 @@ void GimpleKdmTripleWriter::writeKdmArraySelect(long const actionElementId, gimp
  *
  */
 //D.1716 = this->m_bar;
-void GimpleKdmTripleWriter::writeKdmComponentSelect(long const actionElementId, gimple const gs)
+void GimpleKdmTripleWriter::writeKdmMemberSelect(long const actionElementId, gimple const gs)
 {
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
@@ -1150,7 +1165,7 @@ void GimpleKdmTripleWriter::writeKdmComponentSelect(long const actionElementId, 
   tree op1 = TREE_OPERAND (rhs, 1);
 
   mKdmWriter.writeTripleKind(actionElementId, KdmKind::MemberSelect());
-  long lhsId = mKdmWriter.getReferenceId(lhs);
+  long lhsId = getReferenceId(lhs);
   long op0Id = getRhsReferenceId(op0);
   long op1Id = getRhsReferenceId(op1);
 
@@ -1179,7 +1194,7 @@ void GimpleKdmTripleWriter::writeKdmPtr(long const actionElementId, gimple const
     long ptrActionId = mKdmWriter.getNextElementId();
 
     //we have to create a temp variable
-    long storableId = writeKdmStorableUnit(mKdmWriter.getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gimple_location(gs)));
+    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gimple_location(gs)));
     mKdmWriter.writeTripleContains(ptrActionId, storableId);
 
     mKdmWriter.writeTripleKind(actionElementId, KdmKind::ArraySelect());
@@ -1191,12 +1206,12 @@ void GimpleKdmTripleWriter::writeKdmPtr(long const actionElementId, gimple const
     mKdmWriter.writeTripleKind(ptrActionId, KdmKind::Ptr());
     writeKdmActionRelation(KdmType::Addresses(), ptrActionId, storableId);
     tree lhs = gimple_assign_lhs(gs);
-    long lhsId = mKdmWriter.getReferenceId(lhs);
+    long lhsId = getReferenceId(lhs);
     writeKdmActionRelation(KdmType::Writes(), ptrActionId, lhsId);
   }
   else
   {
-    long lhsId = mKdmWriter.getReferenceId(lhs);
+    long lhsId = getReferenceId(lhs);
     long rhsId = getRhsReferenceId(op0);
     mKdmWriter.writeTripleKind(actionElementId, KdmKind::Ptr());
     writeKdmActionRelation(KdmType::Addresses(), actionElementId, rhsId);
@@ -1222,7 +1237,7 @@ long GimpleKdmTripleWriter::writeKdmPtrParam(long const callActionId, tree const
     long arraySelectActionId = mKdmWriter.getNextElementId();
 
     //we have to create a temp variable... aka temp1
-    long storableId = writeKdmStorableUnit(mKdmWriter.getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gcckdm::locationOf(addrExpr)));
+    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gcckdm::locationOf(addrExpr)));
     mKdmWriter.writeTripleContains(blockUnitId, storableId);
 
     //ArraySelect ... ie  temp1 = myArray[0]
@@ -1233,7 +1248,7 @@ long GimpleKdmTripleWriter::writeKdmPtrParam(long const callActionId, tree const
     mKdmWriter.writeTripleContains(blockUnitId, arraySelectActionId);
 
     //we have to create a second temp variable... aka temp2
-    long storable2Id = writeKdmStorableUnit(mKdmWriter.getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gcckdm::locationOf(addrExpr)));
+    long storable2Id = writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gcckdm::locationOf(addrExpr)));
     mKdmWriter.writeTripleContains(blockUnitId, storable2Id);
 
     //perform address on temp1 assign to temp2    temp2 = &rhs
@@ -1248,7 +1263,7 @@ long GimpleKdmTripleWriter::writeKdmPtrParam(long const callActionId, tree const
   else
   {
     //we have to create a temp variable... aka temp1
-    long storableId = writeKdmStorableUnit(mKdmWriter.getReferenceId(TREE_TYPE(TREE_OPERAND (addrExpr, 0))),expand_location(gcckdm::locationOf(addrExpr)));
+    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (addrExpr, 0))),expand_location(gcckdm::locationOf(addrExpr)));
     mKdmWriter.writeTripleContains(blockUnitId, storableId);
 
     //Address.... temp1 = &rhs

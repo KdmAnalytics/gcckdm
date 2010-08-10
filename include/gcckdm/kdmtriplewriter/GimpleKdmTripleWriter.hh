@@ -148,6 +148,13 @@ private:
    * of class GIMPLE_BINARY_RHS.
    *
    *
+   * Calling this method reserves an subject id, writes an action element triple
+   * and passes that actionElement id to all methods called by this method
+   * to handle the individual constructs.
+   *
+   * The containment of the generated action element is also written to the
+   * sink.
+   *
    */
   long processGimpleAssignStatement(gimple const gs);
 

@@ -181,9 +181,13 @@ private:
   void writeKdmUnaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
   void writeKdmBinaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
   void writeKdmArraySelect(long const actionId, gimple const gs);
-  /** D.1716 = this->m_bar;
+  void writeKdmArrayReplace(long const actionId, gimple const gs);
+
+  /**
+   * D.1716 = this->m_bar;
    */
   void writeKdmMemberSelect(long const actionId, gimple const gs);
+
   /**
    * sin.sin_family = 2;
    */

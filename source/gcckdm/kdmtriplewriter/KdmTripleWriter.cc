@@ -783,16 +783,6 @@ bool KdmTripleWriter::hasReferenceId(tree const node) const
 
 long KdmTripleWriter::getReferenceId(tree const node)
 {
-  //  if (TREE_CODE(node) == INDIRECT_REF)
-  //  {
-  //    int i = 0;
-  //  }
-  //  if (TREE_CODE(node) == ADDR_EXPR)
-  //  {
-  //    int i = 0;
-  //  }
-
-
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
   if (result.second)

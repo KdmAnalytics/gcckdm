@@ -275,11 +275,6 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
-  if (TREE_CODE(ast) == COMPONENT_REF)
-  {
-    int i = 0;
-  }
-
   long retVal = mKdmWriter.getReferenceId(ast);
   return retVal;
 }
@@ -288,25 +283,15 @@ long GimpleKdmTripleWriter::getRhsReferenceId(tree const rhs)
 {
   long rhsId;
 
-//  if (TREE_CODE(rhs) == ADDR_EXPR)
-//  {
-//    int i = 0;
-//
-//  }
-//  if (TREE_CODE(rhs) == INDIRECT_REF)
-//  {
-//    int i = 0;
-//  }
-
   //Value types we handle special have to add them to languageUnit
   if (isValueNode(rhs))
   {
-    rhsId = mKdmWriter.getReferenceId(rhs);
+    rhsId = getReferenceId(rhs);
     mKdmWriter.processAstNode(rhs);
   }
   else
   {
-    rhsId = mKdmWriter.getReferenceId(rhs);
+    rhsId = getReferenceId(rhs);
   }
   return rhsId;
 }
@@ -667,9 +652,13 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
       {
         paramId = writeKdmPtrParam(actionId, t, callArg, gs);
       }
+      else if (TREE_CODE(callArg) == COMPONENT_REF)
+      {
+        paramId = writeKdmMemberSelectParam(actionId, callArg, gs);
+      }
       else
       {
-        paramId = (getReferenceId(gimple_call_arg(gs, i)));
+        paramId = (getReferenceId(callArg));
       }
 
       writeKdmActionRelation(KdmType::Reads(), actionId, paramId);
@@ -1166,18 +1155,71 @@ void GimpleKdmTripleWriter::writeKdmMemberSelect(long const actionElementId, gim
 
   mKdmWriter.writeTripleKind(actionElementId, KdmKind::MemberSelect());
   long lhsId = getReferenceId(lhs);
+
+  if (TREE_CODE(op0) == INDIRECT_REF)
+  {
+    tree indirectRef = TREE_OPERAND (op0, 0);
+    long refId = getReferenceId(indirectRef);
+    long op1Id = getRhsReferenceId(op1);
+
+    writeKdmActionRelation(KdmType::Reads(), actionElementId, op1Id);
+    writeKdmActionRelation(KdmType::Invokes(), actionElementId, refId);
+    writeKdmActionRelation(KdmType::Writes(), actionElementId, lhsId);
+
+  }
+  else
+  {
+    long op0Id = getRhsReferenceId(op0);
+    long op1Id = getRhsReferenceId(op1);
+
+    writeKdmActionRelation(KdmType::Reads(), actionElementId, op1Id);
+    writeKdmActionRelation(KdmType::Invokes(), actionElementId, op0Id);
+    writeKdmActionRelation(KdmType::Writes(), actionElementId, lhsId);
+  }
+}
+
+
+
+long GimpleKdmTripleWriter::writeKdmMemberSelectParam(long const actionElementId, tree const compRef, gimple const gs)
+{
+  tree op0 = TREE_OPERAND (compRef, 0);
+  tree op1 = TREE_OPERAND (compRef, 1);
+
+  mKdmWriter.writeTripleKind(actionElementId, KdmKind::MemberSelect());
+  long selectActionId = mKdmWriter.getNextElementId();
+
+  //we have to create a temp variable
+  long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)), expand_location(gimple_location(gs)));
+  mKdmWriter.writeTripleContains(selectActionId, storableId);
+
   long op0Id = getRhsReferenceId(op0);
   long op1Id = getRhsReferenceId(op1);
 
   writeKdmActionRelation(KdmType::Reads(), actionElementId, op1Id);
-  writeKdmActionRelation(KdmType::Addresses(), actionElementId, op0Id);
+  writeKdmActionRelation(KdmType::Invokes(), actionElementId, op0Id);
+  writeKdmActionRelation(KdmType::Writes(), actionElementId, storableId);
+  return storableId;
+}
+
+
+//Example: sin.sin_family = 2;
+void GimpleKdmTripleWriter::writeKdmMemberReplace(long const actionElementId, gimple const gs)
+{
+  tree lhs = gimple_assign_lhs(gs);
+  tree rhs = gimple_assign_rhs1(gs);
+
+  tree lhsOp0 = TREE_OPERAND (lhs, 0);
+  mKdmWriter.writeTripleKind(actionElementId, KdmKind::MemberReplace());
+  long lhsId = getReferenceId(lhsOp0);
+  long rhsId = getRhsReferenceId(rhs);
+
+  writeKdmActionRelation(KdmType::Reads(), actionElementId, rhsId);
+  writeKdmActionRelation(KdmType::Invokes(), actionElementId, lhsId);
   writeKdmActionRelation(KdmType::Writes(), actionElementId, lhsId);
 }
 
-void GimpleKdmTripleWriter::writeKdmMemberReplace(long const actionElementId, gimple const gs)
-{
-  mKdmWriter.writeComment("FIXME: KdmMemberReplace needs implementing");
-}
+
+
 
 //ptr = &a[0];
 void GimpleKdmTripleWriter::writeKdmPtr(long const actionElementId, gimple const gs)

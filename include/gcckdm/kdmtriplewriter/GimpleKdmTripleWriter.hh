@@ -187,6 +187,8 @@ private:
   /**
    * sin.sin_family = 2;
    */
+  long writeKdmMemberSelectParam(long const actionElementId, tree const compRef, gimple const gs);
+
   void writeKdmMemberReplace(long const actionId, gimple const gs);
   void writeKdmPtr(long const actionId, gimple const gs);
   long writeKdmPtrParam(long const actionId, tree const callNode, tree const addrExpr, gimple const gs);

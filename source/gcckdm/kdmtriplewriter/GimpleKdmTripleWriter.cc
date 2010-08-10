@@ -1274,7 +1274,7 @@ void GimpleKdmTripleWriter::writeKdmPtr(long const actionElementId, gimple const
 
 
     //we have to create a temp variable
-    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gimple_location(gs)));
+    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(refOp0)),expand_location(gimple_location(gs)));
 
     long ptrActionId = mKdmWriter.getNextElementId();
     mKdmWriter.writeTripleContains(blockUnitId, storableId);
@@ -1358,6 +1358,7 @@ long GimpleKdmTripleWriter::writeKdmPtrParam(long const callActionId, tree const
     long ptrActionId = mKdmWriter.getNextElementId();
 
     long rhsId = getRhsReferenceId(op0);
+    mKdmWriter.writeTripleKdmType(ptrActionId, KdmType::ActionElement());
     mKdmWriter.writeTripleKind(ptrActionId, KdmKind::Ptr());
     writeKdmActionRelation(KdmType::Addresses(), ptrActionId, rhsId);
     writeKdmActionRelation(KdmType::Writes(), ptrActionId, storableId);

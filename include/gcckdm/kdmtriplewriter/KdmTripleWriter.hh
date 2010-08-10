@@ -329,6 +329,7 @@ private:
   void writeKdmMethodType(tree const type);
 
   void writeKdmSharedUnit(tree const file);
+  void writeKdmSharedUnit(Path const & filename, long const id);
   long writeKdmItemUnit(tree const item);
   void writeKdmArrayType(tree const array);
   long writeKdmStorableUnit(tree const var);
@@ -347,6 +348,7 @@ private:
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
+  FileMap mSharedUnitMap;
 
   bool mBodies;
 };

@@ -514,6 +514,12 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
   tree var;
   for (var = gimple_bind_vars(gs); var; var = TREE_CHAIN(var))
   {
+    if (DECL_EXTERNAL (var))
+    {
+      mKdmWriter.writeComment("Skipping external variable in bind statement....");
+      continue;
+    }
+
     long declId = getReferenceId(var);
     mKdmWriter.processAstNode(var);
     mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);

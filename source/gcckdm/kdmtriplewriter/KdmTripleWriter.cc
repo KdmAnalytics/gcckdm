@@ -185,12 +185,19 @@ void KdmTripleWriter::finishTranslationUnit()
     std::cerr << boost::diagnostic_information(e);
   }
 
+
+
   //Write any left over shared units
   try
   {
     for (TreeMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
     {
       writeKdmSharedUnit(i->first);
+    }
+
+    for (FileMap::const_iterator i = mSharedUnitMap.begin(), e = mSharedUnitMap.end(); i != e; ++i)
+    {
+      writeKdmSharedUnit(i->first, i->second);
     }
   }
   catch (KdmTripleWriterException & e)
@@ -542,12 +549,31 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   writeTripleName(callableUnitId, name);
 
+
   Path sourceFile(DECL_SOURCE_FILE(functionDecl));
   if (!sourceFile.is_complete())
   {
     sourceFile = boost::filesystem::complete(sourceFile);
   }
-  long unitId(sourceFile == mCompilationFile ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
+  writeComment("FIXME: Source File: " + sourceFile.string());
+
+  long unitId;
+  //the function is located in the compilation unit
+  if (sourceFile == mCompilationFile)
+  {
+    unitId = KdmElementId_CompilationUnit;
+  }
+  //the function is located in an include file
+  else
+  {
+    std::pair<FileMap::iterator, bool> result;
+    result = mSharedUnitMap.insert(std::make_pair(sourceFile, mKdmElementId + 1));
+    if (result.second)
+    {
+      ++mKdmElementId;
+    }
+    unitId = result.first->second;
+  }
 
   // If this is c++, the method/function is written in the class first, otherwise in the compilation unit
   if (isFrontendCxx())
@@ -1151,8 +1177,14 @@ void KdmTripleWriter::writeKdmSharedUnit(tree const file)
   writeTripleKdmType(id, KdmType::SharedUnit());
 
   Path filename(IDENTIFIER_POINTER(file));
-  writeTripleName(id, filename.filename());
-  writeTripleLinkId(id, filename.string());
+  writeKdmSharedUnit(filename, id);
+}
+
+void KdmTripleWriter::writeKdmSharedUnit(Path const & file, const long id)
+{
+  writeTripleKdmType(id, KdmType::SharedUnit());
+  writeTripleName(id, file.filename());
+  writeTripleLinkId(id, file.string());
   writeTripleContains(KdmElementId_CodeAssembly, id);
 }
 

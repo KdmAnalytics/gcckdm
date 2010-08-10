@@ -57,6 +57,19 @@ location_t locationOf(tree t);
  */
 std::string const locationString(location_t loc);
 
+
+/**
+ * Returns true if the front end being used is C++
+ */
+bool isFrontendCxx();
+
+/**
+ * Returns true is the front end being used is C
+ */
+bool isFrontentC();
+
+
+
 } // namespace gcckdm
 
 #endif /* GCCKDM_GCCKDMUTILITIES_HH_ */

@@ -454,4 +454,17 @@ std::string getAstNodeName(tree node)
   return nameStr;
 }
 
+
+bool isFrontendCxx()
+{
+  std::string langName(lang_hooks.name);
+  return langName == "GNU C++";
+}
+
+bool isFrontendC()
+{
+  std::string langName(lang_hooks.name);
+  return langName == "GNU C";
+}
+
 } // namespace gcckdm

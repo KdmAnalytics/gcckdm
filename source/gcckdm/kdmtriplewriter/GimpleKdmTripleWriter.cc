@@ -514,6 +514,12 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
   tree var;
   for (var = gimple_bind_vars(gs); var; var = TREE_CHAIN(var))
   {
+    if (DECL_EXTERNAL (var))
+    {
+      mKdmWriter.writeComment("Skipping external variable in bind statement....");
+      continue;
+    }
+
     long declId = getReferenceId(var);
     mKdmWriter.processAstNode(var);
     mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
@@ -1274,7 +1280,7 @@ void GimpleKdmTripleWriter::writeKdmPtr(long const actionElementId, gimple const
 
 
     //we have to create a temp variable
-    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),expand_location(gimple_location(gs)));
+    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(refOp0)),expand_location(gimple_location(gs)));
 
     long ptrActionId = mKdmWriter.getNextElementId();
     mKdmWriter.writeTripleContains(blockUnitId, storableId);
@@ -1358,6 +1364,7 @@ long GimpleKdmTripleWriter::writeKdmPtrParam(long const callActionId, tree const
     long ptrActionId = mKdmWriter.getNextElementId();
 
     long rhsId = getRhsReferenceId(op0);
+    mKdmWriter.writeTripleKdmType(ptrActionId, KdmType::ActionElement());
     mKdmWriter.writeTripleKind(ptrActionId, KdmKind::Ptr());
     writeKdmActionRelation(KdmType::Addresses(), ptrActionId, rhsId);
     writeKdmActionRelation(KdmType::Writes(), ptrActionId, storableId);

@@ -785,7 +785,7 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
         }
         else if (TREE_CODE(lhs) == COMPONENT_REF)
         {
-          writeKdmMemberSelect(actionElementId, gs);
+          writeKdmMemberReplace(actionElementId, gs);
         }
         else
         {
@@ -1172,6 +1172,11 @@ void GimpleKdmTripleWriter::writeKdmMemberSelect(long const actionElementId, gim
   writeKdmActionRelation(KdmType::Reads(), actionElementId, op1Id);
   writeKdmActionRelation(KdmType::Addresses(), actionElementId, op0Id);
   writeKdmActionRelation(KdmType::Writes(), actionElementId, lhsId);
+}
+
+void GimpleKdmTripleWriter::writeKdmMemberReplace(long const actionElementId, gimple const gs)
+{
+  mKdmWriter.writeComment("FIXME: KdmMemberReplace needs implementing");
 }
 
 //ptr = &a[0];

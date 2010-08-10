@@ -184,6 +184,10 @@ private:
   /** D.1716 = this->m_bar;
    */
   void writeKdmMemberSelect(long const actionId, gimple const gs);
+  /**
+   * sin.sin_family = 2;
+   */
+  void writeKdmMemberReplace(long const actionId, gimple const gs);
   void writeKdmPtr(long const actionId, gimple const gs);
   long writeKdmPtrParam(long const actionId, tree const callNode, tree const addrExpr, gimple const gs);
   void writeKdmPtrReplace(long const actionId, gimple const gs);

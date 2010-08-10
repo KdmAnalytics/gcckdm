@@ -72,6 +72,7 @@ private:
     //Action Group
     KdmType_ActionElement,
     KdmType_Addresses,
+    KdmType_Invokes,
     KdmType_Writes,
     KdmType_Reads,
     KdmType_BlockUnit,
@@ -127,6 +128,7 @@ public:
   //Action Group
   static const KdmType ActionElement()    { return KdmType(KdmType_ActionElement, "action/ActionElement");  }
   static const KdmType Addresses()        { return KdmType(KdmType_Addresses, "action/Addresses");  }
+  static const KdmType Invokes()          { return KdmType(KdmType_Invokes, "action/Invokes");  }
   static const KdmType Writes()           { return KdmType(KdmType_Writes, "action/Writes");  }
   static const KdmType Reads()            { return KdmType(KdmType_Reads, "action/Reads");  }
   static const KdmType BlockUnit()        { return KdmType(KdmType_BlockUnit, "action/BlockUnit");  }

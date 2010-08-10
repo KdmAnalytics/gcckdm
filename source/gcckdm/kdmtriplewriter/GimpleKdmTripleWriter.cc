@@ -786,8 +786,8 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionI
         }
         else
         {
-          std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[gimpleRhsCode])
-          % BOOST_CURRENT_FUNCTION));
+          std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
+          % BOOST_CURRENT_FUNCTION % __LINE__));
           mKdmWriter.writeUnsupportedComment(msg);
         }
         break;

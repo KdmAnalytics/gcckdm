@@ -66,7 +66,7 @@ bool isFrontendCxx();
 /**
  * Returns true is the front end being used is C
  */
-bool isFrontentC();
+bool isFrontendC();
 
 
 

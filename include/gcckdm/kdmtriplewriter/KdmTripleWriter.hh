@@ -287,6 +287,11 @@ private:
    */
   void writeKdmRecordType(tree const type);
 
+  /**
+   *
+   */
+  void writeKdmMethodType(tree const type);
+
   void writeKdmSharedUnit(tree const file);
   long writeKdmItemUnit(tree const item);
   void writeKdmArrayType(tree const array);

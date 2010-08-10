@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+                                                      mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -1049,54 +1049,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
   }
   else if (global_namespace && TYPE_LANG_SPECIFIC (mainRecordType) && CLASSTYPE_DECLARED_CLASS (mainRecordType))
   {
-    long compilationUnitId(getSourceFileReferenceId(mainRecordType));
-    //class
-
-    long classId = getReferenceId(mainRecordType);
-    writeTripleKdmType(classId, KdmType::ClassUnit());
-    std::string name;
-    //check to see if we are an anonymous class
-    name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
-    writeTripleName(classId, name);
-
-    if (COMPLETE_TYPE_P (mainRecordType))
-    {
-      for (tree d(TYPE_FIELDS(mainRecordType)); d; d = TREE_CHAIN(d))
-      {
-        switch (TREE_CODE(d))
-        {
-          case TYPE_DECL:
-          {
-            if (!DECL_SELF_REFERENCE_P(d))
-            {
-              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
-              writeUnsupportedComment(msg);
-            }
-            break;
-          }
-          case FIELD_DECL:
-          {
-            if (!DECL_ARTIFICIAL(d))
-            {
-              long itemId = getReferenceId(d);
-              processAstNode(d);
-              writeTripleContains(classId, itemId);
-            }
-            break;
-          }
-          default:
-          {
-            std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
-            writeUnsupportedComment(msg);
-            break;
-          }
-        }
-      }
-    }
-
-    writeKdmSourceRef(classId, mainRecordType);
-
-    writeTripleContains(compilationUnitId, classId);
+    writeKdmClassType(recordType);
   }
   else //Record or Union
 
@@ -1152,6 +1105,63 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     writeTripleContains(compilationUnitId, structId);
   }
   //    std::cerr << "======================= End of Record Type\n";
+
+}
+
+/**
+ *
+ */
+void KdmTripleWriter::writeKdmClassType(tree const recordType)
+{
+  tree mainRecordType = TYPE_MAIN_VARIANT (recordType);
+
+  long compilationUnitId(getSourceFileReferenceId(mainRecordType));
+  //class
+
+  long classId = getReferenceId(mainRecordType);
+  writeTripleKdmType(classId, KdmType::ClassUnit());
+  std::string name;
+  //check to see if we are an anonymous class
+  name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
+  writeTripleName(classId, name);
+
+  // Base class information
+  // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
+
+
+  // Traverse members.
+  for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
+  {
+    switch (TREE_CODE (d))
+    {
+      case TYPE_DECL:
+      {
+        if (!DECL_SELF_REFERENCE_P (d))
+          processAstNode(d);
+        break;
+      }
+      case FIELD_DECL:
+      {
+        if (!DECL_ARTIFICIAL (d))
+          processAstNode(d);
+        break;
+      }
+      default:
+      {
+        processAstNode(d);
+        break;
+      }
+    }
+  }
+
+  for (tree d (TYPE_METHODS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
+  {
+    if (!DECL_ARTIFICIAL (d))
+      processAstNode(d);
+  }
+
+  writeKdmSourceRef(classId, mainRecordType);
+  writeTripleContains(compilationUnitId, classId);
 
 }
 

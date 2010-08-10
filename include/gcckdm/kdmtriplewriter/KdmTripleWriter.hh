@@ -319,9 +319,14 @@ private:
   void writeKdmPointerType(tree const type);
 
   /**
-   * Handles output of enums, classes, and structs
+   * Handles output of enums, and structs, pass through of class to writeKdmClassType
    */
   void writeKdmRecordType(tree const type);
+
+  /**
+   * Handles output of classes
+   */
+  void writeKdmClassType(tree const recordType);
 
   /**
    *

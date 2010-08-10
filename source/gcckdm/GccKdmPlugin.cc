@@ -189,7 +189,7 @@ void registerCallbacks(char const * pluginName)
 
   // In C we require notification of all types and functions so that we know to add them to the KDM. In
   // C++ we can just parse through the global namespace. The following callbacks are for C only.
-  if(gcckdm::isFrontendC())
+  if(!gcckdm::isFrontendCxx())
   {
     // Called whenever a type has been parsed
     register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);

@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-                                                      mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+                                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -235,7 +235,17 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else if (treeCode == TREE_LIST)
       {
-        writeComment("FIXME: Skipping TREE_LIST.");
+        tree l = ast;
+        while(l)
+        {
+//          tree treePurpose = TREE_PURPOSE(l);
+          tree treeValue = TREE_VALUE(l);
+          if(treeValue)
+          {
+            processAstNode(treeValue);
+          }
+          l = TREE_CHAIN (l);
+        }
       }
       else if (treeCode == ERROR_MARK)
       {
@@ -360,6 +370,11 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
         break;
       }
       case FUNCTION_TYPE:
+      {
+        writeKdmSignature(typeNode);
+        break;
+      }
+      case METHOD_TYPE:
       {
         writeKdmSignature(typeNode);
         break;

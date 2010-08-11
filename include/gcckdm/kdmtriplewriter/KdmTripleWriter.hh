@@ -238,8 +238,21 @@ private:
   typedef std::queue<tree> TreeQueue;
   typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
 
-  long getSourceFileReferenceId(tree const decl);
-  long getSharedUnitReferenceId(tree const file);
+
+  /**
+   * Returns the id for source file containing the given node
+   *
+   * @param node
+   */
+  long getSourceFileReferenceId(tree const node);
+
+  /**
+   * Returns the shared unit id for the given identifierNode
+   *
+   * Note: this should only be called by getSourceFileReferenceId
+   */
+  long getSharedUnitReferenceId(tree const identifier);
+
 
   enum
   {
@@ -344,11 +357,11 @@ private:
   GimpleWriter mGimpleWriter;
   TreeMap mReferencedNodes;
   TreeMap mReferencedSharedUnits;
-  Path mCompilationFile;
+
+  Path mCompilationFile; /// The complete (absolute) path to the file being compiled
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
-  FileMap mSharedUnitMap;
 
   bool mBodies;
 };

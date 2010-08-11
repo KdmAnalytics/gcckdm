@@ -159,7 +159,8 @@ public:
    */
   void writeTripleKind(long const subject, KdmKind const & kind);
 
-  /** Convenience method to write the "export" triple
+  /**
+   * Convenience method to write the "export" triple
    *
    */
   void writeTripleExport(long const subject, std::string const & exportName);
@@ -286,7 +287,6 @@ private:
    */
   void processAstNamespaceNode(tree const val);
 
-//  void processAstLabelDeclarationNode(tree const labelDecl);
   void writeVersionHeader();
   void writeDefaultKdmModelElements();
 

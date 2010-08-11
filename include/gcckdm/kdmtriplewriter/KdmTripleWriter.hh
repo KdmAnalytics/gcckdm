@@ -286,7 +286,6 @@ private:
    */
   void processAstNamespaceNode(tree const val);
 
-//  void processAstLabelDeclarationNode(tree const labelDecl);
   void writeVersionHeader();
   void writeDefaultKdmModelElements();
 

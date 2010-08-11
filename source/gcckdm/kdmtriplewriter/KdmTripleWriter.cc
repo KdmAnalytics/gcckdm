@@ -1064,7 +1064,8 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
 
 }
 
-/** Record Types all need to output the following standard information:
+/**
+ * Record Types all need to output the following standard information:
  *
  *     KDM Type
  *     Name

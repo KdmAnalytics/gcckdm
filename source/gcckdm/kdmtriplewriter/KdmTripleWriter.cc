@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-                                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+                                                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -137,10 +137,10 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
   try
   {
-	  //Ensure we hav the complete path
-	  mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
+    //Ensure we hav the complete path
+    mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
 
-	  writeVersionHeader();
+    writeVersionHeader();
     writeDefaultKdmModelElements();
     writeKdmSourceFile(mCompilationFile);
   }
@@ -236,7 +236,7 @@ void KdmTripleWriter::processAstNode(tree const ast)
         tree l = ast;
         while(l)
         {
-//          tree treePurpose = TREE_PURPOSE(l);
+          //          tree treePurpose = TREE_PURPOSE(l);
           tree treeValue = TREE_VALUE(l);
           if(treeValue)
           {
@@ -303,6 +303,11 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       processAstTypeDecl(decl);
       break;
     }
+    case TEMPLATE_DECL:
+    {
+      processAstTemplateDecl(decl);
+      break;
+    }
     case LABEL_DECL:
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
@@ -352,6 +357,81 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
 
   writeKdmCxxContains(typeDecl);
 }
+
+/**
+ *
+ */
+void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
+{
+  // Dump the template specializations.
+  for (tree tl = DECL_TEMPLATE_SPECIALIZATIONS (templateDecl); tl ; tl = TREE_CHAIN (tl))
+  {
+    tree ts = TREE_VALUE (tl);
+    int treeCode = TREE_CODE (ts);
+    switch (treeCode)
+    {
+      case FUNCTION_DECL:
+      {
+        processAstNode(ts);
+        break;
+      }
+      //      case TEMPLATE_DECL:
+      //        break;
+      default:
+      {
+        std::string msg(str(boost::format("AST Template Specialization Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+        break;
+      }
+    }
+  }
+
+  /* Dump the template instantiations.  */
+  for (tree tl = DECL_TEMPLATE_INSTANTIATIONS (templateDecl); tl ; tl = TREE_CHAIN (tl))
+  {
+    tree ts = TYPE_NAME (TREE_VALUE (tl));
+    int treeCode = TREE_CODE (ts);
+    switch (treeCode)
+    {
+      case TYPE_DECL:
+      {
+        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+        //        /* Add the instantiation only if it is real.  */
+        //        if (!xml_find_template_parm (TYPE_TI_ARGS(TREE_TYPE(ts))))
+        //        {
+        //          xml_add_node (xdi, ts, complete);
+        //        }
+//        processAstNode(tl);
+        break;
+      }
+      default:
+      {
+        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+        break;
+      }
+    }
+  }
+
+  /* Dump any member template instantiations.  */
+  if(TREE_CODE (TREE_TYPE (templateDecl)) == RECORD_TYPE ||
+      TREE_CODE (TREE_TYPE (templateDecl)) == UNION_TYPE ||
+      TREE_CODE (TREE_TYPE (templateDecl)) == QUAL_UNION_TYPE)
+  {
+    for (tree tl = TYPE_FIELDS (TREE_TYPE (templateDecl)); tl; tl = TREE_CHAIN (tl))
+    {
+      if (TREE_CODE (tl) == TEMPLATE_DECL)
+      {
+        processAstNode(tl);
+      }
+    }
+  }
+  //  long templateKdmElementId = getReferenceId(templateDecl);
+  //  std::string name(nodeName(templateDecl));
+  //  writeTripleName(templateKdmElementId, name);
+}
+
 
 void KdmTripleWriter::processAstTypeNode(tree const typeNode)
 {
@@ -581,13 +661,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   // In straight C, it is always contained in the source file
   else
   {
-//    expanded_location loc(expand_location(locationOf(functionDecl)));
-//    Path file(loc.file);
-//    if (!file.is_complete())
-//    {
-//      file = boost::filesystem::complete(file);
-//    }
-//    std::cerr << "HERE: " << " " << DECL_EXTERNAL(functionDecl) << " " << TREE_PUBLIC(functionDecl)<< " " << gcckdm::getAstNodeName(functionDecl) << ": " << file.string() << std::endl;
+    //    expanded_location loc(expand_location(locationOf(functionDecl)));
+    //    Path file(loc.file);
+    //    if (!file.is_complete())
+    //    {
+    //      file = boost::filesystem::complete(file);
+    //    }
+    //    std::cerr << "HERE: " << " " << DECL_EXTERNAL(functionDecl) << " " << TREE_PUBLIC(functionDecl)<< " " << gcckdm::getAstNodeName(functionDecl) << ": " << file.string() << std::endl;
 
     long unitId = getSourceFileReferenceId(functionDecl);
     writeTripleContains(unitId, callableUnitId);

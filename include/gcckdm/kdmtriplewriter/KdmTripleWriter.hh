@@ -159,7 +159,8 @@ public:
    */
   void writeTripleKind(long const subject, KdmKind const & kind);
 
-  /** Convenience method to write the "export" triple
+  /**
+   * Convenience method to write the "export" triple
    *
    */
   void writeTripleExport(long const subject, std::string const & exportName);
@@ -238,8 +239,21 @@ private:
   typedef std::queue<tree> TreeQueue;
   typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
 
-  long getSourceFileReferenceId(tree const decl);
-  long getSharedUnitReferenceId(tree const file);
+
+  /**
+   * Returns the id for source file containing the given node
+   *
+   * @param node
+   */
+  long getSourceFileReferenceId(tree const node);
+
+  /**
+   * Returns the shared unit id for the given identifierNode
+   *
+   * Note: this should only be called by getSourceFileReferenceId
+   */
+  long getSharedUnitReferenceId(tree const identifier);
+
 
   enum
   {
@@ -273,7 +287,6 @@ private:
    */
   void processAstNamespaceNode(tree const val);
 
-//  void processAstLabelDeclarationNode(tree const labelDecl);
   void writeVersionHeader();
   void writeDefaultKdmModelElements();
 
@@ -349,11 +362,11 @@ private:
   GimpleWriter mGimpleWriter;
   TreeMap mReferencedNodes;
   TreeMap mReferencedSharedUnits;
-  Path mCompilationFile;
+
+  Path mCompilationFile; /// The complete (absolute) path to the file being compiled
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
-  FileMap mSharedUnitMap;
 
   bool mBodies;
 };

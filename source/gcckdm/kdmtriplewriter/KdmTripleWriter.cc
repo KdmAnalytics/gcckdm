@@ -137,8 +137,10 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
   try
   {
-    mCompilationFile = file;
-    writeVersionHeader();
+	  //Ensure we hav the complete path
+	  mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
+
+	  writeVersionHeader();
     writeDefaultKdmModelElements();
     writeKdmSourceFile(mCompilationFile);
   }
@@ -193,11 +195,6 @@ void KdmTripleWriter::finishTranslationUnit()
     for (TreeMap::const_iterator i = mReferencedSharedUnits.begin(), e = mReferencedSharedUnits.end(); i != e; ++i)
     {
       writeKdmSharedUnit(i->first);
-    }
-
-    for (FileMap::const_iterator i = mSharedUnitMap.begin(), e = mSharedUnitMap.end(); i != e; ++i)
-    {
-      writeKdmSharedUnit(i->first, i->second);
     }
   }
   catch (KdmTripleWriterException & e)
@@ -565,32 +562,6 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   writeTripleName(callableUnitId, name);
 
-
-  Path sourceFile(DECL_SOURCE_FILE(functionDecl));
-  if (!sourceFile.is_complete())
-  {
-    sourceFile = boost::filesystem::complete(sourceFile);
-  }
-  writeComment("FIXME: Source File: " + sourceFile.string());
-
-  long unitId;
-  //the function is located in the compilation unit
-  if (sourceFile == mCompilationFile)
-  {
-    unitId = KdmElementId_CompilationUnit;
-  }
-  //the function is located in an include file
-  else
-  {
-    std::pair<FileMap::iterator, bool> result;
-    result = mSharedUnitMap.insert(std::make_pair(sourceFile, mKdmElementId + 1));
-    if (result.second)
-    {
-      ++mKdmElementId;
-    }
-    unitId = result.first->second;
-  }
-
   // If this is c++, the method/function is written in the class first, otherwise in the compilation unit
   if (isFrontendCxx())
   {
@@ -607,9 +578,18 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     }
     writeKdmCxxContains(functionDecl);
   }
-  // In straight C, it is always written in the CompilationUnit
+  // In straight C, it is always contained in the source file
   else
   {
+//    expanded_location loc(expand_location(locationOf(functionDecl)));
+//    Path file(loc.file);
+//    if (!file.is_complete())
+//    {
+//      file = boost::filesystem::complete(file);
+//    }
+//    std::cerr << "HERE: " << " " << DECL_EXTERNAL(functionDecl) << " " << TREE_PUBLIC(functionDecl)<< " " << gcckdm::getAstNodeName(functionDecl) << ": " << file.string() << std::endl;
+
+    long unitId = getSourceFileReferenceId(functionDecl);
     writeTripleContains(unitId, callableUnitId);
   }
   writeKdmSourceRef(callableUnitId, functionDecl);
@@ -960,36 +940,65 @@ long KdmTripleWriter::getReferenceId(tree const node)
   return retValue;
 }
 
-long KdmTripleWriter::getSourceFileReferenceId(tree const t)
+
+long KdmTripleWriter::getSourceFileReferenceId(tree const node)
 {
-  long sourceFileId(0);
-  expanded_location loc(expand_location(locationOf(t)));
-  if (mCompilationFile != Path(loc.file))
+  //The shared or compliation unit id
+  long unitId(0);
+
+  //Find the file the given node is located in ensure that is is complete
+  expanded_location loc(expand_location(locationOf(node)));
+  Path file(loc.file);
+  if (!file.is_complete())
   {
-    tree t = get_identifier(loc.file);
-    sourceFileId = getSharedUnitReferenceId(t);
+    file = boost::filesystem::complete(file);
+  }
+
+  // the node is not in our translation unit, it must be in a shared unit
+  if (mCompilationFile != file)
+  {
+    //Retrieve the identifier node for the file containing the given node
+    tree identifierNode = get_identifier(loc.file);
+    unitId = getSharedUnitReferenceId(identifierNode);
   }
   else
   {
-    sourceFileId = KdmElementId_CompilationUnit;
+    //the node is located in the translation unit; return the id for the translation unit
+    //unless it's external in which case we don't know where it is
+    //in which case we put it in the derivedSharedUnit by default
+    if (!DECL_EXTERNAL(node))
+    {
+      unitId = KdmElementId_CompilationUnit;
+    }
+    else
+    {
+      unitId = KdmElementId_DerivedSharedUnit;
+    }
   }
-  return sourceFileId;
+  return unitId;
 }
 
-long KdmTripleWriter::getSharedUnitReferenceId(tree const file)
+long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 {
   long retValue(-1);
-  std::pair<TreeMap::iterator, bool> result = mReferencedSharedUnits.insert(std::make_pair(file, mKdmElementId + 1));
+
+  //Attempt insertion with an artificial element id;
+  std::pair<TreeMap::iterator, bool> result = mReferencedSharedUnits.insert(std::make_pair(identifierNode, mKdmElementId + 1));
+
+  //We haven't seen that identifier before, increment the element id and return it
   if (result.second)
   {
     retValue = ++mKdmElementId;
   }
+  // We have already encountered that identifier return the id for it
   else
   {
     retValue = result.first->second;
   }
   return retValue;
 }
+
+
 
 long KdmTripleWriter::getNextElementId()
 {
@@ -1060,7 +1069,8 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
 
 }
 
-/** Record Types all need to output the following standard information:
+/**
+ * Record Types all need to output the following standard information:
  *
  *     KDM Type
  *     Name

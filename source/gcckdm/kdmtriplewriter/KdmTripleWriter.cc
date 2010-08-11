@@ -235,6 +235,7 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else if (treeCode == TREE_LIST)
       {
+        // FIXME: Is this the correct handling for the tree_list?
         tree l = ast;
         while(l)
         {

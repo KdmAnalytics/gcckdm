@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-                                                                              mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+                                                                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -401,7 +401,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         //        {
         //          xml_add_node (xdi, ts, complete);
         //        }
-        processAstNode(tl);
+        processAstNode(ts);
         break;
       }
       default:
@@ -420,15 +420,15 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
   {
     for (tree tl = TYPE_FIELDS (TREE_TYPE (templateDecl)); tl; tl = TREE_CHAIN (tl))
     {
-      if (TREE_CODE (tl) == TEMPLATE_DECL)
+      int treeCode = TREE_CODE (tl);
+      if (treeCode == TEMPLATE_DECL)
       {
-        processAstNode(tl);
+        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+        //        processAstNode(tl);
       }
     }
   }
-  //  long templateKdmElementId = getReferenceId(templateDecl);
-  //  std::string name(nodeName(templateDecl));
-  //  writeTripleName(templateKdmElementId, name);
 }
 
 
@@ -476,7 +476,24 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
         //Fall Through
       case RECORD_TYPE:
       {
-        writeKdmRecordType(typeNode);
+        // The contained code taken from GCCXML
+        if ((TREE_CODE (typeNode) == RECORD_TYPE) && TYPE_PTRMEMFUNC_P (typeNode))
+        {
+          // Pointer-to-member-functions are stored in a RECORD_TYPE.
+          std::string msg(str(boost::format("AST Type Node pointer to member-function (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+          writeUnsupportedComment(msg);
+        }
+        else if (!CLASSTYPE_IS_TEMPLATE (typeNode))
+        {
+          // This is a struct or class type.
+          writeKdmRecordType(typeNode);
+        }
+        else
+        {
+          // This is a class template.  We don't want to dump it.
+          std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+          writeUnsupportedComment(msg);
+        }
         break;
       }
       default:
@@ -1229,13 +1246,15 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 
 }
 
+
+#include "demangle.h"
+
 /**
  *
  */
 void KdmTripleWriter::writeKdmClassType(tree const recordType)
 {
   tree mainRecordType = TYPE_MAIN_VARIANT (recordType);
-
   long compilationUnitId(getSourceFileReferenceId(mainRecordType));
   //class
 

@@ -28,6 +28,9 @@
 #include <sstream>
 #include <boost/format.hpp>
 
+// Required for c++ name demangling
+#include "demangle.h"
+
 //This is to indicated that the global namespace is not linked in
 tree global_namespace = NULL;
 
@@ -244,10 +247,41 @@ std::string const locationString(location_t loc)
 }
 
 
-
+/**
+ *
+ */
 std::string getAstNodeName(tree node)
 {
+  // In C++, use the demangler if possible.
+  if(isFrontendCxx())
+  {
+    // First try for the demangled assembler name
+    if(TYPE_NAME (node))
+    {
+      tree typeName = TYPE_NAME (node);
+      if (HAS_DECL_ASSEMBLER_NAME_P(typeName) &&
+          DECL_NAME (typeName) &&
+          DECL_ASSEMBLER_NAME (typeName) &&
+          DECL_ASSEMBLER_NAME (typeName) != DECL_NAME (typeName))
+      {
+        tree mangledNameNode = DECL_ASSEMBLER_NAME (typeName);
+        std::string mangledName(IDENTIFIER_POINTER (mangledNameNode));
+
+        size_t index = mangledName.find(" *INTERNAL* ");
+        if (index != std::string::npos)
+        {
+          mangledName.erase(index, 12);
+        }
+
+        const int demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_TYPES | DMGL_ANSI) & ~DMGL_JAVA;
+        std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
+        return demangledName;
+      }
+    }
+  }
+
   std::string nameStr("");
+
   if (node != NULL_TREE)
   {
     switch (TREE_CODE(node))
@@ -416,26 +450,26 @@ std::string getAstNodeName(tree node)
       }
       case REAL_CST:
       {
-          REAL_VALUE_TYPE d;
-          if (TREE_OVERFLOW (node))
-          {
-            nameStr += "Overflow";
-          }
-          d = TREE_REAL_CST (node);
-          if (REAL_VALUE_ISINF (d))
-          {
-            nameStr += "Inf";
-          }
-          else if (REAL_VALUE_ISNAN (d))
-          {
-            nameStr += "Nan";
-          }
-          else
-          {
-            char str[64];
-            real_to_decimal (str, &d, sizeof (str), 0, 1);
-            nameStr += str;
-          }
+        REAL_VALUE_TYPE d;
+        if (TREE_OVERFLOW (node))
+        {
+          nameStr += "Overflow";
+        }
+        d = TREE_REAL_CST (node);
+        if (REAL_VALUE_ISINF (d))
+        {
+          nameStr += "Inf";
+        }
+        else if (REAL_VALUE_ISNAN (d))
+        {
+          nameStr += "Nan";
+        }
+        else
+        {
+          char str[64];
+          real_to_decimal (str, &d, sizeof (str), 0, 1);
+          nameStr += str;
+        }
         break;
       }
       case STRING_CST:

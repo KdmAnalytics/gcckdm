@@ -372,7 +372,9 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
     {
       case FUNCTION_DECL:
       {
+        writeComment("--- Start Specialization");
         processAstNode(ts);
+        writeComment("--- End Specialization");
         break;
       }
       //      case TEMPLATE_DECL:

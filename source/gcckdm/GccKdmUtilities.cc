@@ -246,6 +246,62 @@ std::string const locationString(location_t loc)
   return str.str();
 }
 
+/**
+ * Return the demangled name for the given node, if possible. Otherwise return the standard name.
+ */
+std::string getDemangledName(tree node)
+{
+  // First try for the demangled assembler name
+  if (HAS_DECL_ASSEMBLER_NAME_P(node) &&
+      DECL_NAME (node) &&
+      DECL_ASSEMBLER_NAME (node) &&
+      DECL_ASSEMBLER_NAME (node) != DECL_NAME (node))
+  {
+    tree mangledNameNode = DECL_ASSEMBLER_NAME (node);
+    const char *namePtr = IDENTIFIER_POINTER (mangledNameNode);
+    if(namePtr)
+    {
+      std::string mangledName(namePtr);
+
+      size_t index = mangledName.find(" *INTERNAL* ");
+      if (index != std::string::npos)
+      {
+        mangledName.erase(index, 12);
+      }
+
+      const int demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_TYPES | DMGL_ANSI) & ~DMGL_JAVA;
+      namePtr = cplus_demangle(mangledName.c_str(), demangle_opt);
+      if(namePtr)
+      {
+        std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
+        return demangledName;
+      }
+    }
+  }
+
+  // Otherwise return the empty string
+  std::string nameStr("");
+  return nameStr;
+}
+
+/**
+ * Get the demangled name for a node if possible
+ */
+std::string getDemangledNodeName(tree node)
+{
+  if (node != NULL_TREE)
+  {
+    // If this is a type node, demangle the type name
+    if(TYPE_P(node) && TYPE_NAME (node))
+    {
+      return getDemangledName(TYPE_NAME (node));
+    }
+  }
+
+  // Otherwise return the empty string
+  std::string nameStr("");
+  return nameStr;
+}
 
 /**
  *
@@ -255,29 +311,8 @@ std::string getAstNodeName(tree node)
   // In C++, use the demangler if possible.
   if(isFrontendCxx())
   {
-    // First try for the demangled assembler name
-    if(TYPE_NAME (node))
-    {
-      tree typeName = TYPE_NAME (node);
-      if (HAS_DECL_ASSEMBLER_NAME_P(typeName) &&
-          DECL_NAME (typeName) &&
-          DECL_ASSEMBLER_NAME (typeName) &&
-          DECL_ASSEMBLER_NAME (typeName) != DECL_NAME (typeName))
-      {
-        tree mangledNameNode = DECL_ASSEMBLER_NAME (typeName);
-        std::string mangledName(IDENTIFIER_POINTER (mangledNameNode));
-
-        size_t index = mangledName.find(" *INTERNAL* ");
-        if (index != std::string::npos)
-        {
-          mangledName.erase(index, 12);
-        }
-
-        const int demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_TYPES | DMGL_ANSI) & ~DMGL_JAVA;
-        std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
-        return demangledName;
-      }
-    }
+    std::string name = getDemangledNodeName(node);
+    if(!name.empty()) return name;
   }
 
   std::string nameStr("");

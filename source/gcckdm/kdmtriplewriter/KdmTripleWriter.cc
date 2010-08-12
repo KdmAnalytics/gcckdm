@@ -112,7 +112,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSi
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-                                                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+                                                                              mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -395,14 +395,13 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
     {
       case TYPE_DECL:
       {
-        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-        writeUnsupportedComment(msg);
+        // GCCXML only processed the node in some circumstances. Do we need to do the same?
         //        /* Add the instantiation only if it is real.  */
         //        if (!xml_find_template_parm (TYPE_TI_ARGS(TREE_TYPE(ts))))
         //        {
         //          xml_add_node (xdi, ts, complete);
         //        }
-//        processAstNode(tl);
+        processAstNode(tl);
         break;
       }
       default:

@@ -282,6 +282,7 @@ private:
    * Process a template declaration. Dump all specializations and instantiations.
    */
   void processAstTemplateDecl(tree const templateDecl);
+
   void processAstFunctionDeclarationNode(tree const functionDecl);
   void processAstFieldDeclarationNode(tree const fieldDecl);
   void processAstVariableDeclarationNode(tree const varDecl);

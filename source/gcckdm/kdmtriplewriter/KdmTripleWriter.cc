@@ -4,7 +4,7 @@
 //
 // This file is part of libGccKdm.
 //
-// Foobar is free software: you can redistribute it and/or modify
+// libGccKdm is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
@@ -151,10 +151,10 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
   try
   {
-	  //Ensure we hav the complete path
-	  mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
+    //Ensure we hav the complete path
+    mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
 
-	  writeVersionHeader();
+    writeVersionHeader();
     writeDefaultKdmModelElements();
     writeKdmSourceFile(mCompilationFile);
   }
@@ -322,7 +322,18 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else if (treeCode == TREE_LIST)
       {
-        writeComment("FIXME: Skipping TREE_LIST.");
+        // FIXME: Is this the correct handling for the tree_list?
+        tree l = ast;
+        while(l)
+        {
+          //          tree treePurpose = TREE_PURPOSE(l);
+          tree treeValue = TREE_VALUE(l);
+          if(treeValue)
+          {
+            processAstNode(treeValue);
+          }
+          l = TREE_CHAIN (l);
+        }
       }
       else if (treeCode == ERROR_MARK)
       {
@@ -382,6 +393,11 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       processAstTypeDecl(decl);
       break;
     }
+    case TEMPLATE_DECL:
+    {
+      processAstTemplateDecl(decl);
+      break;
+    }
     case LABEL_DECL:
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
@@ -432,6 +448,82 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   writeKdmCxxContains(typeDecl);
 }
 
+/**
+ *
+ */
+void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
+{
+  // Dump the template specializations.
+  for (tree tl = DECL_TEMPLATE_SPECIALIZATIONS (templateDecl); tl ; tl = TREE_CHAIN (tl))
+  {
+    tree ts = TREE_VALUE (tl);
+    int treeCode = TREE_CODE (ts);
+    switch (treeCode)
+    {
+      case FUNCTION_DECL:
+      {
+        writeComment("--- Start Specialization");
+        processAstNode(ts);
+        writeComment("--- End Specialization");
+        break;
+      }
+      //      case TEMPLATE_DECL:
+      //        break;
+      default:
+      {
+        std::string msg(str(boost::format("AST Template Specialization Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+        break;
+      }
+    }
+  }
+
+  /* Dump the template instantiations.  */
+  for (tree tl = DECL_TEMPLATE_INSTANTIATIONS (templateDecl); tl ; tl = TREE_CHAIN (tl))
+  {
+    tree ts = TYPE_NAME (TREE_VALUE (tl));
+    int treeCode = TREE_CODE (ts);
+    switch (treeCode)
+    {
+      case TYPE_DECL:
+      {
+        // GCCXML only processed the node in some circumstances. Do we need to do the same?
+        //        /* Add the instantiation only if it is real.  */
+        //        if (!xml_find_template_parm (TYPE_TI_ARGS(TREE_TYPE(ts))))
+        //        {
+        //          xml_add_node (xdi, ts, complete);
+        //        }
+        processAstNode(ts);
+        break;
+      }
+      default:
+      {
+        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+        break;
+      }
+    }
+  }
+
+  /* Dump any member template instantiations.  */
+  if(TREE_CODE (TREE_TYPE (templateDecl)) == RECORD_TYPE ||
+      TREE_CODE (TREE_TYPE (templateDecl)) == UNION_TYPE ||
+      TREE_CODE (TREE_TYPE (templateDecl)) == QUAL_UNION_TYPE)
+  {
+    for (tree tl = TYPE_FIELDS (TREE_TYPE (templateDecl)); tl; tl = TREE_CHAIN (tl))
+    {
+      int treeCode = TREE_CODE (tl);
+      if (treeCode == TEMPLATE_DECL)
+      {
+        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+        //        processAstNode(tl);
+      }
+    }
+  }
+}
+
+
 void KdmTripleWriter::processAstTypeNode(tree const typeNode)
 {
   assert(TYPE_P(typeNode));
@@ -447,6 +539,11 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
         break;
       }
       case FUNCTION_TYPE:
+      {
+        writeKdmSignature(typeNode);
+        break;
+      }
+      case METHOD_TYPE:
       {
         writeKdmSignature(typeNode);
         break;
@@ -471,7 +568,24 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
         //Fall Through
       case RECORD_TYPE:
       {
-        writeKdmRecordType(typeNode);
+        // The contained code taken from GCCXML
+        if ((TREE_CODE (typeNode) == RECORD_TYPE) && TYPE_PTRMEMFUNC_P (typeNode))
+        {
+          // Pointer-to-member-functions are stored in a RECORD_TYPE.
+          std::string msg(str(boost::format("AST Type Node pointer to member-function (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+          writeUnsupportedComment(msg);
+        }
+        else if (!CLASSTYPE_IS_TEMPLATE (typeNode))
+        {
+          // This is a struct or class type.
+          writeKdmRecordType(typeNode);
+        }
+        else
+        {
+          // This is a class template.  We don't want to dump it.
+          std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+          writeUnsupportedComment(msg);
+        }
         break;
       }
       default:
@@ -655,13 +769,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   // In straight C, it is always contained in the source file
   else
   {
-//    expanded_location loc(expand_location(locationOf(functionDecl)));
-//    Path file(loc.file);
-//    if (!file.is_complete())
-//    {
-//      file = boost::filesystem::complete(file);
-//    }
-//    std::cerr << "HERE: " << " " << DECL_EXTERNAL(functionDecl) << " " << TREE_PUBLIC(functionDecl)<< " " << gcckdm::getAstNodeName(functionDecl) << ": " << file.string() << std::endl;
+    //    expanded_location loc(expand_location(locationOf(functionDecl)));
+    //    Path file(loc.file);
+    //    if (!file.is_complete())
+    //    {
+    //      file = boost::filesystem::complete(file);
+    //    }
+    //    std::cerr << "HERE: " << " " << DECL_EXTERNAL(functionDecl) << " " << TREE_PUBLIC(functionDecl)<< " " << gcckdm::getAstNodeName(functionDecl) << ": " << file.string() << std::endl;
 
     long unitId = getSourceFileReferenceId(functionDecl);
     writeTripleContains(unitId, callableUnitId);
@@ -1218,54 +1332,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
   }
   else if (global_namespace && TYPE_LANG_SPECIFIC (mainRecordType) && CLASSTYPE_DECLARED_CLASS (mainRecordType))
   {
-    long compilationUnitId(getSourceFileReferenceId(mainRecordType));
-    //class
-
-    long classId = getReferenceId(mainRecordType);
-    writeTripleKdmType(classId, KdmType::ClassUnit());
-    std::string name;
-    //check to see if we are an anonymous class
-    name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
-    writeTripleName(classId, name);
-
-    if (COMPLETE_TYPE_P (mainRecordType))
-    {
-      for (tree d(TYPE_FIELDS(mainRecordType)); d; d = TREE_CHAIN(d))
-      {
-        switch (TREE_CODE(d))
-        {
-          case TYPE_DECL:
-          {
-            if (!DECL_SELF_REFERENCE_P(d))
-            {
-              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
-              writeUnsupportedComment(msg);
-            }
-            break;
-          }
-          case FIELD_DECL:
-          {
-            if (!DECL_ARTIFICIAL(d))
-            {
-              long itemId = getReferenceId(d);
-              processAstNode(d);
-              writeTripleContains(classId, itemId);
-            }
-            break;
-          }
-          default:
-          {
-            std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
-            writeUnsupportedComment(msg);
-            break;
-          }
-        }
-      }
-    }
-
-    writeKdmSourceRef(classId, mainRecordType);
-
-    writeTripleContains(compilationUnitId, classId);
+    writeKdmClassType(recordType);
   }
   else //Record or Union
 
@@ -1321,6 +1388,65 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     writeTripleContains(compilationUnitId, structId);
   }
   //    std::cerr << "======================= End of Record Type\n";
+
+}
+
+
+#include "demangle.h"
+
+/**
+ *
+ */
+void KdmTripleWriter::writeKdmClassType(tree const recordType)
+{
+  tree mainRecordType = TYPE_MAIN_VARIANT (recordType);
+  long compilationUnitId(getSourceFileReferenceId(mainRecordType));
+  //class
+
+  long classId = getReferenceId(mainRecordType);
+  writeTripleKdmType(classId, KdmType::ClassUnit());
+  std::string name;
+  //check to see if we are an anonymous class
+  name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
+  writeTripleName(classId, name);
+
+  // Base class information
+  // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
+
+
+  // Traverse members.
+  for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
+  {
+    switch (TREE_CODE (d))
+    {
+      case TYPE_DECL:
+      {
+        if (!DECL_SELF_REFERENCE_P (d))
+          processAstNode(d);
+        break;
+      }
+      case FIELD_DECL:
+      {
+        if (!DECL_ARTIFICIAL (d))
+          processAstNode(d);
+        break;
+      }
+      default:
+      {
+        processAstNode(d);
+        break;
+      }
+    }
+  }
+
+  for (tree d (TYPE_METHODS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
+  {
+    if (!DECL_ARTIFICIAL (d))
+      processAstNode(d);
+  }
+
+  writeKdmSourceRef(classId, mainRecordType);
+  writeTripleContains(compilationUnitId, classId);
 
 }
 

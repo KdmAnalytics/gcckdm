@@ -5,7 +5,7 @@
 //
 // This file is part of libGccKdm.
 //
-// Foobar is free software: you can redistribute it and/or modify
+// libGccKdm is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
@@ -189,19 +189,18 @@ void registerCallbacks(char const * pluginName)
 
   // In C we require notification of all types and functions so that we know to add them to the KDM. In
   // C++ we can just parse through the global namespace. The following callbacks are for C only.
-  if(gcckdm::isFrontendC())
+  if(!gcckdm::isFrontendCxx())
   {
     // Called whenever a type has been parsed
     register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
-
-    //Attempt to get the very first gimple AST before any optimizations, called for every function
-    struct register_pass_info pass_info;
-    pass_info.pass = &kdmGimplePass;
-    pass_info.reference_pass_name = all_lowering_passes->name;
-    pass_info.ref_pass_instance_number = 0;
-    pass_info.pos_op = PASS_POS_INSERT_AFTER;
-    register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
   }
+  //Attempt to get the very first gimple AST before any optimizations, called for every function
+  struct register_pass_info pass_info;
+  pass_info.pass = &kdmGimplePass;
+  pass_info.reference_pass_name = all_lowering_passes->name;
+  pass_info.ref_pass_instance_number = 0;
+  pass_info.pos_op = PASS_POS_INSERT_AFTER;
+  register_callback(pluginName, PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
 
   // Called when finished with the translation unit
   register_callback(pluginName, PLUGIN_FINISH_UNIT, static_cast<plugin_callback_func> (executeFinishUnit), NULL);
@@ -240,72 +239,6 @@ extern "C" void executeStartUnit(void *event_data, void *data)
 //}
 
 /**
- * Function used for debug purposes.
- */
-void print_decl (tree decl)
-{
-  int tc (TREE_CODE (decl));
-  tree id (DECL_NAME (decl));
-  const char* name (id
-      ? IDENTIFIER_POINTER (id)
-          : "<unnamed>");
-
-  std::cerr << tree_code_name[tc] << " " << name << " at "
-      << DECL_SOURCE_FILE (decl) << ":"
-      << DECL_SOURCE_LINE (decl) << std::endl;
-}
-
-/**
- * Traverse the namespaces, pushing all found types onto the process queue
- */
-void traverse_namespace (tree ns)
-{
-  tree decl;
-  cp_binding_level* level (NAMESPACE_LEVEL (ns));
-
-  // Traverse declarations.
-  //
-  for (decl = level->names;
-      decl != 0;
-      decl = TREE_CHAIN (decl))
-  {
-    if (DECL_IS_BUILTIN (decl))
-      continue;
-
-    if (!errorcount)
-    {
-      //Appending nodes to the queue instead of processing them immediately is
-      //because gcc is overly lazy and does some things (like setting annonymous struct names)
-      //sometime after completing the type
-      // taken from dehyra_plugin.c
-      VEC_safe_push(tree, heap, treeQueueVec, decl);
-      //    print_decl(decl);
-    }
-  }
-
-  // Traverse namespaces.
-  //
-  for(decl = level->namespaces;
-      decl != 0;
-      decl = TREE_CHAIN (decl))
-  {
-    if (DECL_IS_BUILTIN (decl))
-      continue;
-
-    if (!errorcount)
-    {
-      //Appending nodes to the queue instead of processing them immediately is
-      //because gcc is overly lazy and does some things (like setting annonymous struct names)
-      //sometime after completing the type
-      // taken from dehyra_plugin.c
-      VEC_safe_push(tree, heap, treeQueueVec, decl);
-      //    print_decl(decl);
-      traverse_namespace (decl);
-    }
-  }
-}
-
-/**
  * Called after GCC finishes parsing a type
  */
 extern "C" void executeFinishType(void *event_data, void *data)
@@ -335,7 +268,7 @@ extern "C" unsigned int executeKdmGimplePass()
 {
   unsigned int retValue(0);
 
-  if (gcckdm::isFrontendC() && !errorcount && !sorrycount)
+  if (!errorcount && !sorrycount)
   {
     gccAstListener->startKdmGimplePass();
     gccAstListener->processAstNode(current_function_decl);

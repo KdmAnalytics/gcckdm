@@ -5,7 +5,7 @@
 //
 // This file is part of libGccKdm.
 //
-// Foobar is free software: you can redistribute it and/or modify
+// libGccKdm is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
@@ -27,6 +27,9 @@
 #include <iostream>
 #include <sstream>
 #include <boost/format.hpp>
+
+// Required for c++ name demangling
+#include "demangle.h"
 
 //This is to indicated that the global namespace is not linked in
 tree global_namespace = NULL;
@@ -243,11 +246,77 @@ std::string const locationString(location_t loc)
   return str.str();
 }
 
+/**
+ * Return the demangled name for the given node, if possible. Otherwise return the standard name.
+ */
+std::string getDemangledName(tree node)
+{
+  // First try for the demangled assembler name
+  if (HAS_DECL_ASSEMBLER_NAME_P(node) &&
+      DECL_NAME (node) &&
+      DECL_ASSEMBLER_NAME (node) &&
+      DECL_ASSEMBLER_NAME (node) != DECL_NAME (node))
+  {
+    tree mangledNameNode = DECL_ASSEMBLER_NAME (node);
+    const char *namePtr = IDENTIFIER_POINTER (mangledNameNode);
+    if(namePtr)
+    {
+      std::string mangledName(namePtr);
 
+      size_t index = mangledName.find(" *INTERNAL* ");
+      if (index != std::string::npos)
+      {
+        mangledName.erase(index, 12);
+      }
 
+      const int demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_TYPES | DMGL_ANSI) & ~DMGL_JAVA;
+      namePtr = cplus_demangle(mangledName.c_str(), demangle_opt);
+      if(namePtr)
+      {
+        std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
+        return demangledName;
+      }
+    }
+  }
+
+  // Otherwise return the empty string
+  std::string nameStr("");
+  return nameStr;
+}
+
+/**
+ * Get the demangled name for a node if possible
+ */
+std::string getDemangledNodeName(tree node)
+{
+  if (node != NULL_TREE)
+  {
+    // If this is a type node, demangle the type name
+    if(TYPE_P(node) && TYPE_NAME (node))
+    {
+      return getDemangledName(TYPE_NAME (node));
+    }
+  }
+
+  // Otherwise return the empty string
+  std::string nameStr("");
+  return nameStr;
+}
+
+/**
+ *
+ */
 std::string getAstNodeName(tree node)
 {
+  // In C++, use the demangler if possible.
+  if(isFrontendCxx())
+  {
+    std::string name = getDemangledNodeName(node);
+    if(!name.empty()) return name;
+  }
+
   std::string nameStr("");
+
   if (node != NULL_TREE)
   {
     switch (TREE_CODE(node))
@@ -416,26 +485,26 @@ std::string getAstNodeName(tree node)
       }
       case REAL_CST:
       {
-          REAL_VALUE_TYPE d;
-          if (TREE_OVERFLOW (node))
-          {
-            nameStr += "Overflow";
-          }
-          d = TREE_REAL_CST (node);
-          if (REAL_VALUE_ISINF (d))
-          {
-            nameStr += "Inf";
-          }
-          else if (REAL_VALUE_ISNAN (d))
-          {
-            nameStr += "Nan";
-          }
-          else
-          {
-            char str[64];
-            real_to_decimal (str, &d, sizeof (str), 0, 1);
-            nameStr += str;
-          }
+        REAL_VALUE_TYPE d;
+        if (TREE_OVERFLOW (node))
+        {
+          nameStr += "Overflow";
+        }
+        d = TREE_REAL_CST (node);
+        if (REAL_VALUE_ISINF (d))
+        {
+          nameStr += "Inf";
+        }
+        else if (REAL_VALUE_ISNAN (d))
+        {
+          nameStr += "Nan";
+        }
+        else
+        {
+          char str[64];
+          real_to_decimal (str, &d, sizeof (str), 0, 1);
+          nameStr += str;
+        }
         break;
       }
       case STRING_CST:

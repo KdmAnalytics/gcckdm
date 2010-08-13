@@ -5,7 +5,7 @@
 //
 // This file is part of libGccKdm.
 //
-// Foobar is free software: you can redistribute it and/or modify
+// libGccKdm is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
@@ -288,6 +288,12 @@ private:
    * A type declaration may be a typedef, a new class, or an enumeration
    */
   void processAstTypeDecl(tree const typeNode);
+
+  /**
+   * Process a template declaration. Dump all specializations and instantiations.
+   */
+  void processAstTemplateDecl(tree const templateDecl);
+
   void processAstFunctionDeclarationNode(tree const functionDecl);
   void processAstFieldDeclarationNode(tree const fieldDecl);
   void processAstVariableDeclarationNode(tree const varDecl);
@@ -343,9 +349,14 @@ private:
   void writeKdmPointerType(tree const type);
 
   /**
-   * Handles output of enums, classes, and structs
+   * Handles output of enums, and structs, pass through of class to writeKdmClassType
    */
   void writeKdmRecordType(tree const type);
+
+  /**
+   * Handles output of classes
+   */
+  void writeKdmClassType(tree const recordType);
 
   /**
    *

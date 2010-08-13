@@ -96,7 +96,7 @@ public:
   }
   static const KdmPredicate LastUid()
   {
-    return KdmPredicate(KdmPredicate_LastUid, "LastUID");
+    return KdmPredicate(KdmPredicate_LastUid, "lastUID");
   }
   static const KdmPredicate Export()
   {

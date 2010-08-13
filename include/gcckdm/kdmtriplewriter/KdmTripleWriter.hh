@@ -27,6 +27,16 @@
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 #include <boost/shared_ptr.hpp>
+
+//GCC c-common.h defines a null_node macro, boost::multi_index
+//used by boost::graph which causes much breakage we undefine
+//it for the duration of the boost include and restore it after
+#undef null_node
+#include <boost/graph/adjacency_list.hpp>
+
+//restore null_node macro just in case
+#define null_node c_global_trees[CTI_NULL]
+
 #include <gcckdm/utilities/unique_ptr.hpp>
 
 #include "gcckdm/GccKdmConfig.hh"
@@ -37,7 +47,7 @@
 #include "gcckdm/KdmKind.hh"
 #include "gcckdm/kdmtriplewriter/PathHash.hh"
 #include "gcckdm/kdmtriplewriter/TripleWriter.hh"
-
+#include "gcckdm/kdmtriplewriter/UidNode.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriterFwd.hh"
 
 namespace gcckdm
@@ -238,7 +248,8 @@ private:
   typedef std::tr1::unordered_set<tree> TreeSet;
   typedef std::queue<tree> TreeQueue;
   typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
-
+  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
+  typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
 
   /**
    * Returns the id for source file containing the given node
@@ -352,6 +363,13 @@ private:
   long writeKdmSourceRef(long id, tree const var);
   long writeKdmValue(tree const val);
 
+
+  /**
+   * Adds nodes for the given id's if they don't already exist
+   * and adds the relationship between them.
+   */
+  void updateUidGraph(const long parent, const long child);
+
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
   long mKdmElementId; /// The current element id, incremented for each new element
   GimpleWriter mGimpleWriter;
@@ -363,7 +381,14 @@ private:
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
 
+  //Graph to store generated UID's
+  UidGraph mUidGraph;
+
   bool mBodies;
+
+  friend class UidVisitor;
+  class UidVisitor;
+  long mUid;
 };
 
 } // namespace kdmtriplewriter

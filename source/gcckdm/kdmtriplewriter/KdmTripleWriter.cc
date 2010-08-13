@@ -34,9 +34,12 @@
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
-
+#include <boost/graph/depth_first_search.hpp>
+#include <boost/graph/graphviz.hpp>
+#include <fstream>
 namespace
 {
+
 std::string const commentPrefix("# ");
 std::string const unsupportedPrefix("UNSUPPORTED: ");
 
@@ -106,13 +109,24 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
   std::for_each(strs.begin(), strs.end(), CommentWriter(sink, unsupportedPrefix));
 }
 
-KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr) : mKdmSink(kdmSinkPtr), mKdmElementId(KdmElementId_DefaultStart), mBodies(true)
+
+
+KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr)
+  : mKdmSink(kdmSinkPtr),
+    mKdmElementId(KdmElementId_DefaultStart),
+    mUidGraph(),
+    mBodies(true),
+    mUid(0)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
-KdmTripleWriter::KdmTripleWriter(Path const & filename) :
-                                          mKdmSink(new boost::filesystem::ofstream(filename)), mKdmElementId(KdmElementId_DefaultStart)
+KdmTripleWriter::KdmTripleWriter(Path const & filename)
+  : mKdmSink(new boost::filesystem::ofstream(filename)),
+    mKdmElementId(KdmElementId_DefaultStart),
+    mUidGraph(),
+    mBodies(true),
+    mUid(0)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -172,6 +186,54 @@ void KdmTripleWriter::finishKdmGimplePass()
 {
 }
 
+class KdmTripleWriter::UidVisitor : public boost::default_dfs_visitor
+{
+public:
+  explicit UidVisitor(KdmTripleWriter & writer, UidGraph & graph)
+    : mWriter(writer),
+      mGraph(graph)
+  {
+  }
+
+  void discover_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
+  {
+    //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
+    //std::cerr << "Start:" << g[v].elementId << std::endl;
+    mGraph[v].startUid = mWriter.mUid++;
+    mLastVertex = v;
+  }
+
+  void finish_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
+  {
+    //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
+//    std::cerr << "Finish:" << g[v].elementId << std::endl;
+    //A leaf mark uid's identical
+    if (mLastVertex == v)
+    {
+      mGraph[v].endUid = mGraph[v].startUid;
+    }
+    else
+    {
+      mGraph[v].endUid = mGraph[mLastVertex].endUid;
+    }
+
+    mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::Uid(), boost::lexical_cast<std::string>(mGraph[v].startUid));
+
+    //Don't write lastUid if the uid's are the same
+    if (mGraph[v].elementId != mGraph[v].endUid)
+    {
+      mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::LastUid(), boost::lexical_cast<std::string>(mGraph[v].endUid));
+    }
+  }
+private:
+  KdmTripleWriter & mWriter;
+  KdmTripleWriter::UidGraph & mGraph;
+  KdmTripleWriter::Vertex mLastVertex;
+};
+
+
+
+
 void KdmTripleWriter::finishTranslationUnit()
 {
   //Process any nodes that are still left on the queue
@@ -201,6 +263,34 @@ void KdmTripleWriter::finishTranslationUnit()
   {
     std::cerr << boost::diagnostic_information(e);
   }
+
+
+  //Calculate and Write UIDs
+
+  boost::graph_traits<UidGraph>::vertex_iterator i, end;
+  bool foundFlag = false;
+  for (boost::tie(i, end) = boost::vertices(mUidGraph); i != end; ++i)
+  {
+    if (0 == mUidGraph[*i].elementId)
+    {
+      foundFlag = true;
+      break;
+    }
+  }
+
+  if (foundFlag)
+  {
+    KdmTripleWriter::UidVisitor vis(*this, mUidGraph);
+    boost::depth_first_search(mUidGraph, boost::visitor(vis).root_vertex(*i));
+  }
+  else
+  {
+    writeComment("Unable to locate root of UID tree, no UIDs will be written");
+  }
+
+  //  std::ofstream out("graph.viz", std::ios::out);
+  //  boost::write_graphviz(out, mUidGraph);
+
 }
 
 void KdmTripleWriter::processAstNode(tree const ast)
@@ -719,50 +809,50 @@ void KdmTripleWriter::writeUnsupportedComment(std::string const & comment)
 void KdmTripleWriter::writeDefaultKdmModelElements()
 {
   writeTriple(KdmElementId_Segment, KdmPredicate::KdmType(), KdmType::Segment());
-  writeTriple(KdmElementId_Segment, KdmPredicate::Uid(), "0");
+//  writeTriple(KdmElementId_Segment, KdmPredicate::Uid(), "0");
   writeTriple(KdmElementId_Segment, KdmPredicate::LinkId(), "root");
   writeTriple(KdmElementId_CodeModel, KdmPredicate::KdmType(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::Name(), KdmType::CodeModel());
-  writeTriple(KdmElementId_CodeModel, KdmPredicate::Uid(), "1");
+//  writeTriple(KdmElementId_CodeModel, KdmPredicate::Uid(), "1");
   writeTriple(KdmElementId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
-  writeTriple(KdmElementId_Segment, KdmPredicate::Contains(), KdmElementId_CodeModel);
+  writeTripleContains(KdmElementId_Segment, KdmElementId_CodeModel);
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "__WORKBENCH__");
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "__WORKBENCH__");
-  writeTriple(KdmElementId_Segment, KdmPredicate::Contains(), KdmElementId_WorkbenchExtensionFamily);
+  writeTripleContains(KdmElementId_Segment, KdmElementId_WorkbenchExtensionFamily);
   writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
   writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::Name(), "__HIDDEN__");
   writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::LinkId(), "__HIDDEN__");
-  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Contains(), KdmElementId_HiddenStereoType);
+  writeTripleContains(KdmElementId_WorkbenchExtensionFamily, KdmElementId_HiddenStereoType);
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
-  writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Uid(), "2");
+//  writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Uid(), "2");
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::LinkId(), ":code");
-  writeTriple(KdmElementId_CodeModel, KdmPredicate::Contains(), KdmElementId_CodeAssembly);
+  writeTripleContains(KdmElementId_CodeModel, KdmElementId_CodeAssembly);
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::KdmType(), KdmType::LanguageUnit());
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Name(), ":language");
-  writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Uid(), "3");
+//  writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Uid(), "3");
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::LinkId(), ":language");
-  writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_LanguageUnit);
+  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_LanguageUnit);
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Name(), ":derived");
-  writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Uid(), "4");
+//  writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Uid(), "4");
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::LinkId(), ":derived");
-  writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_DerivedSharedUnit);
+  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_DerivedSharedUnit);
   writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
   writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Name(), ":class");
-  writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Uid(), "5");
+//  writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Uid(), "5");
   writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::LinkId(), ":class");
-  writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_ClassSharedUnit);
+  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_ClassSharedUnit);
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::KdmType(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
-  writeTriple(KdmElementId_Segment, KdmPredicate::Contains(), KdmElementId_InventoryModel);
+  writeTripleContains(KdmElementId_Segment,KdmElementId_InventoryModel);
 
   writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
   writeTripleName(KdmElementId_CompilationUnit, mCompilationFile.filename());
   writeTriple(KdmElementId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
-  writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Contains(), KdmElementId_CompilationUnit);
+  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_CompilationUnit);
 
 }
 
@@ -778,7 +868,60 @@ void KdmTripleWriter::writeTripleName(long const subject, std::string const & na
 
 void KdmTripleWriter::writeTripleContains(long const parent, long const child)
 {
+  //add the node(s) to the uid graph
+  updateUidGraph(parent, child);
+
+  //write contains relationship to file
   writeTriple(parent, KdmPredicate::Contains(), child);
+}
+
+void KdmTripleWriter::updateUidGraph(long const parent, long const child)
+{
+  //We check to see if the parent or the child already has a node
+  //in the graph since the creation of subtrees can happen in
+  //any order
+  boost::graph_traits<UidGraph>::vertex_iterator i, end;
+  bool foundParentFlag = false;
+  bool foundChildFlag = false;
+  Vertex parentVertex;
+  Vertex childVertex;
+
+
+  for (boost::tie(i, end) = boost::vertices(mUidGraph); i != end; ++i)
+  {
+    if (parent == mUidGraph[*i].elementId)
+    {
+      foundParentFlag = true;
+      parentVertex = *i;
+    }
+    if (child == mUidGraph[*i].elementId)
+    {
+      foundChildFlag = true;
+      childVertex = *i;
+    }
+    if (foundParentFlag and foundChildFlag)
+    {
+      break;
+    }
+  }
+
+  //If we don't have the parent in graph already create a new vertex otherwise
+  //use the one we found
+  if (not foundParentFlag)
+  {
+    parentVertex = boost::add_vertex(mUidGraph);
+    mUidGraph[parentVertex].elementId = parent;
+  }
+
+  if (not foundChildFlag)
+  {
+    //Create our child vertex
+    childVertex = boost::add_vertex(mUidGraph);
+    mUidGraph[childVertex].elementId = child;
+  }
+
+  //create the edge between them
+  boost::add_edge(parentVertex, childVertex, mUidGraph);
 }
 void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & name)
 {

@@ -277,7 +277,8 @@ void KdmTripleWriter::finishKdmGimplePass()
 {
 }
 
-void KdmTripleWriter::finishTranslationUnit()
+
+void KdmTripleWriter::processNodeQueue()
 {
   //Process any nodes that are still left on the queue
   try
@@ -291,7 +292,10 @@ void KdmTripleWriter::finishTranslationUnit()
   {
     std::cerr << boost::diagnostic_information(e);
   }
+}
 
+void KdmTripleWriter::writeReferencedSharedUnits()
+{
   //Write any left over shared units
   try
   {
@@ -304,8 +308,10 @@ void KdmTripleWriter::finishTranslationUnit()
   {
     std::cerr << boost::diagnostic_information(e);
   }
+}
 
-
+void KdmTripleWriter::writeUids()
+{
   //Calculate and Write UIDs
 
   //First we try to locate our root node
@@ -335,7 +341,13 @@ void KdmTripleWriter::finishTranslationUnit()
   //  Use this to view the graph in dot
   //  std::ofstream out("graph.viz", std::ios::out);
   //  boost::write_graphviz(out, mUidGraph);
+}
 
+void KdmTripleWriter::finishTranslationUnit()
+{
+  processNodeQueue();
+  writeReferencedSharedUnits();
+  //writeUids();
 }
 
 void KdmTripleWriter::processAstNode(tree const ast)

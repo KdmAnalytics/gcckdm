@@ -48,6 +48,9 @@ BinaryOperationKindMap treeCodeToKind =
                               (TRUTH_XOR_EXPR, gcckdm::KdmKind::Xor())
                               (LSHIFT_EXPR, gcckdm::KdmKind::LeftShift())
                               (RSHIFT_EXPR, gcckdm::KdmKind::RightShift())
+                              (BIT_XOR_EXPR, gcckdm::KdmKind::BitXor())
+                              (BIT_AND_EXPR, gcckdm::KdmKind::BitAnd())
+                              (BIT_IOR_EXPR, gcckdm::KdmKind::BitOr())
                               ;
 
 bool isValueNode(tree const node)
@@ -758,13 +761,7 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
       break;
     }
     case PAREN_EXPR:
-    {
-      std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[gimpleRhsCode])
-      % BOOST_CURRENT_FUNCTION));
-      mKdmWriter.writeUnsupportedComment(msg);
-      //            rhsString += "((" + gcckdm::getAstNodeName(rhs) + "))";
-      break;
-    }
+       //Fall Through
     case ABS_EXPR:
     {
       std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[gimpleRhsCode])
@@ -830,18 +827,17 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
         writeKdmUnaryOperation(actionElementId, KdmKind::Negate(), gs);
         break;
       }
+      else if (gimpleRhsCode == BIT_NOT_EXPR)
+      {
+        writeKdmUnaryOperation(actionElementId, KdmKind::BitNot(), gs);
+        break;
+      }
       else
       {
-        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
-        % BOOST_CURRENT_FUNCTION % __LINE__));
+        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])  % BOOST_CURRENT_FUNCTION % __LINE__));
         mKdmWriter.writeUnsupportedComment(msg);
         break;
       }
-      //      else if (rhs_code == BIT_NOT_EXPR)
-      //      {
-      //        mKdmWriter.writeComment("=====Gimple Operation Not Implemented========7");
-      //        //                rhsString += '~';
-      //      }
       //      else if (rhs_code == TRUTH_NOT_EXPR)
       //      {
       //        mKdmWriter.writeComment("=====Gimple Operation Not Implemented========8");
@@ -952,13 +948,19 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
           case NE_EXPR:
           case LSHIFT_EXPR:
           case RSHIFT_EXPR:
-          {
+          case BIT_XOR_EXPR:
+          case BIT_IOR_EXPR:
+          case BIT_AND_EXPR:
+         {
             writeKdmBinaryOperation(actionId, treeCodeToKind.find(gimple_assign_rhs_code(gs))->second, gs);
             break;
           }
           default:
           {
-            mKdmWriter.writeUnsupportedComment(std::string("rhs op_code: (") + op_symbol_code(gimple_assign_rhs_code(gs)) + ") in " + BOOST_CURRENT_FUNCTION );
+            std::string msg(boost::str(boost::format("GIMPLE binary assignment operation '%1%' (%2%) in %3% on line %4%") % op_symbol_code(gimple_assign_rhs_code(gs)) % std::string(tree_code_name[gimple_assign_rhs_code(gs)]) % BOOST_CURRENT_FUNCTION % __LINE__));
+            mKdmWriter.writeUnsupportedComment(msg);
+//            std::string(tree_code_name[gimpleRhsCode])
+//            mKdmWriter.writeUnsupportedComment(std::string("rhs op_code: (") + op_symbol_code(gimple_assign_rhs_code(gs)) + ") in " + BOOST_CURRENT_FUNCTION );
             break;
           }
         }

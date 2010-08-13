@@ -375,6 +375,12 @@ private:
   long writeKdmValue(tree const val);
 
 
+  void processNodeQueue();
+  void writeReferencedSharedUnits();
+  void writeUids();
+
+
+
   /**
    * Adds nodes for the given id's if they don't already exist
    * and adds the relationship between them.

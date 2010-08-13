@@ -2004,8 +2004,8 @@
 								<option id="gnu.cpp.compiler.so.debug.option.optimization.level.2139466821" name="Optimization Level" superClass="gnu.cpp.compiler.so.debug.option.optimization.level" value="gnu.cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.so.debug.option.debugging.level.1300736401" name="Debug Level" superClass="gnu.cpp.compiler.so.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="gnu.cpp.compiler.option.include.paths.291797446" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/usr/lib/gcc/i486-linux-gnu/4.5/plugin/include"/>
 									<listOptionValue builtIn="false" value="&quot;${ProjDirPath}/include&quot;"/>
+									<listOptionValue builtIn="false" value="/usr/lib/gcc/i686-linux-gnu/4.5/plugin/include"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.warnings.pedantic.1674791277" name="Pedantic (-pedantic)" superClass="gnu.cpp.compiler.option.warnings.pedantic" value="false" valueType="boolean"/>
 								<option id="gnu.cpp.compiler.option.other.other.574842161" name="Other flags" superClass="gnu.cpp.compiler.option.other.other" value="-c -fmessage-length=0   -Wno-deprecated" valueType="string"/>

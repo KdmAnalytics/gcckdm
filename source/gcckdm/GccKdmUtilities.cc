@@ -22,14 +22,13 @@
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/GccKdmUtilities.hh"
 
-#include <boost/lexical_cast.hpp>
-#include <boost/current_function.hpp>
 #include <iostream>
 #include <sstream>
+#include <demangle.h> // Required for c++ name demangling
+#include <boost/lexical_cast.hpp>
+#include <boost/current_function.hpp>
 #include <boost/format.hpp>
 
-// Required for c++ name demangling
-#include "demangle.h"
 
 //This is to indicated that the global namespace is not linked in
 tree global_namespace = NULL;

@@ -568,23 +568,31 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
         //Fall Through
       case RECORD_TYPE:
       {
-        // The contained code taken from GCCXML
-        if ((TREE_CODE (typeNode) == RECORD_TYPE) && TYPE_PTRMEMFUNC_P (typeNode))
+        if (isFrontendCxx())
         {
-          // Pointer-to-member-functions are stored in a RECORD_TYPE.
-          std::string msg(str(boost::format("AST Type Node pointer to member-function (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-          writeUnsupportedComment(msg);
-        }
-        else if (!CLASSTYPE_IS_TEMPLATE (typeNode))
-        {
-          // This is a struct or class type.
-          writeKdmRecordType(typeNode);
+          // The contained code taken from GCCXML
+          if ((TREE_CODE (typeNode) == RECORD_TYPE) && TYPE_PTRMEMFUNC_P (typeNode))
+          {
+            // Pointer-to-member-functions are stored in a RECORD_TYPE.
+            std::string msg(str(boost::format("AST Type Node pointer to member-function (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+            writeUnsupportedComment(msg);
+          }
+          else if (!CLASSTYPE_IS_TEMPLATE (typeNode))
+          {
+            // This is a struct or class type.
+            writeKdmRecordType(typeNode);
+          }
+          else
+          {
+            // This is a class template.  We don't want to dump it.
+            std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+            writeUnsupportedComment(msg);
+          }
         }
         else
         {
-          // This is a class template.  We don't want to dump it.
-          std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-          writeUnsupportedComment(msg);
+          // This is a struct or class type.
+          writeKdmRecordType(typeNode);
         }
         break;
       }
@@ -1391,8 +1399,6 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 
 }
 
-
-#include "demangle.h"
 
 /**
  *

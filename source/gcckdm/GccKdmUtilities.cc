@@ -310,11 +310,14 @@ std::string getAstNodeName(tree node)
   // In C++, use the demangler if possible.
   if(isFrontendCxx())
   {
-    std::string name = getDemangledNodeName(node);
-    if(!name.empty()) return name;
+    std::string name(getDemangledNodeName(node));
+    if(!name.empty())
+    {
+      return name;
+    }
   }
 
-  std::string nameStr("");
+  std::string nameStr;
 
   if (node != NULL_TREE)
   {

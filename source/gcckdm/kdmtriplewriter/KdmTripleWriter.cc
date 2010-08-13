@@ -35,16 +35,18 @@
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
 #include <boost/graph/depth_first_search.hpp>
-#include <boost/graph/graphviz.hpp>
+//#include <boost/graph/graphviz.hpp>
 #include <fstream>
 namespace
 {
-
+/// Prefix for all KDM triple format comments
 std::string const commentPrefix("# ");
+
+/// Prefix for all KDM triple unsupported node statements, used in conjunction with commentPrefix
 std::string const unsupportedPrefix("UNSUPPORTED: ");
 
 //If a AST node doesn't have a name use this name
-std::string const unamedNode("<unnamed>");
+std::string const unnamedNode("<unnamed>");
 
 /**
  * Returns the name of the given node or the value of unnamedNode
@@ -55,7 +57,20 @@ std::string const unamedNode("<unnamed>");
  */
 std::string nodeName(tree const node)
 {
-  return gcckdm::getAstNodeName(node);
+  std::string name;
+  if (node == NULL_TREE)
+  {
+    name = unnamedNode;
+  }
+  else
+  {
+    name = gcckdm::getAstNodeName(node);
+    if (name.empty())
+    {
+      name = unnamedNode;
+    }
+  }
+  return name;
 }
 
 /**
@@ -85,6 +100,10 @@ namespace kdmtriplewriter
  */
 struct CommentWriter
 {
+  /**
+   * Constructs a CommentWriter which writes to the given sink and prefixes
+   * every comment line written with the given prefix
+   */
   CommentWriter(KdmTripleWriter::KdmSinkPtr sink, std::string const & prefix = "") :
     mKdmSink(sink), mPrefixStr(prefix)
   {
@@ -92,6 +111,8 @@ struct CommentWriter
 
   /**
    * Writes <code>str</code> to the KdmSink
+   *
+   * @param the str a string to write to the kdmsink
    */
   void operator()(std::string const & str)
   {
@@ -102,6 +123,77 @@ struct CommentWriter
   std::string mPrefixStr;
 };
 
+/**
+ * For every node visited write it's UID and lastUID
+ *
+ * For use with boost::depth_first_search
+ */
+class KdmTripleWriter::UidVisitor : public boost::default_dfs_visitor
+{
+public:
+  /**
+   * Constructs a visitor that can write the required triples using the
+   * given writer and modify the graph to include new/updated values
+   *
+   * Have to include the graph as a non-const reference here to
+   * allow updating of vertex properties.  The graph that is passed
+   * to the functions while visiting is a constant graph.  While
+   * const_cast could be used because we know that we aren't modifying
+   * the graph in this visitor I prefer to avoid casting when possible
+   *
+   * @param the writer to use to write triples
+   * @param graph the non-const instance of the graph to modify while visiting
+   */
+  UidVisitor(KdmTripleWriter & writer, UidGraph & graph)
+    : mWriter(writer),
+      mGraph(graph)
+  {
+  }
+
+  void discover_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
+  {
+    //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
+    //std::cerr << "Start:" << g[v].elementId << std::endl;
+    mGraph[v].startUid = mWriter.mUid++;
+    mLastVertex = v;
+  }
+
+  void finish_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
+  {
+    //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
+//    std::cerr << "Finish:" << g[v].elementId << std::endl;
+    //A leaf mark uid's identical
+    if (mLastVertex == v)
+    {
+      mGraph[v].endUid = mGraph[v].startUid;
+    }
+    else
+    {
+      mGraph[v].endUid = mGraph[mLastVertex].endUid;
+    }
+
+    mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::Uid(), boost::lexical_cast<std::string>(mGraph[v].startUid));
+
+    //Don't write lastUid if the uid's are the same
+    if (mGraph[v].elementId != mGraph[v].endUid)
+    {
+      mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::LastUid(), boost::lexical_cast<std::string>(mGraph[v].endUid));
+    }
+  }
+private:
+  KdmTripleWriter & mWriter;
+  KdmTripleWriter::UidGraph & mGraph;
+  KdmTripleWriter::Vertex mLastVertex;
+};
+
+
+/**
+ * Tokenizes the given string by looking for newline characters writes each token
+ * as a seperate unsupported comment using the CommentWriter function object
+ *
+ * @param sink the destination of the comment
+ * @param msg the string to output with the unsupported prefix
+ */
 void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const & msg)
 {
   std::vector<std::string> strs;
@@ -153,7 +245,6 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
   {
     //Ensure we hav the complete path
     mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
-
     writeVersionHeader();
     writeDefaultKdmModelElements();
     writeKdmSourceFile(mCompilationFile);
@@ -186,54 +277,6 @@ void KdmTripleWriter::finishKdmGimplePass()
 {
 }
 
-class KdmTripleWriter::UidVisitor : public boost::default_dfs_visitor
-{
-public:
-  explicit UidVisitor(KdmTripleWriter & writer, UidGraph & graph)
-    : mWriter(writer),
-      mGraph(graph)
-  {
-  }
-
-  void discover_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
-  {
-    //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
-    //std::cerr << "Start:" << g[v].elementId << std::endl;
-    mGraph[v].startUid = mWriter.mUid++;
-    mLastVertex = v;
-  }
-
-  void finish_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
-  {
-    //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
-//    std::cerr << "Finish:" << g[v].elementId << std::endl;
-    //A leaf mark uid's identical
-    if (mLastVertex == v)
-    {
-      mGraph[v].endUid = mGraph[v].startUid;
-    }
-    else
-    {
-      mGraph[v].endUid = mGraph[mLastVertex].endUid;
-    }
-
-    mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::Uid(), boost::lexical_cast<std::string>(mGraph[v].startUid));
-
-    //Don't write lastUid if the uid's are the same
-    if (mGraph[v].elementId != mGraph[v].endUid)
-    {
-      mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::LastUid(), boost::lexical_cast<std::string>(mGraph[v].endUid));
-    }
-  }
-private:
-  KdmTripleWriter & mWriter;
-  KdmTripleWriter::UidGraph & mGraph;
-  KdmTripleWriter::Vertex mLastVertex;
-};
-
-
-
-
 void KdmTripleWriter::finishTranslationUnit()
 {
   //Process any nodes that are still left on the queue
@@ -248,8 +291,6 @@ void KdmTripleWriter::finishTranslationUnit()
   {
     std::cerr << boost::diagnostic_information(e);
   }
-
-
 
   //Write any left over shared units
   try
@@ -267,6 +308,8 @@ void KdmTripleWriter::finishTranslationUnit()
 
   //Calculate and Write UIDs
 
+  //First we try to locate our root node
+  //it should be the segment but we do this just in case.....
   boost::graph_traits<UidGraph>::vertex_iterator i, end;
   bool foundFlag = false;
   for (boost::tie(i, end) = boost::vertices(mUidGraph); i != end; ++i)
@@ -278,8 +321,10 @@ void KdmTripleWriter::finishTranslationUnit()
     }
   }
 
+
   if (foundFlag)
   {
+    //Perform a depth_first_search using the segment as our starting point
     KdmTripleWriter::UidVisitor vis(*this, mUidGraph);
     boost::depth_first_search(mUidGraph, boost::visitor(vis).root_vertex(*i));
   }
@@ -287,7 +332,7 @@ void KdmTripleWriter::finishTranslationUnit()
   {
     writeComment("Unable to locate root of UID tree, no UIDs will be written");
   }
-
+  //  Use this to view the graph in dot
   //  std::ofstream out("graph.viz", std::ios::out);
   //  boost::write_graphviz(out, mUidGraph);
 
@@ -439,8 +484,8 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
 
   // Get the name for the typedef, if available
   tree id (DECL_NAME (typeDecl));
-  std::string name(id ? IDENTIFIER_POINTER (id) : "<unnamed>");
-  writeTripleName(typedefKdmElementId, name);
+  std::string name(id ? nodeName(id) : unnamedNode);
+  writeTripleName(typedefKdmElementId, nodeName(id));
 
   long typeKdmElementId = getReferenceId(typeNode);
   writeTriple(typedefKdmElementId, KdmPredicate::Type(), typeKdmElementId);
@@ -685,7 +730,8 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
-/** We do not currently use the following tests from GCCXML that provide additional information:
+/**
+ * We do not currently use the following tests from GCCXML that provide additional information:
  *
  *   Explicit:   DECL_NONCONVERTING_P (d)
  *   Const:      DECL_CONST_MEMFUNC_P (fd)
@@ -931,11 +977,9 @@ void KdmTripleWriter::writeUnsupportedComment(std::string const & comment)
 void KdmTripleWriter::writeDefaultKdmModelElements()
 {
   writeTriple(KdmElementId_Segment, KdmPredicate::KdmType(), KdmType::Segment());
-//  writeTriple(KdmElementId_Segment, KdmPredicate::Uid(), "0");
   writeTriple(KdmElementId_Segment, KdmPredicate::LinkId(), "root");
   writeTriple(KdmElementId_CodeModel, KdmPredicate::KdmType(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::Name(), KdmType::CodeModel());
-//  writeTriple(KdmElementId_CodeModel, KdmPredicate::Uid(), "1");
   writeTriple(KdmElementId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
   writeTripleContains(KdmElementId_Segment, KdmElementId_CodeModel);
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
@@ -948,34 +992,28 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTripleContains(KdmElementId_WorkbenchExtensionFamily, KdmElementId_HiddenStereoType);
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
-//  writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Uid(), "2");
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::LinkId(), ":code");
   writeTripleContains(KdmElementId_CodeModel, KdmElementId_CodeAssembly);
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::KdmType(), KdmType::LanguageUnit());
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Name(), ":language");
-//  writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Uid(), "3");
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::LinkId(), ":language");
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_LanguageUnit);
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Name(), ":derived");
-//  writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Uid(), "4");
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::LinkId(), ":derived");
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_DerivedSharedUnit);
   writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
   writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Name(), ":class");
-//  writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Uid(), "5");
   writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::LinkId(), ":class");
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_ClassSharedUnit);
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::KdmType(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
   writeTripleContains(KdmElementId_Segment,KdmElementId_InventoryModel);
-
   writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
   writeTripleName(KdmElementId_CompilationUnit, mCompilationFile.filename());
   writeTriple(KdmElementId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_CompilationUnit);
-
 }
 
 void KdmTripleWriter::writeTripleKdmType(long const subject, KdmType const & object)
@@ -1007,8 +1045,6 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
   bool foundChildFlag = false;
   Vertex parentVertex;
   Vertex childVertex;
-
-
   for (boost::tie(i, end) = boost::vertices(mUidGraph); i != end; ++i)
   {
     if (parent == mUidGraph[*i].elementId)
@@ -1303,7 +1339,6 @@ void KdmTripleWriter::writeKdmPointerType(tree const pointerType)
   processAstNode(t2);
 
   writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
-
 }
 
 void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
@@ -1315,7 +1350,6 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   tree t2(TYPE_MAIN_VARIANT(treeType));
   long arrayTypeKdmElementId = getReferenceId(t2);
   writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
-
 }
 
 /**
@@ -1352,7 +1386,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     writeTripleKdmType(structId, KdmType::RecordType());
     std::string name;
     //check to see if we are an anonymous struct
-    name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
+    name = (isAnonymousStruct(mainRecordType)) ? unnamedNode : nodeName(mainRecordType);
     writeTripleName(structId, name);
 
     if (COMPLETE_TYPE_P (mainRecordType))
@@ -1388,15 +1422,12 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
           }
         }
       }
-
     }
 
     writeKdmSourceRef(structId, mainRecordType);
-
     writeTripleContains(compilationUnitId, structId);
   }
   //    std::cerr << "======================= End of Record Type\n";
-
 }
 
 
@@ -1413,7 +1444,7 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   writeTripleKdmType(classId, KdmType::ClassUnit());
   std::string name;
   //check to see if we are an anonymous class
-  name = (isAnonymousStruct(mainRecordType)) ? unamedNode : nodeName(mainRecordType);
+  name = (isAnonymousStruct(mainRecordType)) ? unnamedNode : nodeName(mainRecordType);
   writeTripleName(classId, name);
 
   // Base class information
@@ -1428,13 +1459,17 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
       case TYPE_DECL:
       {
         if (!DECL_SELF_REFERENCE_P (d))
+        {
           processAstNode(d);
+        }
         break;
       }
       case FIELD_DECL:
       {
         if (!DECL_ARTIFICIAL (d))
+        {
           processAstNode(d);
+        }
         break;
       }
       default:
@@ -1448,7 +1483,9 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   for (tree d (TYPE_METHODS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
   {
     if (!DECL_ARTIFICIAL (d))
+    {
       processAstNode(d);
+    }
   }
 
   writeKdmSourceRef(classId, mainRecordType);

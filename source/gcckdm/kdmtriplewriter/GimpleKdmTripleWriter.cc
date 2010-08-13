@@ -254,10 +254,14 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
   tree_code code = TREE_CODE (op0);
   switch (code)
   {
+    case VAR_DECL:
+    case PARM_DECL:
     case FUNCTION_DECL:
     {
       break;
     }
+    case INDIRECT_REF:
+    case NOP_EXPR:
     case ADDR_EXPR:
     {
       op0 = TREE_OPERAND(op0, 0);
@@ -266,8 +270,7 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
     }
     default:
     {
-      std::string msg(boost::str(boost::format("GIMPLE call statement (%1%) in %2%") % std::string(tree_code_name[TREE_CODE(op0)])
-      % BOOST_CURRENT_FUNCTION));
+      std::string msg(boost::str(boost::format("GIMPLE call statement (%1%) in %2%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION));
       mKdmWriter.writeUnsupportedComment(msg);
     }
     break;
@@ -849,22 +852,18 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
       //        //                rhsString += "[" + std::string(tree_code_name[rhs_code]) + "]";
       //      }
 
-      if (op_prio(rhsNode) < op_code_prio(gimpleRhsCode))
-      {
-        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
-        % BOOST_CURRENT_FUNCTION % __LINE__));
-        mKdmWriter.writeUnsupportedComment(msg);
-        //        rhsString += "=====Gimple Operation Not Implemented========11";
-        //                rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
-      }
-      else
-      {
-        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
-        % BOOST_CURRENT_FUNCTION % __LINE__));
-        mKdmWriter.writeUnsupportedComment(msg);
-        //        rhsString += "=====Gimple Operation Not Implemented========12";
-        //                rhsString += gcckdm::getAstNodeName(rhs);
-      }
+//      if (op_prio(rhsNode) < op_code_prio(gimpleRhsCode))
+//      {
+//        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
+//        % BOOST_CURRENT_FUNCTION % __LINE__));
+//        mKdmWriter.writeUnsupportedComment(msg);
+//      }
+//      else
+//      {
+//        std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
+//        % BOOST_CURRENT_FUNCTION % __LINE__));
+//        mKdmWriter.writeUnsupportedComment(msg);
+//      }
       break;
     }
   }

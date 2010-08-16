@@ -641,11 +641,6 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
 {
   long actionId = mKdmWriter.getNextElementId();
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::Call());
-
-  long callId = mKdmWriter.getNextElementId();
-  mKdmWriter.writeTripleKdmType(callId, KdmType::Calls());
-  mKdmWriter.writeTriple(callId, KdmPredicate::From(), actionId);
 
   tree op0 = gimple_call_fn(gs);
   if (TREE_CODE (op0) == NON_LVALUE_EXPR)
@@ -654,8 +649,23 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
   }
   tree t(resolveCall(op0));
   long callableId(getReferenceId(t));
-  mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
-  mKdmWriter.writeTripleContains(actionId, callId);
+
+  if (TREE_CODE(TREE_TYPE(t)) == POINTER_TYPE)
+  {
+    //it's a function pointer call
+    mKdmWriter.writeTripleKind(actionId, KdmKind::PtrCall());
+    writeKdmActionRelation(KdmType::Addresses(), actionId, callableId);
+  }
+  else
+  {
+    //regular call
+    mKdmWriter.writeTripleKind(actionId, KdmKind::Call());
+    long callId = mKdmWriter.getNextElementId();
+    mKdmWriter.writeTripleKdmType(callId, KdmType::Calls());
+    mKdmWriter.writeTriple(callId, KdmPredicate::From(), actionId);
+    mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
+    mKdmWriter.writeTripleContains(actionId, callId);
+  }
 
   //Read each parameter
   if (gimple_call_num_args(gs) > 0)
@@ -682,6 +692,7 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
     }
   }
 
+
   //optional write
   tree lhs = gimple_call_lhs(gs);
   if (lhs)
@@ -692,6 +703,7 @@ long GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
 
   long blockId = getBlockReferenceId(gimple_location(gs));
   mKdmWriter.writeTripleContains(blockId, actionId);
+
 
   return actionId;
 }
@@ -1109,7 +1121,10 @@ void GimpleKdmTripleWriter::writeKdmPtrReplace(long const actionId, gimple const
 
   writeKdmActionRelation(KdmType::Reads(), actionId, rhsId);
   writeKdmActionRelation(KdmType::Addresses(), actionId, lhsId);
-  mKdmWriter.writeComment("FIXME: There could be a writes relationship here.. ");
+
+  //Have to determine if there is a bug in the spec here or not
+  //where does the write relationship go?
+  mKdmWriter.writeComment("FIXME: KDM spec states there should be a writes relationship here.. ");
   //writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
 
 
@@ -1163,7 +1178,10 @@ void GimpleKdmTripleWriter::writeKdmArrayReplace(long const actionElementId, gim
   writeKdmActionRelation(KdmType::Addresses(), actionElementId, op0Id); //data element
   writeKdmActionRelation(KdmType::Reads(), actionElementId, op1Id); // index
   writeKdmActionRelation(KdmType::Reads(), actionElementId, rhsId); //new value
-  mKdmWriter.writeComment("FIXME: There could be a writes relationship here.. ");
+
+  //Have to determine if there is a bug in the spec here or not
+  //where does the write relationship go?
+  mKdmWriter.writeComment("FIXME: KDM spec states there should be a writes relationship here..");
 }
 
 /** Write to LHS

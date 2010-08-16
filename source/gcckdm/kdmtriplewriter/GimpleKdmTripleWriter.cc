@@ -282,10 +282,10 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
   long retVal;
-  if (TREE_CODE(ast) == ARRAY_REF)
-  {
-    retVal = 0;
-  }
+//  if (TREE_CODE(ast) == REFERENCE_TYPE)
+//  {
+//    retVal = 0;
+//  }
   retVal = mKdmWriter.getReferenceId(ast);
   return retVal;
 }

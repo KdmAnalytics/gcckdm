@@ -289,6 +289,7 @@ private:
    */
   void processAstTypeDecl(tree const typeNode);
 
+  void processAstRecordTypeNode(tree const typeNode);
   /**
    * Process a template declaration. Dump all specializations and instantiations.
    */

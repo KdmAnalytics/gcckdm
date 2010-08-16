@@ -205,6 +205,8 @@ private:
 
   tree resolveCall(tree const tree);
 
+
+
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;
 

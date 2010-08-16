@@ -36,6 +36,7 @@ private:
     KdmKind_Subtract,
     KdmKind_Multiply,
     KdmKind_Divide,
+    KdmKind_Remainder,
     KdmKind_Negate,
     KdmKind_Return,
     KdmKind_Register,
@@ -101,6 +102,7 @@ public:
   static const KdmKind Subtract()             { return KdmKind(KdmKind_Subtract, "Subtract");  }
   static const KdmKind Multiply()             { return KdmKind(KdmKind_Multiply, "Multiply");  }
   static const KdmKind Divide()               { return KdmKind(KdmKind_Divide, "Divide");  }
+  static const KdmKind Remainder()            { return KdmKind(KdmKind_Remainder, "Remainder");  }
   static const KdmKind Negate()               { return KdmKind(KdmKind_Negate, "Negate");  }
   static const KdmKind Return()               { return KdmKind(KdmKind_Return, "Return");  }
   static const KdmKind Register()             { return KdmKind(KdmKind_Register, "register"); }

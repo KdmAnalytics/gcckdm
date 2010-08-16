@@ -44,6 +44,7 @@ BinaryOperationKindMap treeCodeToKind =
                               (EQ_EXPR, gcckdm::KdmKind::Equals())
                               (NE_EXPR, gcckdm::KdmKind::NotEqual())
                               (TRUTH_AND_EXPR, gcckdm::KdmKind::And())
+                              (TRUNC_MOD_EXPR, gcckdm::KdmKind::Remainder())
                               (TRUTH_OR_EXPR, gcckdm::KdmKind::Or())
                               (TRUTH_XOR_EXPR, gcckdm::KdmKind::Xor())
                               (LSHIFT_EXPR, gcckdm::KdmKind::LeftShift())
@@ -503,14 +504,14 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
 
     }
 
-    if (mHasLastActionId and hasActionId)
+    //After the first action element we need to hook up the flows
+    if (mHasLastActionId)
     {
       long flowId = mKdmWriter.getNextElementId();
-      mKdmWriter.writeTripleKdmType(flowId, KdmType::Flow());
-      mKdmWriter.writeTriple(flowId, KdmPredicate::From(), mLastActionId);
-      mKdmWriter.writeTriple(flowId, KdmPredicate::To(), actionId);
+      writeKdmActionRelation(KdmType::Flow(), mLastActionId, flowId);
     }
 
+    //the gimple we just processed returned an action remember it
     if (hasActionId)
     {
       mLastActionId = actionId;
@@ -971,6 +972,7 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
           case MINUS_EXPR:
           case MULT_EXPR:
           case RDIV_EXPR:
+          case TRUNC_MOD_EXPR:
           case LT_EXPR:
           case LE_EXPR:
           case GT_EXPR:

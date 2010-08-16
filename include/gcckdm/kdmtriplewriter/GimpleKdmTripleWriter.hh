@@ -225,6 +225,9 @@ private:
   bool mLabelFlag;
   long mLastLabelId;
   long mRegisterVariableIndex;
+
+  long mLastActionId;
+  bool mHasLastActionId;
 };
 
 } // namespace kdmtriplewriter

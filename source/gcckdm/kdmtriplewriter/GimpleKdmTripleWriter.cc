@@ -218,7 +218,12 @@ namespace kdmtriplewriter
 
 
 GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter) :
-      mKdmWriter(tripleWriter), mLabelFlag(false), mLastLabelId(0), mRegisterVariableIndex(0)
+      mKdmWriter(tripleWriter),
+      mLabelFlag(false),
+      mLastLabelId(0),
+      mRegisterVariableIndex(0),
+      mLastActionId(0),
+      mHasLastActionId(false)
 {
 }
 
@@ -238,6 +243,9 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   {
     mCurrentFunctionDeclarationNode = functionDeclNode;
     mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
+
+    //
+    mHasLastActionId = false;
 
     mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
@@ -282,10 +290,6 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
   long retVal;
-//  if (TREE_CODE(ast) == REFERENCE_TYPE)
-//  {
-//    retVal = 0;
-//  }
   retVal = mKdmWriter.getReferenceId(ast);
   return retVal;
 }
@@ -498,6 +502,22 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
 
     }
+
+    if (mHasLastActionId and hasActionId)
+    {
+      long flowId = mKdmWriter.getNextElementId();
+      mKdmWriter.writeTripleKdmType(flowId, KdmType::Flow());
+      mKdmWriter.writeTriple(flowId, KdmPredicate::From(), mLastActionId);
+      mKdmWriter.writeTriple(flowId, KdmPredicate::To(), actionId);
+    }
+
+    if (hasActionId)
+    {
+      mLastActionId = actionId;
+      mHasLastActionId = true;
+    }
+
+
     // If the last gimple statement we processed was a label or some goto's
     // we have to do a little magic here to get the flows
     // correct... some labels/goto's don't have line numbers so we add
@@ -1395,12 +1415,12 @@ long GimpleKdmTripleWriter::writeKdmPtrParam(long const callActionId, tree const
 }
 
 
-
 long GimpleKdmTripleWriter::writeKdmStorableUnit(long const typeId, expanded_location const & xloc)
 {
   long unitId = mKdmWriter.getNextElementId();
   mKdmWriter.writeTripleKdmType(unitId, KdmType::StorableUnit());
   mKdmWriter.writeTripleName(unitId, "M." + boost::lexical_cast<std::string>(++mRegisterVariableIndex));
+  mKdmWriter.writeTripleKind(unitId, KdmKind::Register());
   mKdmWriter.writeTriple(unitId, KdmPredicate::Type(), typeId);
   mKdmWriter.writeKdmSourceRef(unitId, xloc);
   return unitId;

@@ -316,6 +316,11 @@ long GimpleKdmTripleWriter::getRhsReferenceId(tree const rhs)
   {
     rhsId = writeKdmPtrParam(rhs, gcckdm::locationOf(rhs));
   }
+  else if (TREE_CODE(rhs) == ARRAY_REF)
+  {
+    long arrayId = mKdmWriter.getNextElementId();
+    rhsId = writeKdmArraySelect(arrayId, NULL_TREE, rhs, gcckdm::locationOf(rhs), true);
+  }
   else
   {
     rhsId = getReferenceId(rhs);
@@ -401,8 +406,8 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     //After the first action element we need to hook up the flows
     if (mHasLastActionId)
     {
-      long flowId = mKdmWriter.getNextElementId();
-      writeKdmActionRelation(KdmType::Flow(), mLastActionId, flowId);
+      //long flowId = mKdmWriter.getNextElementId();
+      //writeKdmActionRelation(KdmType::Flow(), mLastActionId, flowId);
     }
 
     //the gimple we just processed returned an action remember it

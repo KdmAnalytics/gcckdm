@@ -787,37 +787,37 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
 
 void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const actionId, gimple const gs)
 {
-  std::string rhsString;
+//  std::string rhsString;
   enum tree_code code = gimple_assign_rhs_code(gs);
   switch (code)
   {
-    case COMPLEX_EXPR:
-    case MIN_EXPR:
-    case MAX_EXPR:
-    case VEC_WIDEN_MULT_HI_EXPR:
-    case VEC_WIDEN_MULT_LO_EXPR:
-    case VEC_PACK_TRUNC_EXPR:
-    case VEC_PACK_SAT_EXPR:
-    case VEC_PACK_FIX_TRUNC_EXPR:
-    case VEC_EXTRACT_EVEN_EXPR:
-    case VEC_EXTRACT_ODD_EXPR:
-    case VEC_INTERLEAVE_HIGH_EXPR:
-    case VEC_INTERLEAVE_LOW_EXPR:
-    {
-      rhsString += tree_code_name[static_cast<int> (code)];
-      std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-      rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ">";
-      break;
-    }
+//    case COMPLEX_EXPR:
+//    case MIN_EXPR:
+//    case MAX_EXPR:
+//    case VEC_WIDEN_MULT_HI_EXPR:
+//    case VEC_WIDEN_MULT_LO_EXPR:
+//    case VEC_PACK_TRUNC_EXPR:
+//    case VEC_PACK_SAT_EXPR:
+//    case VEC_PACK_FIX_TRUNC_EXPR:
+//    case VEC_EXTRACT_EVEN_EXPR:
+//    case VEC_EXTRACT_ODD_EXPR:
+//    case VEC_INTERLEAVE_HIGH_EXPR:
+//    case VEC_INTERLEAVE_LOW_EXPR:
+//    {
+//      rhsString += tree_code_name[static_cast<int> (code)];
+//      std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
+//      rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ">";
+//      break;
+//    }
     default:
     {
       if (op_prio(gimple_assign_rhs1(gs)) <= op_code_prio(code))
       {
-        rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ")";
+        //rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ")";
       }
       else
       {
-        rhsString += gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs))) + " ";
+        //rhsString += gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs))) + " ";
 
         switch (gimple_assign_rhs_code(gs))
         {
@@ -852,14 +852,14 @@ void GimpleKdmTripleWriter::processGimpleBinaryAssignStatement(long const action
           }
         }
       }
-      if (op_prio(gimple_assign_rhs2(gs)) <= op_code_prio(code))
-      {
-        rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ")";
-      }
-      else
-      {
-        rhsString += gcckdm::getAstNodeName(gimple_assign_rhs2(gs));
-      }
+//      if (op_prio(gimple_assign_rhs2(gs)) <= op_code_prio(code))
+//      {
+//        rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ")";
+//      }
+//      else
+//      {
+//        rhsString += gcckdm::getAstNodeName(gimple_assign_rhs2(gs));
+//      }
     }
   }
   //std::cerr << "rhsbinaryString: " << rhsString << std::endl;

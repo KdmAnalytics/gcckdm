@@ -515,6 +515,44 @@ std::string getAstNodeName(tree node)
         prettyPrintStringCst(nameStr, str);
         break;
       }
+      case ARRAY_REF:
+      {
+        tree op0 = TREE_OPERAND (node, 0);
+        if (op_prio (op0) < op_prio (node))
+        {
+          nameStr += "(";
+        }
+        nameStr += getAstNodeName(op0);
+        if (op_prio (op0) < op_prio (node))
+        {
+          nameStr += ")";
+        }
+        nameStr += "[";
+        nameStr += getAstNodeName(TREE_OPERAND (node, 1));
+        nameStr += "]";
+        break;
+      }
+      case ADDR_EXPR:
+      {
+        if ((TREE_CODE (TREE_OPERAND (node, 0)) == STRING_CST
+          || TREE_CODE (TREE_OPERAND (node, 0)) == FUNCTION_DECL))
+        {
+          //Do Nothing
+        }
+        else
+        {
+          nameStr += op_symbol_code (TREE_CODE (node));
+        }
+        if (op_prio (TREE_OPERAND (node, 0)) < op_prio (node))
+        {
+          nameStr += '(' + getAstNodeName(TREE_OPERAND (node, 0)) + ')';
+        }
+        else
+        {
+          nameStr += getAstNodeName(TREE_OPERAND (node, 0));
+        }
+        break;
+      }
       default:
       {
         std::cerr << "UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;

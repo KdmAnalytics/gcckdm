@@ -687,15 +687,11 @@ void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
   writeKdmItemUnit(fieldDecl);
 }
 
-//void KdmTripleWriter::processAstLabelDeclarationNode(tree const labelDecl)
-//{
-//  //mGimpleWriter ->//writeKdm
-//}
-
 void KdmTripleWriter::processAstValueNode(tree const val)
 {
   writeKdmValue(val);
 }
+
 
 /**
  *
@@ -1272,13 +1268,20 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
     //the node is located in the translation unit; return the id for the translation unit
     //unless it's external in which case we don't know where it is
     //in which case we put it in the derivedSharedUnit by default
-    if (!DECL_EXTERNAL(node))
+    if (DECL_P(node))
     {
-      unitId = KdmElementId_CompilationUnit;
+      if (!DECL_EXTERNAL(node))
+      {
+        unitId = KdmElementId_CompilationUnit;
+      }
+      else
+      {
+        unitId = KdmElementId_DerivedSharedUnit;
+      }
     }
     else
     {
-      unitId = KdmElementId_DerivedSharedUnit;
+      unitId = KdmElementId_CompilationUnit;
     }
   }
   return unitId;

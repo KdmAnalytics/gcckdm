@@ -70,16 +70,24 @@ std::string getUnaryRhsString(gimple const gs)
   switch (gimpleRhsCode)
   {
     case VIEW_CONVERT_EXPR:
+      //Fall Through
     case ASSERT_EXPR:
+    {
       rhsString += gcckdm::getAstNodeName(rhs);
       break;
-
+    }
     case FIXED_CONVERT_EXPR:
+      //Fall Through
     case ADDR_SPACE_CONVERT_EXPR:
+      //Fall Through
     case FIX_TRUNC_EXPR:
+      //Fall Through
     case FLOAT_EXPR:
+      //Fall Through
     case NOP_EXPR:
+      //Fall Through
     case CONVERT_EXPR:
+    {
       rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
       if (op_prio(rhs) < op_code_prio(gimpleRhsCode))
       {
@@ -90,16 +98,19 @@ std::string getUnaryRhsString(gimple const gs)
         rhsString += gcckdm::getAstNodeName(rhs);
       }
       break;
-
+    }
     case PAREN_EXPR:
+    {
       rhsString += "((" + gcckdm::getAstNodeName(rhs) + "))";
       break;
-
+    }
     case ABS_EXPR:
+    {
       rhsString += "ABS_EXPR <" + gcckdm::getAstNodeName(rhs) + ">";
       break;
-
+    }
     default:
+    {
       if (TREE_CODE_CLASS(gimpleRhsCode) == tcc_declaration || TREE_CODE_CLASS(gimpleRhsCode) == tcc_constant || TREE_CODE_CLASS(gimpleRhsCode) == tcc_reference
           || gimpleRhsCode == SSA_NAME || gimpleRhsCode == ADDR_EXPR || gimpleRhsCode == CONSTRUCTOR)
       {
@@ -132,6 +143,7 @@ std::string getUnaryRhsString(gimple const gs)
         rhsString += gcckdm::getAstNodeName(rhs);
       }
       break;
+    }
   }
   return rhsString;
 }
@@ -143,16 +155,27 @@ std::string getBinaryRhsString(gimple const gs)
   switch (code)
   {
     case COMPLEX_EXPR:
+      //Fall Through
     case MIN_EXPR:
+      //Fall Through
     case MAX_EXPR:
+      //Fall Through
     case VEC_WIDEN_MULT_HI_EXPR:
+      //Fall Through
     case VEC_WIDEN_MULT_LO_EXPR:
+      //Fall Through
     case VEC_PACK_TRUNC_EXPR:
+      //Fall Through
     case VEC_PACK_SAT_EXPR:
+      //Fall Through
     case VEC_PACK_FIX_TRUNC_EXPR:
+      //Fall Through
     case VEC_EXTRACT_EVEN_EXPR:
+      //Fall Through
     case VEC_EXTRACT_ODD_EXPR:
+      //Fall Through
     case VEC_INTERLEAVE_HIGH_EXPR:
+      //Fall Through
     case VEC_INTERLEAVE_LOW_EXPR:
     {
       rhsString += tree_code_name[static_cast<int> (code)];
@@ -187,26 +210,6 @@ std::string getBinaryRhsString(gimple const gs)
 std::string getTernaryRhsString(gimple const gs)
 {
   return "<TODO: ternary not implemented>";
-  //    ///Might not need this function I don't know
-  //
-  //    std::string rhsString();
-  //    enum tree_code code = gimple_assign_rhs_code (gs);
-  //    switch (code)
-  //      {
-  //      case WIDEN_MULT_PLUS_EXPR:
-  //      case WIDEN_MULT_MINUS_EXPR:
-  //      {
-  //          rhsString += tree_code_name [static_cast<int>(code)];
-  //          std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-  //          rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs3(gs)) + ">";
-  //        break;
-  //      }
-  //
-  //      default:
-  //      {
-  //        gcc_unreachable ();
-  //      }
-
 }
 
 } // namespace
@@ -305,6 +308,10 @@ long GimpleKdmTripleWriter::getRhsReferenceId(tree const rhs)
     rhsId = getReferenceId(rhs);
     mKdmWriter.processAstNode(rhs);
   }
+  if (TREE_CODE(rhs) == CONSTRUCTOR)
+  {
+    rhsId = getReferenceId(TREE_TYPE(rhs));
+  }
   else
   {
     rhsId = getReferenceId(rhs);
@@ -333,11 +340,6 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
   {
     switch (gimple_code(gs))
     {
-      //      case GIMPLE_ASM:
-      //      {
-      //        gimple_not_implemented_yet(mKdmWriter, gs);
-      //        break;
-      //      }
       case GIMPLE_ASSIGN:
       {
         actionId = processGimpleAssignStatement(gs);
@@ -371,11 +373,6 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         hasActionId = false;
         break;
       }
-      //      case GIMPLE_NOP:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
       case GIMPLE_RETURN:
       {
         actionId = processGimpleReturnStatement(gs);
@@ -387,113 +384,6 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         hasActionId = false;
         break;
       }
-      //      case GIMPLE_TRY:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_PHI:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_PARALLEL:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_TASK:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_ATOMIC_LOAD:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_ATOMIC_STORE:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_FOR:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_CONTINUE:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_SINGLE:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_RETURN:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_SECTIONS:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_SECTIONS_SWITCH:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_MASTER:
-      //      case GIMPLE_OMP_ORDERED:
-      //      case GIMPLE_OMP_SECTION:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_OMP_CRITICAL:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_CATCH:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_EH_FILTER:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_EH_MUST_NOT_THROW:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_RESX:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_EH_DISPATCH:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_DEBUG:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
-      //      case GIMPLE_PREDICT:
-      //      {
-      //        gimple_not_implemented_yet(gs);
-      //        break;
-      //      }
       default:
       {
         std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))]
@@ -819,6 +709,10 @@ void GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(long const actionE
         else if (TREE_CODE(lhs) == COMPONENT_REF)
         {
           writeKdmMemberReplace(actionElementId, gs);
+        }
+        else if (TREE_CODE(lhs) == ARRAY_REF)
+        {
+          writeKdmArrayReplace(actionElementId, gs);
         }
         else if (TREE_CODE(lhs) == ARRAY_REF)
         {

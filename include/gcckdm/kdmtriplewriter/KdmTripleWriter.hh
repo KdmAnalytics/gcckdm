@@ -281,31 +281,35 @@ private:
     KdmElementId_DefaultStart,
   };
 
+  /**
+   * Process the AST Constructor node
+   */
   void processAstDeclarationNode(tree const decl);
-  void processAstTypeNode(tree const decl);
-
-  /**
-   * A type declaration may be a typedef, a new class, or an enumeration
-   */
-  void processAstTypeDecl(tree const typeNode);
-
-  void processAstRecordTypeNode(tree const typeNode);
-  /**
-   * Process a template declaration. Dump all specializations and instantiations.
-   */
-  void processAstTemplateDecl(tree const templateDecl);
-
   void processAstFunctionDeclarationNode(tree const functionDecl);
   void processAstFieldDeclarationNode(tree const fieldDecl);
-  void processAstVariableDeclarationNode(tree const varDecl);
-  void processAstValueNode(tree const valueConst);
-
   /**
    * Process the namespace
    */
   void processAstNamespaceNode(tree const val);
 
+  void processAstTypeNode(tree const decl);
+
+  void processAstRecordTypeNode(tree const typeNode);
+
+  /**
+   * Process a template declaration. Dump all specializations and instantiations.
+   */
+  void processAstTemplateDecl(tree const templateDecl);
+
+  /**
+   * A type declaration may be a typedef, a new class, or an enumeration
+   */
+  void processAstTypeDecl(tree const typeNode);
+  void processAstVariableDeclarationNode(tree const varDecl);
+  void processAstValueNode(tree const valueConst);
+
   void writeVersionHeader();
+
   void writeDefaultKdmModelElements();
 
   /**

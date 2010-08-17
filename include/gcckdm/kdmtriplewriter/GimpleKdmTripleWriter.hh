@@ -181,6 +181,7 @@ private:
   void writeKdmUnaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
   void writeKdmBinaryOperation(long const actionId, KdmKind const & kind, gimple const gs);
   void writeKdmArraySelect(long const actionId, gimple const gs);
+  long writeKdmArraySelect(long const actionId, tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
   void writeKdmArrayReplace(long const actionId, gimple const gs);
 
   /**
@@ -192,13 +193,17 @@ private:
    * sin.sin_family = 2;
    */
   long writeKdmMemberSelectParam(long const actionElementId, tree const compRef, gimple const gs);
+  long writeKdmMemberSelectParam(long const actionElementId, tree const compRef, location_t const loc);
 
   void writeKdmMemberReplace(long const actionId, gimple const gs);
   void writeKdmPtr(long const actionId, gimple const gs);
-  long writeKdmPtrParam(long const actionId, tree const callNode, tree const addrExpr, gimple const gs);
+  void writeKdmPtr(long const actionId, long const lhsId, long const rhsId);
+  long writeKdmPtrParam(tree const addrExpr, gimple const gs);
+  long writeKdmPtrParam(tree const addrExpr, location_t const loc);
   void writeKdmPtrReplace(long const actionId, gimple const gs);
 
   long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
+  long writeKdmStorableUnit(long const typeId, location_t loc);
 
   long getReferenceId(tree const ast);
   long getRhsReferenceId(tree const rhs);

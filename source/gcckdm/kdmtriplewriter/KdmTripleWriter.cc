@@ -1188,18 +1188,30 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param)
   return parameterUnitId;
 }
 
-long KdmTripleWriter::writeKdmMemberUnit(tree const item)
+/**
+ * Write the memberUnit and any associated data.
+ */
+long KdmTripleWriter::writeKdmMemberUnit(tree const member)
 {
-  long itemId = getReferenceId(item);
-  writeTripleKdmType(itemId, KdmType::MemberUnit());
-  tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
+  long memberId = getReferenceId(member);
+  writeTripleKdmType(memberId, KdmType::MemberUnit());
+  tree type(TYPE_MAIN_VARIANT(TREE_TYPE(member)));
   long ref = getReferenceId(type);
-  std::string name(nodeName(item));
+  std::string name(nodeName(member));
 
-  writeTripleName(itemId, name);
-  writeTriple(itemId, KdmPredicate::Type(), ref);
-  writeKdmSourceRef(itemId, item);
-  return itemId;
+  writeTripleName(memberId, name);
+  writeTriple(memberId, KdmPredicate::Type(), ref);
+  writeKdmSourceRef(memberId, member);
+
+  // Set the export kind, if available
+  tree context = CP_DECL_CONTEXT (member);
+  if (TYPE_P(context))
+  {
+    if (TREE_PRIVATE (member)) writeTripleExport(memberId, "private");
+    else if (TREE_PROTECTED (member)) writeTripleExport(memberId, "protected");
+    else writeTripleExport(memberId, "public");
+  }
+  return memberId;
 }
 
 long KdmTripleWriter::writeKdmItemUnit(tree const item)

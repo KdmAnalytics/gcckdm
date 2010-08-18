@@ -145,8 +145,8 @@ public:
    * @param graph the non-const instance of the graph to modify while visiting
    */
   UidVisitor(KdmTripleWriter & writer, UidGraph & graph)
-    : mWriter(writer),
-      mGraph(graph)
+  : mWriter(writer),
+    mGraph(graph)
   {
   }
 
@@ -161,7 +161,7 @@ public:
   void finish_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
   {
     //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
-//    std::cerr << "Finish:" << g[v].elementId << std::endl;
+    //    std::cerr << "Finish:" << g[v].elementId << std::endl;
     //A leaf mark uid's identical
     if (mLastVertex == v)
     {
@@ -204,21 +204,21 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr)
-  : mKdmSink(kdmSinkPtr),
-    mKdmElementId(KdmElementId_DefaultStart),
-    mUidGraph(),
-    mBodies(true),
-    mUid(0)
+: mKdmSink(kdmSinkPtr),
+  mKdmElementId(KdmElementId_DefaultStart),
+  mUidGraph(),
+  mBodies(true),
+  mUid(0)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename)
-  : mKdmSink(new boost::filesystem::ofstream(filename)),
-    mKdmElementId(KdmElementId_DefaultStart),
-    mUidGraph(),
-    mBodies(true),
-    mUid(0)
+: mKdmSink(new boost::filesystem::ofstream(filename)),
+  mKdmElementId(KdmElementId_DefaultStart),
+  mUidGraph(),
+  mBodies(true),
+  mUid(0)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -465,7 +465,26 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     {
       std::string msg(str(boost::format("AST Declaration Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
       writeUnsupportedComment(msg);
+      return;
     }
+  }
+
+  // Type qualifiers: Assemble any applicable stereotypes that supply additional information
+  int qualifiers = gcckdm::getTypeQualifiers(decl);
+  if(qualifiers & TYPE_QUAL_CONST)
+  {
+    long id = getReferenceId(decl);
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereoType);
+  }
+  if(qualifiers & TYPE_QUAL_VOLATILE)
+  {
+    long id = getReferenceId(decl);
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_VolatileStereoType);
+  }
+  if(qualifiers & TYPE_QUAL_RESTRICT)
+  {
+    long id = getReferenceId(decl);
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_RestrictStereoType);
   }
 }
 
@@ -502,6 +521,7 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   long typeKdmElementId = getReferenceId(typeNode);
   writeTriple(typedefKdmElementId, KdmPredicate::Type(), typeKdmElementId);
 
+  // Write the containment information
   writeKdmCxxContains(typeDecl);
 }
 
@@ -1012,12 +1032,15 @@ void KdmTripleWriter::writeUnsupportedComment(std::string const & comment)
 
 void KdmTripleWriter::writeDefaultKdmModelElements()
 {
+  // Segment and CodeModel definitions
   writeTriple(KdmElementId_Segment, KdmPredicate::KdmType(), KdmType::Segment());
   writeTriple(KdmElementId_Segment, KdmPredicate::LinkId(), "root");
   writeTriple(KdmElementId_CodeModel, KdmPredicate::KdmType(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::Name(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
   writeTripleContains(KdmElementId_Segment, KdmElementId_CodeModel);
+
+  // Workbench stereotypes
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "__WORKBENCH__");
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "__WORKBENCH__");
@@ -1026,6 +1049,34 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::Name(), "__HIDDEN__");
   writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::LinkId(), "__HIDDEN__");
   writeTripleContains(KdmElementId_WorkbenchExtensionFamily, KdmElementId_HiddenStereoType);
+
+  // C++ stereotypes
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "Cxx");
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "Cxx");
+  writeTripleContains(KdmElementId_Segment, KdmElementId_CxxExtensionFamily);
+
+  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::Name(), "mutable");
+  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::LinkId(), "mutable");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_MutableStereoType);
+
+  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::Name(), "volatile");
+  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::LinkId(), "volatile");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VolatileStereoType);
+
+  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::Name(), "const");
+  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::LinkId(), "const");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ConstStereoType);
+
+  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::Name(), "restrict");
+  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::LinkId(), "restrict");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_RestrictStereoType);
+
+  // Code Model contents
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::LinkId(), ":code");

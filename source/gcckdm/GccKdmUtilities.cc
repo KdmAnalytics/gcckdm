@@ -107,6 +107,7 @@ std::string getAstFunctionDeclarationName(tree node)
   return declStr;
 }
 
+
 /**
  * Replace /n with //n and /t with //t etc. etc. etc
  *
@@ -577,4 +578,16 @@ bool isFrontendC()
   return langName == "GNU C";
 }
 
+/**
+ * Returns the type qualifiers for this type, including the qualifiers on the
+ * elements for an array type
+ */
+int getTypeQualifiers(tree type)
+{
+  type = strip_array_types (type);
+  if (type == error_mark_node)
+    return TYPE_UNQUALIFIED;
+  return TYPE_QUALS (type);
+
+}
 } // namespace gcckdm

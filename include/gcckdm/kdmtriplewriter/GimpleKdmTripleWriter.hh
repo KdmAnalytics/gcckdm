@@ -245,6 +245,7 @@ private:
 
   Flow mLastFlow;
   bool mHasLastFlow;
+
 };
 
 } // namespace kdmtriplewriter

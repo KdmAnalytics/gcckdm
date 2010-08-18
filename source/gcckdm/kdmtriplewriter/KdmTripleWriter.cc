@@ -810,7 +810,6 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
 void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 {
   std::string name(nodeName(functionDecl));
-  std::string kind;
 
   long callableUnitId = getReferenceId(functionDecl);
 
@@ -819,22 +818,22 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     if(DECL_CONSTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Constructor().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Constructor().name());
     }
     else if(DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Destructor().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Destructor().name());
     }
     else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Operator().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Operator().name());
     }
     else if(DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Method().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Method().name());
     }
     else
     {
@@ -842,8 +841,8 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     }
     if (DECL_VIRTUAL_P (functionDecl))
     {
-      if(kind.empty()) kind.append(" ");
-      kind.append(KdmKind::Virtual().name());
+      // As described in KDM-1, using a stereotype to mark virtual functions instead of the "kind"
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
     }
     // C++ uses the mangled name for link:id, if possible
     if (HAS_DECL_ASSEMBLER_NAME_P(functionDecl) &&
@@ -1085,6 +1084,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::Name(), "restrict");
   writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::LinkId(), "restrict");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_RestrictStereoType);
+
+  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::Name(), "virtual");
+  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::LinkId(), "virtual");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VirtualStereoType);
 
   // Code Model contents
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());

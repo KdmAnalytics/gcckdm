@@ -277,6 +277,7 @@ private:
     KdmElementId_VolatileStereoType,
     KdmElementId_ConstStereoType,
     KdmElementId_RestrictStereoType,
+    KdmElementId_VirtualStereoType,
     KdmElementId_CodeAssembly,
     KdmElementId_LanguageUnit,
     KdmElementId_DerivedSharedUnit,

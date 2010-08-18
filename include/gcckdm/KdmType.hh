@@ -46,6 +46,7 @@ private:
     KdmType_CompilationUnit,
     KdmType_CallableUnit,
     KdmType_MethodUnit,
+    KdmType_MemberUnit,
     KdmType_ParameterUnit,
     KdmType_PointerType,
     KdmType_PrimitiveType,
@@ -98,6 +99,7 @@ public:
   static const KdmType Value()            { return KdmType(KdmType_Value, "code/Value");  }
   static const KdmType CallableUnit()     { return KdmType(KdmType_CallableUnit, "code/CallableUnit");  }
   static const KdmType MethodUnit()       { return KdmType(KdmType_MethodUnit, "code/MethodUnit");  }
+  static const KdmType MemberUnit()       { return KdmType(KdmType_MemberUnit, "code/MemberUnit");  }
   static const KdmType ParameterUnit()    { return KdmType(KdmType_ParameterUnit, "code/ParameterUnit");  }
   static const KdmType PrimitiveType()    { return KdmType(KdmType_PrimitiveType, "code/PrimitiveType");  }
   static const KdmType IntegerType()      { return KdmType(KdmType_IntegerType, "code/IntegerType");  }

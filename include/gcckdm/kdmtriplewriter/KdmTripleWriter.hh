@@ -370,6 +370,11 @@ private:
 
   void writeKdmSharedUnit(tree const file);
   void writeKdmSharedUnit(Path const & filename, long const id);
+
+  /**
+   * Output the MemberUnit definition.
+   */
+  long writeKdmMemberUnit(tree const item);
   long writeKdmItemUnit(tree const item);
   void writeKdmArrayType(tree const array);
   long writeKdmStorableUnit(tree const var);

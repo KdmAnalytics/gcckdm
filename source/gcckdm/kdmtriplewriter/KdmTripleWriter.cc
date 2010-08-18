@@ -682,8 +682,27 @@ void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl)
   writeKdmCallableUnit(functionDecl);
 }
 
+/**
+ * In C++ a field may be a MemberUnit or an ItemUnit. We determine this by looking at
+ * the context.
+ */
 void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
 {
+  if (isFrontendCxx())
+  {
+    tree context = CP_DECL_CONTEXT (fieldDecl);
+    // If the context is a type, then get the visibility
+    if(context)
+    {
+      // If the item belongs to a class, then the class is the parent
+      int treeCode(TREE_CODE(context));
+      if(treeCode == RECORD_TYPE)
+      {
+        writeKdmMemberUnit(fieldDecl);
+        return;
+      }
+    }
+  }
   writeKdmItemUnit(fieldDecl);
 }
 
@@ -1169,6 +1188,20 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param)
   return parameterUnitId;
 }
 
+long KdmTripleWriter::writeKdmMemberUnit(tree const item)
+{
+  long itemId = getReferenceId(item);
+  writeTripleKdmType(itemId, KdmType::MemberUnit());
+  tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
+  long ref = getReferenceId(type);
+  std::string name(nodeName(item));
+
+  writeTripleName(itemId, name);
+  writeTriple(itemId, KdmPredicate::Type(), ref);
+  writeKdmSourceRef(itemId, item);
+  return itemId;
+}
+
 long KdmTripleWriter::writeKdmItemUnit(tree const item)
 {
   long itemId = getReferenceId(item);
@@ -1492,7 +1525,9 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
       {
         if (!DECL_ARTIFICIAL (d))
         {
+          long itemId = getReferenceId(d);
           processAstNode(d);
+          writeTripleContains(classId, itemId);
         }
         break;
       }

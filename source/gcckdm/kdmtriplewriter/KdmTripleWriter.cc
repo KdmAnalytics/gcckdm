@@ -471,20 +471,22 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
 
   // Type qualifiers: Assemble any applicable stereotypes that supply additional information
   int qualifiers = gcckdm::getTypeQualifiers(decl);
+  long id = getReferenceId(decl);
   if(qualifiers & TYPE_QUAL_CONST)
   {
-    long id = getReferenceId(decl);
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereoType);
   }
   if(qualifiers & TYPE_QUAL_VOLATILE)
   {
-    long id = getReferenceId(decl);
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_VolatileStereoType);
   }
   if(qualifiers & TYPE_QUAL_RESTRICT)
   {
-    long id = getReferenceId(decl);
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_RestrictStereoType);
+  }
+  if (DECL_MUTABLE_P (decl))
+  {
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_MutableStereoType);
   }
 }
 

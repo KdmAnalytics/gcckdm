@@ -389,6 +389,10 @@ private:
   long writeKdmSourceRef(long id, tree const var);
   long writeKdmValue(tree const val);
 
+  /**
+   * Write type qualifiers as stereotypes on the declarations
+   */
+  void writeKdmTypeQualifiers(tree const decl);
 
   void processNodeQueue();
   void writeReferencedSharedUnits();

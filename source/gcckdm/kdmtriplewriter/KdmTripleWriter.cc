@@ -469,6 +469,14 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     }
   }
 
+  writeKdmTypeQualifiers(decl);
+}
+
+/**
+ *
+ */
+void KdmTripleWriter::writeKdmTypeQualifiers(tree const decl)
+{
   // Type qualifiers: Assemble any applicable stereotypes that supply additional information
   int qualifiers = gcckdm::getTypeQualifiers(decl);
   long id = getReferenceId(decl);
@@ -489,7 +497,6 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_MutableStereoType);
   }
 }
-
 /**
  * Type declarations may be typedefs, classes, or enumerations
  */
@@ -961,6 +968,7 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
     if (arg)
     {
       long refId = writeKdmParameterUnit(arg);
+      writeKdmTypeQualifiers(arg);
       writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }

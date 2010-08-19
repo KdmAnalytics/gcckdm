@@ -844,7 +844,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     {
       writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
     }
-    if (DECL_VIRTUAL_P (functionDecl))
+    // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
+    if (DECL_PURE_VIRTUAL_P (functionDecl))
+    {
+      // As described in KDM-1, using a stereotype to mark virtual functions instead of the "kind"
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_PureVirtualStereoType);
+    }
+    else if (DECL_VIRTUAL_P (functionDecl))
     {
       // As described in KDM-1, using a stereotype to mark virtual functions instead of the "kind"
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
@@ -1094,6 +1100,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::Name(), "virtual");
   writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::LinkId(), "virtual");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VirtualStereoType);
+
+  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::Name(), "pure virtual");
+  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::LinkId(), "pure virtual");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PureVirtualStereoType);
 
   writeTriple(KdmElementId_PublicStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
   writeTriple(KdmElementId_PublicStereoType, KdmPredicate::Name(), "public");
@@ -1623,8 +1634,8 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
     tree bi (BINFO_BASE_BINFO (biv, i));
 
     tree b_type (TYPE_MAIN_VARIANT (BINFO_TYPE (bi)));
-//    tree b_decl (TYPE_NAME (b_type));
-//    tree b_id (DECL_NAME (b_decl));
+    //    tree b_decl (TYPE_NAME (b_type));
+    //    tree b_id (DECL_NAME (b_decl));
 
     long superClassId = getReferenceId(b_type);
 

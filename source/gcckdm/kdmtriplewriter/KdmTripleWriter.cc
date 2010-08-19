@@ -1006,7 +1006,38 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
     }
     argType = TREE_CHAIN (argType);
   }
+
+  // Throws
+  if(gcckdm::isFrontendCxx())
+  {
+    tree ft = TREE_TYPE (functionDecl);
+    tree raises = TYPE_RAISES_EXCEPTIONS (ft);
+    if(raises)
+    {
+      if(TREE_VALUE (raises))
+      {
+        for (;raises != NULL_TREE; raises = TREE_CHAIN (raises))
+        {
+          long raisesId = getReferenceId(raises);
+          long throwId = writeKdmThrows(raisesId);
+          writeTripleContains(signatureId, throwId);
+        }
+      }
+    }
+  }
   return signatureId;
+}
+
+/**
+ *
+ */
+long KdmTripleWriter::writeKdmThrows(long const id)
+{
+  writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
+//  writeTripleName(mKdmElementId, "__RESULT__");
+  writeTriple(mKdmElementId, KdmPredicate::Type(), id);
+  writeTripleKind(mKdmElementId, KdmKind::Throw());
+  return mKdmElementId;
 }
 
 long KdmTripleWriter::writeKdmSignatureType(tree const functionType)

@@ -433,6 +433,12 @@ private:
   long writeKdmStorableUnit(tree const var);
   long writeKdmSignature(tree const function);
   long writeKdmSignatureDeclaration(tree const functionDecl);
+
+  /**
+   * Write a variable that represents a value that is thrown
+   */
+  long writeKdmThrows(long const id);
+
   long writeKdmSignatureType(tree const functionType);
   long writeKdmSourceRef(long id, tree const var);
   long writeKdmValue(tree const val);

@@ -530,6 +530,11 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::processGimpleConditionalSt
   mKdmWriter.writeTripleKind(actionId, KdmKind::Condition());
   mKdmWriter.writeTripleName(actionId, "if");
 
+  long lhsId = getReferenceId(gimple_cond_lhs (gs));
+  FlowPtr rhsFlow = getRhsReferenceId(gimple_cond_rhs(gs));
+  writeKdmActionRelation(KdmType::Reads(), actionId, lhsId);
+
+
   if (gimple_cond_true_label(gs))
   {
     tree trueNode(gimple_cond_true_label(gs));

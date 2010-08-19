@@ -31,6 +31,7 @@ namespace
 
 typedef std::map<tree_code, gcckdm::KdmKind> BinaryOperationKindMap;
 
+//Convienent Map from gcc expressions to their KDM equivalents
 BinaryOperationKindMap treeCodeToKind =
     boost::assign::map_list_of(PLUS_EXPR, gcckdm::KdmKind::Add())
                               (POINTER_PLUS_EXPR, gcckdm::KdmKind::Add())
@@ -863,7 +864,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::processGimpleBinaryAssignS
           case BIT_XOR_EXPR:
           case BIT_IOR_EXPR:
           case BIT_AND_EXPR:
-         {
+          {
             flow = writeKdmBinaryOperation(treeCodeToKind.find(gimple_assign_rhs_code(gs))->second, gs);
             break;
           }
@@ -1002,9 +1003,9 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmUnaryOperation(Kdm
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs)
 {
   long actionId = mKdmWriter.getNextElementId();
-  FlowPtr flow = FlowPtr(new Flow(actionId));
   long lhsId = getReferenceId(lhs);
   FlowPtr rhsFlow = getRhsReferenceId(rhs);
+  FlowPtr flow=rhsFlow;
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, kind);
   writeKdmUnaryRelationships(actionId, lhsId, rhsFlow->end);
@@ -1018,12 +1019,11 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmPtrReplace(gimple 
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
   long actionId(mKdmWriter.getNextElementId());
-  FlowPtr flow(new Flow(actionId));
 
   tree lhsOp0(TREE_OPERAND (lhs, 0));
   mKdmWriter.writeTripleKind(actionId, KdmKind::PtrReplace());
   long lhsId(getReferenceId(lhsOp0));
-  FlowPtr rhsFlow(getRhsReferenceId(rhs));
+  FlowPtr flow = rhsFlow(getRhsReferenceId(rhs));
 
   writeKdmActionRelation(KdmType::Reads(), actionId, rhsFlow->end);
   writeKdmActionRelation(KdmType::Addresses(), actionId, lhsId);
@@ -1032,6 +1032,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmPtrReplace(gimple 
   //where does the write relationship go?
   mKdmWriter.writeComment("FIXME: KDM spec states there should be a writes relationship here.. ");
   //writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+  flow->end = actionId;
   return flow;
 }
 
@@ -1046,14 +1047,18 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmBinaryOperation(Kd
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2)
 {
   long actionId(mKdmWriter.getNextElementId());
-  FlowPtr flow(new Flow(actionId));
+//  FlowPtr flow(new Flow(actionId));
 
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, kind);
   long lhsId(getReferenceId(lhs));
   FlowPtr rhs1Flow(getRhsReferenceId(rhs1));
+  Flow flow = rhs1Flow;
   FlowPtr rhs2Flow(getRhsReferenceId(rhs2));
+  writeKdmActionRelation(KdmType::Flow, rhs1Flow->end, rhs2Flow->end);
+
   writeKdmBinaryRelationships(actionId, lhsId, rhs1Flow->end, rhs2Flow->end);
+  flow->end = actionId;
   return flow;
 }
 

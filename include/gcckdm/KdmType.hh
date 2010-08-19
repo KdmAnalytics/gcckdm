@@ -63,6 +63,7 @@ private:
     KdmType_ArrayType,
     KdmType_LanguageUnit,
     KdmType_TypeUnit,
+    KdmType_Extends,
 
     //Source Group
     KdmType_InventoryModel,
@@ -117,6 +118,7 @@ public:
   static const KdmType ArrayType()        { return KdmType(KdmType_ArrayType, "code/ArrayType");  }
   static const KdmType LanguageUnit()     { return KdmType(KdmType_LanguageUnit, "code/LanguageUnit");  }
   static const KdmType TypeUnit()         { return KdmType(KdmType_TypeUnit, "code/TypeUnit");  }
+  static const KdmType Extends()          { return KdmType(KdmType_Extends, "code/Extends");  }
 
   //static const KdmType () { return KdmType(KdmType_, "code/");}
   //static const KdmType () { return KdmType(KdmType_, "code/");}

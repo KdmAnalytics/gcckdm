@@ -404,6 +404,11 @@ void KdmTripleWriter::processAstNode(tree const ast)
       {
         processAstValueNode(ast);
       }
+      else if (treeCode == COMPONENT_REF)
+      {
+        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast)));
+        writeUnsupportedComment(msg);
+      }
       else
       {
         std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast)));
@@ -1090,6 +1095,21 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::LinkId(), "virtual");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VirtualStereoType);
 
+  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::Name(), "public");
+  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::LinkId(), "public");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PublicStereoType);
+
+  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::Name(), "private");
+  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::LinkId(), "private");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PrivateStereoType);
+
+  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::Name(), "protected");
+  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::LinkId(), "protected");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ProtectedStereoType);
+
   // Code Model contents
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
@@ -1134,6 +1154,18 @@ void KdmTripleWriter::writeTripleContains(long const parent, long const child)
 
   //write contains relationship to file
   writeTriple(parent, KdmPredicate::Contains(), child);
+}
+
+/**
+ *
+ */
+long KdmTripleWriter::writeTripleExtends(long const subclass, long const superclass)
+{
+  long extendsId = ++mKdmElementId;
+  writeTripleKdmType(extendsId, KdmType::Extends());
+  writeTriple(extendsId, KdmPredicate::From(), subclass);
+  writeTriple(extendsId, KdmPredicate::To(), superclass);
+  return extendsId;
 }
 
 void KdmTripleWriter::updateUidGraph(long const parent, long const child)
@@ -1583,6 +1615,47 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
+  tree biv (TYPE_BINFO (recordType));
+  size_t n (biv ? BINFO_N_BASE_BINFOS (biv) : 0);
+
+  for (size_t i (0); i < n; i++)
+  {
+    tree bi (BINFO_BASE_BINFO (biv, i));
+
+    tree b_type (TYPE_MAIN_VARIANT (BINFO_TYPE (bi)));
+//    tree b_decl (TYPE_NAME (b_type));
+//    tree b_id (DECL_NAME (b_decl));
+
+    long superClassId = getReferenceId(b_type);
+
+    long extendsId = writeTripleExtends(classId, superClassId);
+
+    // Add some stereotypes to the relationship
+    // Virtual subclass?
+    bool virt (BINFO_VIRTUAL_P (bi));
+    if(virt)
+    {
+      writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
+    }
+
+    // Access specifier.
+    if (BINFO_BASE_ACCESSES (biv))
+    {
+      tree ac (BINFO_BASE_ACCESS (biv, i));
+
+      if (ac == 0 || ac == access_public_node)
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereoType);
+      else if (ac == access_protected_node)
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_ProtectedStereoType);
+      else
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PrivateStereoType);
+
+    }
+    else writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereoType);
+
+    // Write the containment
+    writeTripleContains(classId, extendsId);
+  }
 
 
   // Traverse members.

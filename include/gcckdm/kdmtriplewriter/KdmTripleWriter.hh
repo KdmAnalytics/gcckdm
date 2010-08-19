@@ -156,6 +156,15 @@ public:
   void writeTripleContains(long const parent, long const child);
 
   /**
+   * Convenience method to write the common "extends" relationship
+   *
+   * writes: <extendsId> <kdmType> "code/Extends"
+   * writes: <extendsId> <From> <subclass>
+   * writes: <extendsId> <To> <superclass>
+   */
+  long writeTripleExtends(long const subclass, long const superclass);
+
+  /**
    * Convenience method to write the common "LinkId" triple
    *
    * writes: <subject> <linkId> <child>
@@ -278,6 +287,9 @@ private:
     KdmElementId_ConstStereoType,
     KdmElementId_RestrictStereoType,
     KdmElementId_VirtualStereoType,
+    KdmElementId_PublicStereoType,
+    KdmElementId_PrivateStereoType,
+    KdmElementId_ProtectedStereoType,
     KdmElementId_CodeAssembly,
     KdmElementId_LanguageUnit,
     KdmElementId_DerivedSharedUnit,

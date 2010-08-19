@@ -145,8 +145,8 @@ public:
    * @param graph the non-const instance of the graph to modify while visiting
    */
   UidVisitor(KdmTripleWriter & writer, UidGraph & graph)
-    : mWriter(writer),
-      mGraph(graph)
+  : mWriter(writer),
+    mGraph(graph)
   {
   }
 
@@ -161,7 +161,7 @@ public:
   void finish_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
   {
     //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
-//    std::cerr << "Finish:" << g[v].elementId << std::endl;
+    //    std::cerr << "Finish:" << g[v].elementId << std::endl;
     //A leaf mark uid's identical
     if (mLastVertex == v)
     {
@@ -204,21 +204,21 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 
 
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr)
-  : mKdmSink(kdmSinkPtr),
-    mKdmElementId(KdmElementId_DefaultStart),
-    mUidGraph(),
-    mBodies(true),
-    mUid(0)
+: mKdmSink(kdmSinkPtr),
+  mKdmElementId(KdmElementId_DefaultStart),
+  mUidGraph(),
+  mBodies(true),
+  mUid(0)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename)
-  : mKdmSink(new boost::filesystem::ofstream(filename)),
-    mKdmElementId(KdmElementId_DefaultStart),
-    mUidGraph(),
-    mBodies(true),
-    mUid(0)
+: mKdmSink(new boost::filesystem::ofstream(filename)),
+  mKdmElementId(KdmElementId_DefaultStart),
+  mUidGraph(),
+  mBodies(true),
+  mUid(0)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -404,6 +404,11 @@ void KdmTripleWriter::processAstNode(tree const ast)
       {
         processAstValueNode(ast);
       }
+      else if (treeCode == COMPONENT_REF)
+      {
+        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast)));
+        writeUnsupportedComment(msg);
+      }
       else
       {
         std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast)));
@@ -465,10 +470,38 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     {
       std::string msg(str(boost::format("AST Declaration Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
       writeUnsupportedComment(msg);
+      return;
     }
   }
+
+  writeKdmTypeQualifiers(decl);
 }
 
+/**
+ *
+ */
+void KdmTripleWriter::writeKdmTypeQualifiers(tree const decl)
+{
+  // Type qualifiers: Assemble any applicable stereotypes that supply additional information
+  int qualifiers = gcckdm::getTypeQualifiers(decl);
+  long id = getReferenceId(decl);
+  if(qualifiers & TYPE_QUAL_CONST)
+  {
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereoType);
+  }
+  if(qualifiers & TYPE_QUAL_VOLATILE)
+  {
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_VolatileStereoType);
+  }
+  if(qualifiers & TYPE_QUAL_RESTRICT)
+  {
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_RestrictStereoType);
+  }
+  if (DECL_MUTABLE_P (decl))
+  {
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_MutableStereoType);
+  }
+}
 /**
  * Type declarations may be typedefs, classes, or enumerations
  */
@@ -502,6 +535,7 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   long typeKdmElementId = getReferenceId(typeNode);
   writeTriple(typedefKdmElementId, KdmPredicate::Type(), typeKdmElementId);
 
+  // Write the containment information
   writeKdmCxxContains(typeDecl);
 }
 
@@ -682,8 +716,27 @@ void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl)
   writeKdmCallableUnit(functionDecl);
 }
 
+/**
+ * In C++ a field may be a MemberUnit or an ItemUnit. We determine this by looking at
+ * the context.
+ */
 void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
 {
+  if (isFrontendCxx())
+  {
+    tree context = CP_DECL_CONTEXT (fieldDecl);
+    // If the context is a type, then get the visibility
+    if(context)
+    {
+      // If the item belongs to a class, then the class is the parent
+      int treeCode(TREE_CODE(context));
+      if(treeCode == RECORD_TYPE)
+      {
+        writeKdmMemberUnit(fieldDecl);
+        return;
+      }
+    }
+  }
   writeKdmItemUnit(fieldDecl);
 }
 
@@ -762,7 +815,6 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
 void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 {
   std::string name(nodeName(functionDecl));
-  std::string kind;
 
   long callableUnitId = getReferenceId(functionDecl);
 
@@ -771,46 +823,40 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     if(DECL_CONSTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Constructor().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Constructor().name());
     }
     else if(DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Destructor().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Destructor().name());
     }
     else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Operator().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Operator().name());
     }
     else if(DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      kind.append(KdmKind::Method().name());
+      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Method().name());
     }
     else
     {
       writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
     }
-    if (DECL_VIRTUAL_P (functionDecl))
+    // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
+    if (DECL_PURE_VIRTUAL_P (functionDecl))
     {
-      if(kind.empty()) kind.append(" ");
-      kind.append(KdmKind::Virtual().name());
+      // As described in KDM-1, using a stereotype to mark virtual functions instead of the "kind"
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_PureVirtualStereoType);
+    }
+    else if (DECL_VIRTUAL_P (functionDecl))
+    {
+      // As described in KDM-1, using a stereotype to mark virtual functions instead of the "kind"
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
     }
     // C++ uses the mangled name for link:id, if possible
-    if (HAS_DECL_ASSEMBLER_NAME_P(functionDecl) &&
-        DECL_NAME (functionDecl) &&
-        DECL_ASSEMBLER_NAME (functionDecl) &&
-        DECL_ASSEMBLER_NAME (functionDecl) != DECL_NAME (functionDecl))
-    {
-      tree asmNode = DECL_ASSEMBLER_NAME (functionDecl);
-      if(asmNode) writeTripleLinkId(callableUnitId, IDENTIFIER_POINTER (asmNode));
-      else writeTripleLinkId(callableUnitId, name); // Emergency fall back
-    }
-    else
-    {
-      writeTripleLinkId(callableUnitId, name);
-    }
+    writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
   }
   else
   {
@@ -920,6 +966,7 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
     if (arg)
     {
       long refId = writeKdmParameterUnit(arg);
+      writeKdmTypeQualifiers(arg);
       writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }
@@ -993,12 +1040,15 @@ void KdmTripleWriter::writeUnsupportedComment(std::string const & comment)
 
 void KdmTripleWriter::writeDefaultKdmModelElements()
 {
+  // Segment and CodeModel definitions
   writeTriple(KdmElementId_Segment, KdmPredicate::KdmType(), KdmType::Segment());
   writeTriple(KdmElementId_Segment, KdmPredicate::LinkId(), "root");
   writeTriple(KdmElementId_CodeModel, KdmPredicate::KdmType(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::Name(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
   writeTripleContains(KdmElementId_Segment, KdmElementId_CodeModel);
+
+  // Workbench stereotypes
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "__WORKBENCH__");
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "__WORKBENCH__");
@@ -1007,6 +1057,74 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::Name(), "__HIDDEN__");
   writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::LinkId(), "__HIDDEN__");
   writeTripleContains(KdmElementId_WorkbenchExtensionFamily, KdmElementId_HiddenStereoType);
+
+  // C++ stereotypes
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "Cxx");
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "Cxx");
+  writeTripleContains(KdmElementId_Segment, KdmElementId_CxxExtensionFamily);
+
+  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::Name(), "mutable");
+  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::LinkId(), "mutable");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_MutableStereoType);
+
+  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::Name(), "volatile");
+  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::LinkId(), "volatile");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VolatileStereoType);
+
+  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::Name(), "const");
+  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::LinkId(), "const");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ConstStereoType);
+
+  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::Name(), "restrict");
+  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::LinkId(), "restrict");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_RestrictStereoType);
+
+  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::Name(), "virtual");
+  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::LinkId(), "virtual");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VirtualStereoType);
+
+  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::Name(), "pure virtual");
+  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::LinkId(), "pure virtual");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PureVirtualStereoType);
+
+  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::Name(), "abstract");
+  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::LinkId(), "abstract");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_AbstractStereoType);
+
+  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::Name(), "friend");
+  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::LinkId(), "friend");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_FriendStereoType);
+
+  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::Name(), "incomplete");
+  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::LinkId(), "incomplete");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_IncompleteStereoType);
+
+  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::Name(), "public");
+  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::LinkId(), "public");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PublicStereoType);
+
+  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::Name(), "private");
+  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::LinkId(), "private");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PrivateStereoType);
+
+  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::Name(), "protected");
+  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::LinkId(), "protected");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ProtectedStereoType);
+
+  // Code Model contents
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::LinkId(), ":code");
@@ -1050,6 +1168,31 @@ void KdmTripleWriter::writeTripleContains(long const parent, long const child)
 
   //write contains relationship to file
   writeTriple(parent, KdmPredicate::Contains(), child);
+}
+
+/**
+ *
+ */
+long KdmTripleWriter::writeTripleExtends(long const subclass, long const superclass)
+{
+  long extendsId = ++mKdmElementId;
+  writeTripleKdmType(extendsId, KdmType::Extends());
+  writeTriple(extendsId, KdmPredicate::From(), subclass);
+  writeTriple(extendsId, KdmPredicate::To(), superclass);
+  return extendsId;
+}
+
+/**
+ *
+ */
+long KdmTripleWriter::writeTripleFriend(long const subclass, long const superclass)
+{
+  long extendsId = ++mKdmElementId;
+  writeTripleKdmType(extendsId, KdmType::CodeRelationship());
+  writeTriple(extendsId, KdmPredicate::From(), subclass);
+  writeTriple(extendsId, KdmPredicate::To(), superclass);
+  writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_FriendStereoType);
+  return extendsId;
 }
 
 void KdmTripleWriter::updateUidGraph(long const parent, long const child)
@@ -1167,6 +1310,32 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param)
 
   writeTriple(parameterUnitId, KdmPredicate::Type(), ref);
   return parameterUnitId;
+}
+
+/**
+ * Write the memberUnit and any associated data.
+ */
+long KdmTripleWriter::writeKdmMemberUnit(tree const member)
+{
+  long memberId = getReferenceId(member);
+  writeTripleKdmType(memberId, KdmType::MemberUnit());
+  tree type(TYPE_MAIN_VARIANT(TREE_TYPE(member)));
+  long ref = getReferenceId(type);
+  std::string name(nodeName(member));
+
+  writeTripleName(memberId, name);
+  writeTriple(memberId, KdmPredicate::Type(), ref);
+  writeKdmSourceRef(memberId, member);
+
+  // Set the export kind, if available
+  tree context = CP_DECL_CONTEXT (member);
+  if (TYPE_P(context))
+  {
+    if (TREE_PRIVATE (member)) writeTripleExport(memberId, "private");
+    else if (TREE_PROTECTED (member)) writeTripleExport(memberId, "protected");
+    else writeTripleExport(memberId, "public");
+  }
+  return memberId;
 }
 
 long KdmTripleWriter::writeKdmItemUnit(tree const item)
@@ -1478,7 +1647,6 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
   //    std::cerr << "======================= End of Record Type\n";
 }
 
-
 /**
  *
  */
@@ -1495,9 +1663,78 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   name = (isAnonymousStruct(mainRecordType)) ? unnamedNode : nodeName(mainRecordType);
   writeTripleName(classId, name);
 
+  // link:id is the mangled name, hopefully
+  writeTripleLinkId(classId, gcckdm::getLinkId(TYPE_NAME(recordType), name));
+
+  // Is this an abstract class?
+  if (CLASSTYPE_PURE_VIRTUALS (recordType) != 0)
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_AbstractStereoType);
+
+  if (!COMPLETE_TYPE_P (recordType))
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereoType);
+
+  // Hide artificial classes
+  if (DECL_ARTIFICIAL (recordType))
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereoType);
+
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
+  tree biv (TYPE_BINFO (recordType));
+  size_t n (biv ? BINFO_N_BASE_BINFOS (biv) : 0);
 
+  for (size_t i (0); i < n; i++)
+  {
+    tree bi (BINFO_BASE_BINFO (biv, i));
+
+    tree b_type (TYPE_MAIN_VARIANT (BINFO_TYPE (bi)));
+    //    tree b_decl (TYPE_NAME (b_type));
+    //    tree b_id (DECL_NAME (b_decl));
+
+    long superClassId = getReferenceId(b_type);
+
+    long extendsId = writeTripleExtends(classId, superClassId);
+
+    // Add some stereotypes to the relationship
+    // Virtual subclass?
+    bool virt (BINFO_VIRTUAL_P (bi));
+    if(virt)
+    {
+      writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
+    }
+
+    // Access specifier.
+    if (BINFO_BASE_ACCESSES (biv))
+    {
+      tree ac (BINFO_BASE_ACCESS (biv, i));
+
+      if (ac == 0 || ac == access_public_node)
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereoType);
+      else if (ac == access_protected_node)
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_ProtectedStereoType);
+      else
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PrivateStereoType);
+
+    }
+    else writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereoType);
+
+    // Write the containment
+    writeTripleContains(classId, extendsId);
+  }
+
+  // Friends
+  tree befriending = CLASSTYPE_BEFRIENDING_CLASSES (recordType);
+  for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd))
+  {
+    if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
+    {
+      if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
+      {
+        tree friendType TREE_VALUE (frnd);
+        long friendId = getReferenceId(friendType);
+        writeTripleFriend(classId, friendId);
+      }
+    }
+  }
 
   // Traverse members.
   for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
@@ -1516,7 +1753,9 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
       {
         if (!DECL_ARTIFICIAL (d))
         {
+          long itemId = getReferenceId(d);
           processAstNode(d);
+          writeTripleContains(classId, itemId);
         }
         break;
       }
@@ -1565,6 +1804,10 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const tree node)
 
 long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
 {
+  if(!eloc.file)
+  {
+    return id;
+  }
   Path sourceFile(eloc.file);
   if (!sourceFile.is_complete())
   {

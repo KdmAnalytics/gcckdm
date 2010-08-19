@@ -107,6 +107,7 @@ std::string getAstFunctionDeclarationName(tree node)
   return declStr;
 }
 
+
 /**
  * Replace /n with //n and /t with //t etc. etc. etc
  *
@@ -295,6 +296,7 @@ std::string getDemangledNodeName(tree node)
     {
       return getDemangledName(TYPE_NAME (node));
     }
+    return getDemangledName(node);
   }
 
   // Otherwise return the empty string
@@ -535,7 +537,7 @@ std::string getAstNodeName(tree node)
       case ADDR_EXPR:
       {
         if ((TREE_CODE (TREE_OPERAND (node, 0)) == STRING_CST
-          || TREE_CODE (TREE_OPERAND (node, 0)) == FUNCTION_DECL))
+            || TREE_CODE (TREE_OPERAND (node, 0)) == FUNCTION_DECL))
         {
           //Do Nothing
         }
@@ -574,6 +576,36 @@ bool isFrontendC()
 {
   std::string langName(lang_hooks.name);
   return langName == "GNU C";
+}
+
+/**
+ * Returns the type qualifiers for this type, including the qualifiers on the
+ * elements for an array type
+ */
+int getTypeQualifiers(tree type)
+{
+  type = strip_array_types (type);
+  if (type == error_mark_node)
+    return TYPE_UNQUALIFIED;
+  return TYPE_QUALS (type);
+
+}
+
+/**
+ *
+ */
+std::string getLinkId(tree const typeName, std::string const name)
+{
+  if (HAS_DECL_ASSEMBLER_NAME_P(typeName) &&
+      DECL_NAME (typeName) &&
+      DECL_ASSEMBLER_NAME (typeName) &&
+      DECL_ASSEMBLER_NAME (typeName) != DECL_NAME (typeName))
+  {
+    tree asmNode = DECL_ASSEMBLER_NAME (typeName);
+    return std::string(IDENTIFIER_POINTER (asmNode));
+  }
+
+  return name;
 }
 
 } // namespace gcckdm

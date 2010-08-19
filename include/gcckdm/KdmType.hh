@@ -46,6 +46,7 @@ private:
     KdmType_CompilationUnit,
     KdmType_CallableUnit,
     KdmType_MethodUnit,
+    KdmType_MemberUnit,
     KdmType_ParameterUnit,
     KdmType_PointerType,
     KdmType_PrimitiveType,
@@ -62,6 +63,8 @@ private:
     KdmType_ArrayType,
     KdmType_LanguageUnit,
     KdmType_TypeUnit,
+    KdmType_Extends,
+    KdmType_CodeRelationship,
 
     //Source Group
     KdmType_InventoryModel,
@@ -98,6 +101,7 @@ public:
   static const KdmType Value()            { return KdmType(KdmType_Value, "code/Value");  }
   static const KdmType CallableUnit()     { return KdmType(KdmType_CallableUnit, "code/CallableUnit");  }
   static const KdmType MethodUnit()       { return KdmType(KdmType_MethodUnit, "code/MethodUnit");  }
+  static const KdmType MemberUnit()       { return KdmType(KdmType_MemberUnit, "code/MemberUnit");  }
   static const KdmType ParameterUnit()    { return KdmType(KdmType_ParameterUnit, "code/ParameterUnit");  }
   static const KdmType PrimitiveType()    { return KdmType(KdmType_PrimitiveType, "code/PrimitiveType");  }
   static const KdmType IntegerType()      { return KdmType(KdmType_IntegerType, "code/IntegerType");  }
@@ -115,6 +119,8 @@ public:
   static const KdmType ArrayType()        { return KdmType(KdmType_ArrayType, "code/ArrayType");  }
   static const KdmType LanguageUnit()     { return KdmType(KdmType_LanguageUnit, "code/LanguageUnit");  }
   static const KdmType TypeUnit()         { return KdmType(KdmType_TypeUnit, "code/TypeUnit");  }
+  static const KdmType Extends()          { return KdmType(KdmType_Extends, "code/Extends");  }
+  static const KdmType CodeRelationship() { return KdmType(KdmType_CodeRelationship, "code/CodeRelationship");  }
 
   //static const KdmType () { return KdmType(KdmType_, "code/");}
   //static const KdmType () { return KdmType(KdmType_, "code/");}

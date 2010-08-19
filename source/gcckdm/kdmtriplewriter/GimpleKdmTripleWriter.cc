@@ -242,6 +242,10 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
 
   if (gimple_has_body_p(functionDeclNode))
   {
+    // Clear the block map to ensure we do not reuse blocks in situations where line numbers
+    // are duplicated (template functions, for example).
+    mBlockUnitMap.clear();
+
     mCurrentFunctionDeclarationNode = functionDeclNode;
     mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
     //

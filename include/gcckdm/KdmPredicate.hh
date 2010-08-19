@@ -46,6 +46,7 @@ private:
     KdmPredicate_Uid,
     KdmPredicate_LastUid,
     KdmPredicate_Export,
+    KdmPredicate_Stereotype,
   };
 
 public:
@@ -101,6 +102,10 @@ public:
   static const KdmPredicate Export()
   {
     return KdmPredicate(KdmPredicate_Export, "export");
+  }
+  static const KdmPredicate Stereotype()
+  {
+    return KdmPredicate(KdmPredicate_Stereotype, "stereotype");
   }
 
   int const id() const

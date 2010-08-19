@@ -156,6 +156,25 @@ public:
   void writeTripleContains(long const parent, long const child);
 
   /**
+   * Convenience method to write the common "extends" relationship
+   *
+   * writes: <extendsId> <kdmType> "code/Extends"
+   * writes: <extendsId> <from> <subclass>
+   * writes: <extendsId> <to> <superclass>
+   */
+  long writeTripleExtends(long const subclass, long const superclass);
+
+  /**
+   * Convenience method to write the common "friend" relationship
+   *
+   * writes: <extendsId> <kdmType> "code/CodeRelationship"
+   * writes: <extendsId> <from> <subclass>
+   * writes: <extendsId> <to> <superclass>
+   * writes: <extendsId> <stereotype> <friendId>
+   */
+  long writeTripleFriend(long const subclass, long const superclass);
+
+  /**
    * Convenience method to write the common "LinkId" triple
    *
    * writes: <subject> <linkId> <child>
@@ -285,6 +304,19 @@ private:
     KdmElementId_CodeModel,
     KdmElementId_WorkbenchExtensionFamily,
     KdmElementId_HiddenStereoType,
+    KdmElementId_CxxExtensionFamily,
+    KdmElementId_MutableStereoType,
+    KdmElementId_VolatileStereoType,
+    KdmElementId_ConstStereoType,
+    KdmElementId_RestrictStereoType,
+    KdmElementId_VirtualStereoType,
+    KdmElementId_PureVirtualStereoType,
+    KdmElementId_AbstractStereoType,
+    KdmElementId_FriendStereoType,
+    KdmElementId_IncompleteStereoType,
+    KdmElementId_PublicStereoType,
+    KdmElementId_PrivateStereoType,
+    KdmElementId_ProtectedStereoType,
     KdmElementId_CodeAssembly,
     KdmElementId_LanguageUnit,
     KdmElementId_DerivedSharedUnit,
@@ -383,6 +415,11 @@ private:
 
   void writeKdmSharedUnit(tree const file);
   void writeKdmSharedUnit(Path const & filename, long const id);
+
+  /**
+   * Output the MemberUnit definition.
+   */
+  long writeKdmMemberUnit(tree const item);
   long writeKdmItemUnit(tree const item);
   void writeKdmArrayType(tree const array);
   long writeKdmStorableUnit(tree const var);
@@ -392,6 +429,10 @@ private:
   long writeKdmSourceRef(long id, tree const var);
   long writeKdmValue(tree const val);
 
+  /**
+   * Write type qualifiers as stereotypes on the declarations
+   */
+  void writeKdmTypeQualifiers(tree const decl);
 
   void processNodeQueue();
   void writeReferencedSharedUnits();

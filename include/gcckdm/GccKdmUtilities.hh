@@ -64,11 +64,23 @@ std::string const locationString(location_t loc);
 bool isFrontendCxx();
 
 /**
- * Returns true is the front end being used is C
+ * Returns true if the front end being used is C
  */
 bool isFrontendC();
 
+/**
+ * Returns the type qualifiers for this type, including the qualifiers on the
+ * elements for an array type.
+ *
+ * FIXME: Was cp_type_quals in typeck.c -- where is it now?
+ */
+int getTypeQualifiers(tree type);
 
+/**
+ * Returns the link:id for a specified node. Is passed in a fallback ID if we have no
+ * special code to build an ID
+ */
+std::string getLinkId(tree const typeName, std::string const name);
 
 } // namespace gcckdm
 

@@ -590,4 +590,22 @@ int getTypeQualifiers(tree type)
   return TYPE_QUALS (type);
 
 }
+
+/**
+ *
+ */
+std::string getLinkId(tree const typeName, std::string const name)
+{
+  if (HAS_DECL_ASSEMBLER_NAME_P(typeName) &&
+      DECL_NAME (typeName) &&
+      DECL_ASSEMBLER_NAME (typeName) &&
+      DECL_ASSEMBLER_NAME (typeName) != DECL_NAME (typeName))
+  {
+    tree asmNode = DECL_ASSEMBLER_NAME (typeName);
+    return std::string(IDENTIFIER_POINTER (asmNode));
+  }
+
+  return name;
+}
+
 } // namespace gcckdm

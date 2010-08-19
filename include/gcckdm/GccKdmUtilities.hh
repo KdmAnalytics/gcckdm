@@ -76,6 +76,12 @@ bool isFrontendC();
  */
 int getTypeQualifiers(tree type);
 
+/**
+ * Returns the link:id for a specified node. Is passed in a fallback ID if we have no
+ * special code to build an ID
+ */
+std::string getLinkId(tree const typeName, std::string const name);
+
 } // namespace gcckdm
 
 #endif /* GCCKDM_GCCKDMUTILITIES_HH_ */

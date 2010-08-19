@@ -856,19 +856,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
     }
     // C++ uses the mangled name for link:id, if possible
-    if (HAS_DECL_ASSEMBLER_NAME_P(functionDecl) &&
-        DECL_NAME (functionDecl) &&
-        DECL_ASSEMBLER_NAME (functionDecl) &&
-        DECL_ASSEMBLER_NAME (functionDecl) != DECL_NAME (functionDecl))
-    {
-      tree asmNode = DECL_ASSEMBLER_NAME (functionDecl);
-      if(asmNode) writeTripleLinkId(callableUnitId, IDENTIFIER_POINTER (asmNode));
-      else writeTripleLinkId(callableUnitId, name); // Emergency fall back
-    }
-    else
-    {
-      writeTripleLinkId(callableUnitId, name);
-    }
+    writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
   }
   else
   {
@@ -1110,6 +1098,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::Name(), "abstract");
   writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::LinkId(), "abstract");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_AbstractStereoType);
+
+  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::Name(), "incomplete");
+  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::LinkId(), "incomplete");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_IncompleteStereoType);
 
   writeTriple(KdmElementId_PublicStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
   writeTriple(KdmElementId_PublicStereoType, KdmPredicate::Name(), "public");
@@ -1612,7 +1605,6 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
   //    std::cerr << "======================= End of Record Type\n";
 }
 
-
 /**
  *
  */
@@ -1629,11 +1621,15 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   name = (isAnonymousStruct(mainRecordType)) ? unnamedNode : nodeName(mainRecordType);
   writeTripleName(classId, name);
 
+  // link:id is the mangled name, hopefully
+  writeTripleLinkId(classId, gcckdm::getLinkId(TYPE_NAME(recordType), name));
+
   // Is this an abstract class?
   if (CLASSTYPE_PURE_VIRTUALS (recordType) != 0)
-  {
     writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_AbstractStereoType);
-  }
+
+  if (!COMPLETE_TYPE_P (recordType))
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereoType);
 
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/

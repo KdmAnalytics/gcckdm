@@ -193,8 +193,10 @@ private:
   void writeKdmUnaryRelationships(long const actionId, long lhsId, long rhsId);
   void writeKdmBinaryRelationships(long const actionId, long lhsId, long rhs1Id, long rhs2Id);
 
+  FlowPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
   FlowPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
   FlowPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
+  FlowPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
   FlowPtr writeKdmArraySelect(gimple const gs);
   FlowPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
   FlowPtr writeKdmArrayReplace(gimple const gs);

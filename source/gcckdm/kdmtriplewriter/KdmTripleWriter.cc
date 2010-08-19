@@ -1199,10 +1199,11 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var)
 long KdmTripleWriter::writeKdmValue(tree const val)
 {
   long valueId = getReferenceId(val);
+  tree type = TYPE_MAIN_VARIANT(TREE_TYPE(val));
+  long ref = getReferenceId(type);
+
   writeTripleKdmType(valueId, KdmType::Value());
   writeTripleName(valueId, nodeName(val));
-  tree type(TYPE_MAIN_VARIANT(TREE_TYPE(val)));
-  long ref = getReferenceId(type);
   writeTriple(valueId, KdmPredicate::Type(), ref);
   writeTripleContains(KdmElementId_LanguageUnit, valueId);
   return valueId;
@@ -1286,6 +1287,29 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
   }
   return unitId;
 }
+
+
+long KdmTripleWriter::getUserTypeId(KdmType const & type)
+{
+  TypeMap::const_iterator i = mUserTypes.find(type);
+  long retVal;
+  if (i == mUserTypes.end())
+  {
+    long typeId = getNextElementId();
+    mUserTypes.insert(std::make_pair(type,typeId));
+
+    writeTripleKdmType(typeId, type);
+    writeTripleName(typeId, type.name());
+    writeTripleContains(KdmElementId_LanguageUnit, typeId);
+    retVal = typeId;
+  }
+  else
+  {
+    retVal = i->second;
+  }
+  return retVal;
+}
+
 
 long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 {

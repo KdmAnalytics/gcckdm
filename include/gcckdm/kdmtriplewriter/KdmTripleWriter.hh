@@ -241,9 +241,22 @@ public:
    */
   void bodies(bool value);
 
+
+  long getUserTypeId(KdmType const & type);
+
 private:
 
+  struct KdmTypeHash
+  {
+    size_t operator()(KdmType const & v) const
+    {
+      std::tr1::hash<int> h;
+      return h(v.id());
+    }
+  };
+
   typedef std::tr1::unordered_map<tree, long> TreeMap;
+  typedef std::tr1::unordered_map<KdmType, long, KdmTypeHash> TypeMap;
   typedef std::tr1::unordered_map<Path, long> FileMap;
   typedef std::tr1::unordered_set<tree> TreeSet;
   typedef std::queue<tree> TreeQueue;
@@ -411,6 +424,7 @@ private:
   friend class UidVisitor;
   class UidVisitor;
   long mUid;
+  TypeMap mUserTypes;
 };
 
 } // namespace kdmtriplewriter

@@ -530,10 +530,21 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::processGimpleConditionalSt
   mKdmWriter.writeTripleKind(actionId, KdmKind::Condition());
   mKdmWriter.writeTripleName(actionId, "if");
 
-  long lhsId = getReferenceId(gimple_cond_lhs (gs));
-  FlowPtr rhsFlow = getRhsReferenceId(gimple_cond_rhs(gs));
-  writeKdmActionRelation(KdmType::Reads(), actionId, lhsId);
+  long rhs1Id = getReferenceId(gimple_cond_lhs (gs));
+  FlowPtr rhs2Flow = getRhsReferenceId(gimple_cond_rhs(gs));
+  long boolId = writeKdmStorableUnit(mKdmWriter.getUserTypeId(KdmType::BooleanType()), gimple_location(gs) );
+  mKdmWriter.writeTripleContains(actionId, boolId);
 
+  long condId = mKdmWriter.getNextElementId();
+  mKdmWriter.writeTripleKdmType(condId, KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(condId, treeCodeToKind.find(gimple_cond_code (gs))->second);
+  writeKdmBinaryRelationships(condId, boolId, rhs1Id, rhs2Flow->end);
+  flow->end = rhs2Flow->end;
+  long boolBlockId = getBlockReferenceId(gimple_location(gs));
+  mKdmWriter.writeTripleContains(boolBlockId, condId);
+
+
+  writeKdmActionRelation(KdmType::Reads(), actionId, boolId);
 
   if (gimple_cond_true_label(gs))
   {
@@ -975,21 +986,28 @@ void GimpleKdmTripleWriter::writeKdmUnaryRelationships(long const actionId, long
   writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
 }
 
+
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmUnaryOperation(KdmKind const & kind, gimple const gs)
 {
   tree lhs(gimple_assign_lhs(gs));
   tree rhs(gimple_assign_rhs1(gs));
-  long actionId(mKdmWriter.getNextElementId());
-  FlowPtr flow(new Flow(actionId));
-  long lhsId(getReferenceId(lhs));
-  FlowPtr rhsFlow(getRhsReferenceId(rhs));
+  return writeKdmUnaryOperation(kind, lhs, rhs);
+}
 
+
+GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs)
+{
+  long actionId = mKdmWriter.getNextElementId();
+  FlowPtr flow = FlowPtr(new Flow(actionId));
+  long lhsId = getReferenceId(lhs);
+  FlowPtr rhsFlow = getRhsReferenceId(rhs);
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, kind);
   writeKdmUnaryRelationships(actionId, lhsId, rhsFlow->end);
   flow->end = actionId;
   return flow;
 }
+
 
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmPtrReplace(gimple const gs)
 {
@@ -1018,7 +1036,11 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmBinaryOperation(Kd
   tree lhs(gimple_assign_lhs(gs));
   tree rhs1(gimple_assign_rhs1(gs));
   tree rhs2(gimple_assign_rhs2(gs));
+  return writeKdmBinaryOperation(kind, lhs, rhs1, rhs2);
+}
 
+GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2)
+{
   long actionId(mKdmWriter.getNextElementId());
   FlowPtr flow(new Flow(actionId));
 
@@ -1030,6 +1052,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmBinaryOperation(Kd
   writeKdmBinaryRelationships(actionId, lhsId, rhs1Flow->end, rhs2Flow->end);
   return flow;
 }
+
 
 //D.1989 = a[23];
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmArraySelect(gimple const gs)

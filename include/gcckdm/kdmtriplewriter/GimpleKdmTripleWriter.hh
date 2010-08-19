@@ -253,6 +253,8 @@ private:
   FlowPtr mLastFlow;
   bool mHasLastFlow;
 
+  FlowPtr mFunctionEntryFlow;
+
 };
 
 } // namespace kdmtriplewriter

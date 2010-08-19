@@ -244,9 +244,9 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   {
     mCurrentFunctionDeclarationNode = functionDeclNode;
     mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
-
     //
     mHasLastFlow = false;
+    mFunctionEntryFlow.reset();
 
     mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
@@ -344,7 +344,6 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
 void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
 {
   FlowPtr flow;
-  bool hasFlow(true);
   if (gs)
   {
     switch (gimple_code(gs))
@@ -357,7 +356,6 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       case GIMPLE_BIND:
       {
         processGimpleBindStatement(gs);
-        hasFlow = false;
         break;
       }
       case GIMPLE_CALL:
@@ -373,13 +371,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       case GIMPLE_LABEL:
       {
         processGimpleLabelStatement(gs);
-        hasFlow = false;
         break;
       }
       case GIMPLE_GOTO:
       {
         processGimpleGotoStatement(gs);
-        hasFlow = false;
         break;
       }
       case GIMPLE_RETURN:
@@ -394,12 +390,16 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
       default:
       {
-        std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))]
-                                                                                                     % BOOST_CURRENT_FUNCTION));
+        std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))] % BOOST_CURRENT_FUNCTION));
         mKdmWriter.writeUnsupportedComment(msg);
         break;
       }
+    }
 
+    if (flow and not mFunctionEntryFlow)
+    {
+      writeKdmActionRelation(KdmType::EntryFlow(), mCurrentCallableUnitId, flow->start);
+      mFunctionEntryFlow = flow;
     }
 
     //After the first action element we need to hook up the flows
@@ -410,7 +410,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     }
 
     //the gimple we just processed returned an action remember it
-    if (hasFlow)
+    if (flow)
     {
       mLastFlow = flow;
       mHasLastFlow = true;
@@ -423,7 +423,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     // the label to the next actionElement after the label
     // mLabelFlag is set in the processGimpleLabelStatement and processGimpleGotoStatement methods
     //
-    if (mLabelFlag and hasFlow)
+    if (mLabelFlag and flow)
     {
       long blockId = getBlockReferenceId(gimple_location(gs));
       mKdmWriter.writeTripleContains(blockId, mLastLabelFlow->end);

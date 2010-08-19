@@ -1099,6 +1099,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::LinkId(), "abstract");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_AbstractStereoType);
 
+  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::Name(), "friend");
+  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::LinkId(), "friend");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_FriendStereoType);
+
   writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
   writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::Name(), "incomplete");
   writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::LinkId(), "incomplete");
@@ -1174,6 +1179,19 @@ long KdmTripleWriter::writeTripleExtends(long const subclass, long const supercl
   writeTripleKdmType(extendsId, KdmType::Extends());
   writeTriple(extendsId, KdmPredicate::From(), subclass);
   writeTriple(extendsId, KdmPredicate::To(), superclass);
+  return extendsId;
+}
+
+/**
+ *
+ */
+long KdmTripleWriter::writeTripleFriend(long const subclass, long const superclass)
+{
+  long extendsId = ++mKdmElementId;
+  writeTripleKdmType(extendsId, KdmType::CodeRelationship());
+  writeTriple(extendsId, KdmPredicate::From(), subclass);
+  writeTriple(extendsId, KdmPredicate::To(), superclass);
+  writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_FriendStereoType);
   return extendsId;
 }
 
@@ -1631,6 +1649,10 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   if (!COMPLETE_TYPE_P (recordType))
     writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereoType);
 
+  // Hide artificial classes
+  if (DECL_ARTIFICIAL (recordType))
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereoType);
+
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
   tree biv (TYPE_BINFO (recordType));
@@ -1675,6 +1697,20 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
     writeTripleContains(classId, extendsId);
   }
 
+  // Friends
+  tree befriending = CLASSTYPE_BEFRIENDING_CLASSES (recordType);
+  for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd))
+  {
+    if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
+    {
+      if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
+      {
+        tree friendType TREE_VALUE (frnd);
+        long friendId = getReferenceId(friendType);
+        writeTripleFriend(classId, friendId);
+      }
+    }
+  }
 
   // Traverse members.
   for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))

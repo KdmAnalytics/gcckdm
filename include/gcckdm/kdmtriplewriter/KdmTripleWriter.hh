@@ -159,10 +159,20 @@ public:
    * Convenience method to write the common "extends" relationship
    *
    * writes: <extendsId> <kdmType> "code/Extends"
-   * writes: <extendsId> <From> <subclass>
-   * writes: <extendsId> <To> <superclass>
+   * writes: <extendsId> <from> <subclass>
+   * writes: <extendsId> <to> <superclass>
    */
   long writeTripleExtends(long const subclass, long const superclass);
+
+  /**
+   * Convenience method to write the common "friend" relationship
+   *
+   * writes: <extendsId> <kdmType> "code/CodeRelationship"
+   * writes: <extendsId> <from> <subclass>
+   * writes: <extendsId> <to> <superclass>
+   * writes: <extendsId> <stereotype> <friendId>
+   */
+  long writeTripleFriend(long const subclass, long const superclass);
 
   /**
    * Convenience method to write the common "LinkId" triple
@@ -289,6 +299,7 @@ private:
     KdmElementId_VirtualStereoType,
     KdmElementId_PureVirtualStereoType,
     KdmElementId_AbstractStereoType,
+    KdmElementId_FriendStereoType,
     KdmElementId_IncompleteStereoType,
     KdmElementId_PublicStereoType,
     KdmElementId_PrivateStereoType,

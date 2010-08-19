@@ -416,6 +416,11 @@ private:
    */
   void writeKdmMethodType(tree const type);
 
+  /**
+   * Handles output of friend relationships, which are stereotyped CodeRelationships
+   */
+  void writeKdmTripleFriends(long const id, tree const t);
+
   void writeKdmSharedUnit(tree const file);
   void writeKdmSharedUnit(Path const & filename, long const id);
 

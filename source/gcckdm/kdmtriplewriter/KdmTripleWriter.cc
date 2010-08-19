@@ -886,6 +886,9 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   if (!DECL_NONSTATIC_MEMBER_FUNCTION_P (functionDecl))
     writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_StaticStereoType);
 
+  // Source reference
+  writeKdmSourceRef(callableUnitId, functionDecl);
+
   // If this is c++, the method/function is written in the class first, otherwise in the compilation unit
   if (isFrontendCxx())
   {
@@ -909,6 +912,9 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     if (DECL_ARTIFICIAL (functionDecl))
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereoType);
 
+    // Friendship
+    writeKdmTripleFriends(callableUnitId, DECL_BEFRIENDING_CLASSES(functionDecl));
+
     // Containment
     writeKdmCxxContains(functionDecl);
   }
@@ -926,7 +932,6 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     long unitId = getSourceFileReferenceId(functionDecl);
     writeTripleContains(unitId, callableUnitId);
   }
-  writeKdmSourceRef(callableUnitId, functionDecl);
 
   long signatureId = writeKdmSignature(functionDecl);
   writeTripleContains(callableUnitId, signatureId);
@@ -1694,6 +1699,26 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 /**
  *
  */
+void KdmTripleWriter::writeKdmTripleFriends(long const id, tree const befriending)
+{
+  for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd))
+  {
+    if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
+    {
+      if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
+      {
+        tree friendType TREE_VALUE (frnd);
+        long friendId = getReferenceId(friendType);
+        long relId = writeTripleFriend(id, friendId);
+        writeTripleContains(id, relId);
+      }
+    }
+  }
+}
+
+/**
+ *
+ */
 void KdmTripleWriter::writeKdmClassType(tree const recordType)
 {
   tree mainRecordType = TYPE_MAIN_VARIANT (recordType);
@@ -1766,19 +1791,7 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   }
 
   // Friends
-  tree befriending = CLASSTYPE_BEFRIENDING_CLASSES (recordType);
-  for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd))
-  {
-    if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
-    {
-      if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
-      {
-        tree friendType TREE_VALUE (frnd);
-        long friendId = getReferenceId(friendType);
-        writeTripleFriend(classId, friendId);
-      }
-    }
-  }
+  writeKdmTripleFriends(classId, CLASSTYPE_BEFRIENDING_CLASSES(recordType));
 
   // Traverse members.
   for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))

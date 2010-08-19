@@ -288,6 +288,7 @@ private:
     KdmElementId_RestrictStereoType,
     KdmElementId_VirtualStereoType,
     KdmElementId_PureVirtualStereoType,
+    KdmElementId_AbstractStereoType,
     KdmElementId_PublicStereoType,
     KdmElementId_PrivateStereoType,
     KdmElementId_ProtectedStereoType,

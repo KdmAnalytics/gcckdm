@@ -1106,6 +1106,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::LinkId(), "pure virtual");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PureVirtualStereoType);
 
+  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::Name(), "abstract");
+  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::LinkId(), "abstract");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_AbstractStereoType);
+
   writeTriple(KdmElementId_PublicStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
   writeTriple(KdmElementId_PublicStereoType, KdmPredicate::Name(), "public");
   writeTriple(KdmElementId_PublicStereoType, KdmPredicate::LinkId(), "public");
@@ -1623,6 +1628,12 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   //check to see if we are an anonymous class
   name = (isAnonymousStruct(mainRecordType)) ? unnamedNode : nodeName(mainRecordType);
   writeTripleName(classId, name);
+
+  // Is this an abstract class?
+  if (CLASSTYPE_PURE_VIRTUALS (recordType) != 0)
+  {
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_AbstractStereoType);
+  }
 
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/

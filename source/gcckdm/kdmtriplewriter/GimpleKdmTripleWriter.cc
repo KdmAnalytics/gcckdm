@@ -1171,7 +1171,11 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmMemberSelect(tree 
   }
   else
   {
-    lhsId = getReferenceId(lhs);
+    if (not lhs)
+    {
+      lhsId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc);
+    }
+
     FlowPtr op0Flow(getRhsReferenceId(op0));
     FlowPtr op1Flow(getRhsReferenceId(op1));
 

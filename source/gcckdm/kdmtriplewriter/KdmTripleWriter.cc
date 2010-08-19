@@ -1780,6 +1780,10 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const tree node)
 
 long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
 {
+  if(!eloc.file)
+  {
+    return id;
+  }
   Path sourceFile(eloc.file);
   if (!sourceFile.is_complete())
   {

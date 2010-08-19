@@ -93,6 +93,12 @@ private:
     KdmKind_Virtual,
     KdmKind_Abstract,
     KdmKind_Unknown,
+
+    // CallableKinds
+    KdmKind_External,
+    //KdmKind_Regular,
+    //KdmKind_Operator,
+    //KdmKind_Unknown,
   };
 
 public:
@@ -158,6 +164,12 @@ public:
   static const KdmKind Virtual()              { return KdmKind(KdmKind_Virtual, "virtual"); }
   static const KdmKind Abstract()             { return KdmKind(KdmKind_Abstract, "abstract"); }
   static const KdmKind Unknown()              { return KdmKind(KdmKind_Unknown, "unknown"); }
+
+  // CallableKind
+  static const KdmKind External()             { return KdmKind(KdmKind_External, "external"); }
+  //static const KdmKind Regular()              { return KdmKind(KdmKind_Regular, "regular"); }
+  //static const KdmKind Operator()             { return KdmKind(KdmKind_Operator, "operator"); }
+  //static const KdmKind Unknown()              { return KdmKind(KdmKind_Unknown, "unknown"); }
 
   int const id() const
   {

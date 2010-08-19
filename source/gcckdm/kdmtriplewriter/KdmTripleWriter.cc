@@ -849,6 +849,8 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     else
     {
       writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
+      if(DECL_REALLY_EXTERN(functionDecl)) writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::External().name());
+      else writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Regular().name());
     }
     // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
     if (DECL_PURE_VIRTUAL_P (functionDecl))

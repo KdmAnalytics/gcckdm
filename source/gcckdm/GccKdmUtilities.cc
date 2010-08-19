@@ -582,13 +582,21 @@ bool isFrontendC()
  * Returns the type qualifiers for this type, including the qualifiers on the
  * elements for an array type
  */
-int getTypeQualifiers(tree type)
+int getTypeQualifiers(tree const type)
 {
-  type = strip_array_types (type);
-  if (type == error_mark_node)
-    return TYPE_UNQUALIFIED;
-  return TYPE_QUALS (type);
+  int retVal;
+  tree t = (DECL_P(type)) ? TREE_TYPE(type) : type;
+  t = strip_array_types (t);
 
+  if (t == error_mark_node or not t)
+  {
+    retVal = TYPE_UNQUALIFIED;
+  }
+  else
+  {
+    retVal = TYPE_QUALS (t);
+  }
+  return retVal;
 }
 
 /**

@@ -74,7 +74,7 @@ bool isFrontendC();
  *
  * FIXME: Was cp_type_quals in typeck.c -- where is it now?
  */
-int getTypeQualifiers(tree type);
+int getTypeQualifiers(tree const type);
 
 /**
  * Returns the link:id for a specified node. Is passed in a fallback ID if we have no

@@ -396,6 +396,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
     }
 
+    //If this is the first Action element in the callable unit write an EntryFlow
     if (flow and not mFunctionEntryFlow)
     {
       writeKdmActionRelation(KdmType::EntryFlow(), mCurrentCallableUnitId, flow->start);
@@ -403,19 +404,16 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     }
 
     //After the first action element we need to hook up the flows
-    if (mHasLastFlow)
+    if (mLastFlow and flow)
     {
-      //long flowId = mKdmWriter.getNextElementId();
-      //writeKdmActionRelation(KdmType::Flow(), mLastActionId, flowId);
+      writeKdmActionRelation(KdmType::Flow(), mLastFlow->end, flow->start);
     }
 
     //the gimple we just processed returned an action remember it
     if (flow)
     {
       mLastFlow = flow;
-      mHasLastFlow = true;
     }
-
 
     // If the last gimple statement we processed was a label or some goto's
     // we have to do a little magic here to get the flows

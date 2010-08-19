@@ -309,6 +309,7 @@ private:
     KdmElementId_VolatileStereoType,
     KdmElementId_ConstStereoType,
     KdmElementId_StaticStereoType,
+    KdmElementId_InlineStereoType,
     KdmElementId_RestrictStereoType,
     KdmElementId_VirtualStereoType,
     KdmElementId_PureVirtualStereoType,

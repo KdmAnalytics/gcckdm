@@ -448,7 +448,7 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     case PARM_DECL:
     {
       writeComment("FIXME: Do we need these parm_decls?");
-      break;
+      return;
     }
     case TYPE_DECL:
     {
@@ -464,7 +464,7 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
       //      processAstLabelDeclarationNode(decl);
-      break;
+      return;
     }
     default:
     {
@@ -482,9 +482,24 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
  */
 void KdmTripleWriter::writeKdmTypeQualifiers(tree const decl)
 {
+  long id = getReferenceId(decl);
+  // FIXME: This code was intended to detect constant functions. It does not currently work
+  if(DECL_NONSTATIC_MEMBER_FUNCTION_P (decl))
+  {
+    tree treeType = TREE_TYPE (decl);
+    tree typeArgsType = TYPE_ARG_TYPES (treeType);
+    tree treeValue = TREE_VALUE (typeArgsType);
+    tree treeValueType = TREE_TYPE (treeValue);
+
+    int qualifiers = gcckdm::getTypeQualifiers(treeValueType);
+    if(qualifiers & TYPE_QUAL_CONST)
+    {
+      writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereoType);
+    }
+  }
+
   // Type qualifiers: Assemble any applicable stereotypes that supply additional information
   int qualifiers = gcckdm::getTypeQualifiers(decl);
-  long id = getReferenceId(decl);
   if(qualifiers & TYPE_QUAL_CONST)
   {
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereoType);
@@ -858,6 +873,10 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   writeTripleName(callableUnitId, name);
 
+  // Inline keyword
+  if (DECL_DECLARED_INLINE_P (functionDecl))
+    writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_InlineStereoType);
+
   // Const keyword
   writeKdmTypeQualifiers(functionDecl);
 
@@ -1091,6 +1110,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_StaticStereoType, KdmPredicate::Name(), "static");
   writeTriple(KdmElementId_StaticStereoType, KdmPredicate::LinkId(), "static");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_StaticStereoType);
+
+  writeTriple(KdmElementId_InlineStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_InlineStereoType, KdmPredicate::Name(), "inline");
+  writeTriple(KdmElementId_InlineStereoType, KdmPredicate::LinkId(), "inline");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_InlineStereoType);
 
   writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
   writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::Name(), "restrict");

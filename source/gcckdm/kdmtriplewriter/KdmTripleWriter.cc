@@ -801,15 +801,6 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
 }
 
 /**
- * We do not currently use the following tests from GCCXML that provide additional information:
- *
- *   Explicit:   DECL_NONCONVERTING_P (d)
- *   Const:      DECL_CONST_MEMFUNC_P (fd)
- *   Static:     !DECL_NONSTATIC_MEMBER_FUNCTION_P (fd)
- *   Artificial: DECL_ARTIFICIAL (d)
- *   Inline:
- *   Friends:
- *   Extern:
  *
  */
 void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
@@ -867,6 +858,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   writeTripleName(callableUnitId, name);
 
+  // Const keyword
+  writeKdmTypeQualifiers(functionDecl);
+
+  // Static keyword
+  if (!DECL_NONSTATIC_MEMBER_FUNCTION_P (functionDecl))
+    writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_StaticStereoType);
+
   // If this is c++, the method/function is written in the class first, otherwise in the compilation unit
   if (isFrontendCxx())
   {
@@ -881,6 +879,16 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
         else writeTripleExport(callableUnitId, "public");
       }
     }
+
+    // Explicit keyword
+    if (DECL_NONCONVERTING_P (functionDecl))
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_ExplicitStereoType);
+
+    // Explicit keyword
+    if (DECL_ARTIFICIAL (functionDecl))
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereoType);
+
+    // Containment
     writeKdmCxxContains(functionDecl);
   }
   // In straight C, it is always contained in the source file
@@ -1060,8 +1068,8 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
 
   // C++ stereotypes
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
-  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "Cxx");
-  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "Cxx");
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "C/C++");
+  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "C/C++");
   writeTripleContains(KdmElementId_Segment, KdmElementId_CxxExtensionFamily);
 
   writeTriple(KdmElementId_MutableStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
@@ -1078,6 +1086,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_ConstStereoType, KdmPredicate::Name(), "const");
   writeTriple(KdmElementId_ConstStereoType, KdmPredicate::LinkId(), "const");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ConstStereoType);
+
+  writeTriple(KdmElementId_StaticStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_StaticStereoType, KdmPredicate::Name(), "static");
+  writeTriple(KdmElementId_StaticStereoType, KdmPredicate::LinkId(), "static");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_StaticStereoType);
 
   writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
   writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::Name(), "restrict");
@@ -1123,6 +1136,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::Name(), "protected");
   writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::LinkId(), "protected");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ProtectedStereoType);
+
+  writeTriple(KdmElementId_ExplicitStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
+  writeTriple(KdmElementId_ExplicitStereoType, KdmPredicate::Name(), "explicit");
+  writeTriple(KdmElementId_ExplicitStereoType, KdmPredicate::LinkId(), "explicit");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ExplicitStereoType);
 
   // Code Model contents
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());

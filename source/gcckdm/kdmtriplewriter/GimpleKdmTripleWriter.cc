@@ -1018,14 +1018,13 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmPtrReplace(gimple 
 {
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
-  long actionId(mKdmWriter.getNextElementId());
+  long actionId = mKdmWriter.getNextElementId();
+  tree lhsOp0 = TREE_OPERAND (lhs, 0);
+  long lhsId = getReferenceId(lhsOp0);
+  FlowPtr flow = getRhsReferenceId(rhs);
 
-  tree lhsOp0(TREE_OPERAND (lhs, 0));
   mKdmWriter.writeTripleKind(actionId, KdmKind::PtrReplace());
-  long lhsId(getReferenceId(lhsOp0));
-  FlowPtr flow = rhsFlow(getRhsReferenceId(rhs));
-
-  writeKdmActionRelation(KdmType::Reads(), actionId, rhsFlow->end);
+  writeKdmActionRelation(KdmType::Reads(), actionId, flow->end);
   writeKdmActionRelation(KdmType::Addresses(), actionId, lhsId);
 
   //Have to determine if there is a bug in the spec here or not
@@ -1053,9 +1052,9 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmBinaryOperation(Kd
   mKdmWriter.writeTripleKind(actionId, kind);
   long lhsId(getReferenceId(lhs));
   FlowPtr rhs1Flow(getRhsReferenceId(rhs1));
-  Flow flow = rhs1Flow;
+  FlowPtr flow = rhs1Flow;
   FlowPtr rhs2Flow(getRhsReferenceId(rhs2));
-  writeKdmActionRelation(KdmType::Flow, rhs1Flow->end, rhs2Flow->end);
+  writeKdmActionRelation(KdmType::Flow(), rhs1Flow->end, rhs2Flow->end);
 
   writeKdmBinaryRelationships(actionId, lhsId, rhs1Flow->end, rhs2Flow->end);
   flow->end = actionId;

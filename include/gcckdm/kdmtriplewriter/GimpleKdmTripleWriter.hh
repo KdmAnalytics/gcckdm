@@ -69,13 +69,17 @@ private:
   struct Flow
   {
     explicit Flow(long startId)
-    : start(startId), end(startId)
+    : start(startId), end(startId), valid(true)
     {}
     Flow(long startId, long endId)
-    : start(startId), end(endId)
+    : start(startId), end(endId), valid(true)
     {};
+
     long start;
     long end;
+
+    //If false this flow is a container for the end id;
+    bool valid;
   };
 
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;

@@ -308,6 +308,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::getRhsReferenceId(tree con
   if (isValueNode(rhs))
   {
     flow = FlowPtr(new Flow(getReferenceId(rhs)));
+    flow->valid = false;
     mKdmWriter.processAstNode(rhs);
   }
   else if (TREE_CODE(rhs) == CONSTRUCTOR)
@@ -329,6 +330,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::getRhsReferenceId(tree con
   else
   {
     flow = FlowPtr(new Flow(getReferenceId(rhs)));
+    flow->valid = false;
   }
   return flow;
 }
@@ -635,6 +637,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::processGimpleCallStatement
       }
 
       writeKdmActionRelation(KdmType::Reads(), actionId, paramFlow->end);
+      flow->end = paramFlow->end;
     }
   }
 
@@ -1393,8 +1396,8 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmPtrParam(tree cons
     mKdmWriter.writeTripleContains(blockUnitId, storableId);
 
     //Address.... temp1 = &rhs
-    FlowPtr rhsFlow(getRhsReferenceId(op0));
-    FlowPtr ptrFlow(writeKdmPtr(storableId, rhsFlow->end));
+    FlowPtr rhsFlow = getRhsReferenceId(op0);
+    FlowPtr ptrFlow = writeKdmPtr(storableId, rhsFlow->end);
     mKdmWriter.writeTripleContains(blockUnitId, rhsFlow->end);
     flow = ptrFlow;
   }

@@ -1018,7 +1018,7 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
       {
         for (;raises != NULL_TREE; raises = TREE_CHAIN (raises))
         {
-          long raisesId = getReferenceId(raises);
+          long raisesId = getReferenceId(TREE_VALUE (raises));
           long throwId = writeKdmThrows(raisesId);
           writeTripleContains(signatureId, throwId);
         }

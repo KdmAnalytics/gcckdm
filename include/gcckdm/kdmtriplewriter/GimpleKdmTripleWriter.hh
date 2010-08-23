@@ -68,11 +68,11 @@ private:
 
   struct Flow
   {
-    explicit Flow(long startId)
-    : start(startId), end(startId), valid(true)
+    explicit Flow(long startId, bool v = true)
+    : start(startId), end(startId), valid(v)
     {}
-    Flow(long startId, long endId)
-    : start(startId), end(endId), valid(true)
+    Flow(long startId, long endId, bool v = true)
+    : start(startId), end(endId), valid(v)
     {};
 
     long start;
@@ -229,11 +229,13 @@ private:
   long writeKdmStorableUnit(long const typeId, location_t loc);
 
   long getReferenceId(tree const ast);
-  FlowPtr getRhsReferenceId(tree const rhs);
+//  FlowPtr getRhsReferenceId(tree const rhs);
+  FlowPtr getRhsReferenceId(FlowPtr mainFlow, tree const rhs);
 
   tree resolveCall(tree const tree);
 
 
+  void updateFlow(FlowPtr mainFlow, FlowPtr update);
 
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;

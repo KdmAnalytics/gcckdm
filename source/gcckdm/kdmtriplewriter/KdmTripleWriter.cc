@@ -985,7 +985,6 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
   long signatureId = ++mKdmElementId;
   writeTripleKdmType(signatureId, KdmType::Signature());
   writeTripleName(signatureId, name);
-
   //Determine return type id
   tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
   tree t2(TYPE_MAIN_VARIANT(t));

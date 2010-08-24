@@ -480,6 +480,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     {
       long blockId = getBlockReferenceId(gimple_location(gs));
       mKdmWriter.writeTripleContains(blockId, mLastLabelFlow->end);
+      writeKdmActionRelation(KdmType::Flow(), mLastLabelFlow->end, flow->start);
       mLabelFlag = !mLabelFlag;
     }
   }

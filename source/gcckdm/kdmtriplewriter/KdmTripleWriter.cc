@@ -1630,6 +1630,39 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   tree t2(TYPE_MAIN_VARIANT(treeType));
   long arrayTypeKdmElementId = getReferenceId(t2);
   writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
+
+  //for (tree tmp = arrayType; TREE_CODE (tmp) == ARRAY_TYPE; tmp = TREE_TYPE (tmp))
+//    dump_array_domain (buffer, TYPE_DOMAIN (tmp), spc, flags);
+    tree domain = TYPE_DOMAIN(arrayType);
+    if (domain)
+    {
+      tree min = TYPE_MIN_VALUE (domain);
+      tree max = TYPE_MAX_VALUE (domain);
+      if (min && max && integer_zerop (min) && host_integerp (max, 0))
+      {
+        std::string nameStr = boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % (TREE_INT_CST_LOW (max) + 1));
+        writeTriple(arrayKdmElementId, KdmPredicate::Size(), nameStr);
+      }
+      else
+      {
+        if (min)
+        {
+          std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%  ") % BOOST_CURRENT_FUNCTION % __LINE__ ));
+          writeUnsupportedComment(msg);
+          //dump the node?
+        }
+        if (max)
+        {
+          std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
+          //dump the node?
+        }
+      }
+    }
+    else
+    {
+      writeTriple(arrayKdmElementId, KdmPredicate::Size(), "<unknown>");
+    }
+
 }
 
 /**

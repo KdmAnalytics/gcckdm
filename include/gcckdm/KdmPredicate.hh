@@ -47,66 +47,25 @@ private:
     KdmPredicate_LastUid,
     KdmPredicate_Export,
     KdmPredicate_Stereotype,
+    KdmPredicate_Size,
   };
 
 public:
-  static const KdmPredicate KdmType()
-  {
-    return KdmPredicate(KdmPredicate_KdmType, "kdmType");
-  }
-  static const KdmPredicate Contains()
-  {
-    return KdmPredicate(KdmPredicate_Contains, "contains");
-  }
-  static const KdmPredicate Type()
-  {
-    return KdmPredicate(KdmPredicate_Type, "type");
-  }
-  static const KdmPredicate Name()
-  {
-    return KdmPredicate(KdmPredicate_Name, "name");
-  }
-  static const KdmPredicate Kind()
-  {
-    return KdmPredicate(KdmPredicate_Kind, "kind");
-  }
-  static const KdmPredicate From()
-  {
-    return KdmPredicate(KdmPredicate_From, "from");
-  }
-  static const KdmPredicate To()
-  {
-    return KdmPredicate(KdmPredicate_To, "to");
-  }
-  static const KdmPredicate Path()
-  {
-    return KdmPredicate(KdmPredicate_Path, "path");
-  }
-  static const KdmPredicate SourceRef()
-  {
-    return KdmPredicate(KdmPredicate_SourceRef, "SourceRef");
-  }
-
-  static const KdmPredicate LinkId()
-  {
-    return KdmPredicate(KdmPredicate_LinkId, "link::id");
-  }
-  static const KdmPredicate Uid()
-  {
-    return KdmPredicate(KdmPredicate_Uid, "UID");
-  }
-  static const KdmPredicate LastUid()
-  {
-    return KdmPredicate(KdmPredicate_LastUid, "lastUID");
-  }
-  static const KdmPredicate Export()
-  {
-    return KdmPredicate(KdmPredicate_Export, "export");
-  }
-  static const KdmPredicate Stereotype()
-  {
-    return KdmPredicate(KdmPredicate_Stereotype, "stereotype");
-  }
+  static const KdmPredicate KdmType()    { return KdmPredicate(KdmPredicate_KdmType, "kdmType"); }
+  static const KdmPredicate Contains()   { return KdmPredicate(KdmPredicate_Contains, "contains"); }
+  static const KdmPredicate Type()       { return KdmPredicate(KdmPredicate_Type, "type"); }
+  static const KdmPredicate Name()       { return KdmPredicate(KdmPredicate_Name, "name"); }
+  static const KdmPredicate Kind()       { return KdmPredicate(KdmPredicate_Kind, "kind"); }
+  static const KdmPredicate From()       { return KdmPredicate(KdmPredicate_From, "from"); }
+  static const KdmPredicate To()         { return KdmPredicate(KdmPredicate_To, "to"); }
+  static const KdmPredicate Path()       { return KdmPredicate(KdmPredicate_Path, "path"); }
+  static const KdmPredicate SourceRef()  { return KdmPredicate(KdmPredicate_SourceRef, "SourceRef"); }
+  static const KdmPredicate LinkId()     { return KdmPredicate(KdmPredicate_LinkId, "link::id"); }
+  static const KdmPredicate Uid()        { return KdmPredicate(KdmPredicate_Uid, "UID"); }
+  static const KdmPredicate LastUid()    { return KdmPredicate(KdmPredicate_LastUid, "lastUID"); }
+  static const KdmPredicate Export()     { return KdmPredicate(KdmPredicate_Export, "export"); }
+  static const KdmPredicate Stereotype() { return KdmPredicate(KdmPredicate_Stereotype, "stereotype"); }
+  static const KdmPredicate Size()       { return KdmPredicate(KdmPredicate_Size, "size"); }
 
   int const id() const
   {

@@ -170,7 +170,7 @@ public:
    * writes: <extendsId> <kdmType> "code/CodeRelationship"
    * writes: <extendsId> <from> <subclass>
    * writes: <extendsId> <to> <superclass>
-   * writes: <extendsId> <stereotype> <friendId>
+   * writes: <extendsId> <Stereotype> <friendId>
    */
   long writeTripleFriend(long const subclass, long const superclass);
 
@@ -303,23 +303,23 @@ private:
     KdmElementId_Segment = 0,
     KdmElementId_CodeModel,
     KdmElementId_WorkbenchExtensionFamily,
-    KdmElementId_HiddenStereoType,
+    KdmElementId_HiddenStereotype,
     KdmElementId_CxxExtensionFamily,
-    KdmElementId_MutableStereoType,
-    KdmElementId_VolatileStereoType,
-    KdmElementId_ConstStereoType,
-    KdmElementId_StaticStereoType,
-    KdmElementId_InlineStereoType,
-    KdmElementId_RestrictStereoType,
-    KdmElementId_VirtualStereoType,
-    KdmElementId_PureVirtualStereoType,
-    KdmElementId_AbstractStereoType,
-    KdmElementId_FriendStereoType,
-    KdmElementId_IncompleteStereoType,
-    KdmElementId_PublicStereoType,
-    KdmElementId_PrivateStereoType,
-    KdmElementId_ProtectedStereoType,
-    KdmElementId_ExplicitStereoType,
+    KdmElementId_MutableStereotype,
+    KdmElementId_VolatileStereotype,
+    KdmElementId_ConstStereotype,
+    KdmElementId_StaticStereotype,
+    KdmElementId_InlineStereotype,
+    KdmElementId_RestrictStereotype,
+    KdmElementId_VirtualStereotype,
+    KdmElementId_PureVirtualStereotype,
+    KdmElementId_AbstractStereotype,
+    KdmElementId_FriendStereotype,
+    KdmElementId_IncompleteStereotype,
+    KdmElementId_PublicStereotype,
+    KdmElementId_PrivateStereotype,
+    KdmElementId_ProtectedStereotype,
+    KdmElementId_ExplicitStereotype,
     KdmElementId_CodeAssembly,
     KdmElementId_LanguageUnit,
     KdmElementId_DerivedSharedUnit,
@@ -433,7 +433,7 @@ private:
   long writeKdmValue(tree const val);
 
   /**
-   * Write type qualifiers as stereotypes on the declarations
+   * Write type qualifiers as Stereotypes on the declarations
    */
   void writeKdmTypeQualifiers(tree const decl);
 

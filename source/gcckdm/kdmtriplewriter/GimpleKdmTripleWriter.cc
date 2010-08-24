@@ -1227,11 +1227,19 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmArraySelect(gimple
 
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeBlockUnit)
 {
+  long dummy;
+  return writeKdmArraySelect(lhs, rhs, loc, writeBlockUnit, dummy);
+}
+
+GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeBlockUnit, long & tmpId)
+{
   assert(TREE_CODE(rhs) == ARRAY_REF);
 
   long actionId(mKdmWriter.getNextElementId());
   expanded_location xloc = expand_location(loc);
+  //var_decl
   tree op0 = TREE_OPERAND (rhs, 0);
+  //index
   tree op1 = TREE_OPERAND (rhs, 1);
   FlowPtr op0Flow = getRhsReferenceId(op0);
   FlowPtr actionFlow = updateFlow(FlowPtr(), op0Flow);
@@ -1240,12 +1248,21 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmArraySelect(tree c
 
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::ArraySelect());
-  writeKdmActionRelation(KdmType::Reads(), actionId, op0Flow->end);
+  writeKdmActionRelation(KdmType::Reads(), actionId, op1Flow->end);
   writeKdmActionRelation(KdmType::Addresses(), actionId, op0Flow->end);
 
-  long lhsId = (lhs == NULL_TREE) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),xloc) : getReferenceId(lhs);
-  mKdmWriter.writeTripleContains(actionId, lhsId);
+  long lhsId;
+  if (lhs == NULL_TREE)
+  {
+    lhsId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),xloc);
+    tmpId = lhsId;
+  }
+  else
+  {
+    lhsId = getReferenceId(lhs);
+  }
 
+  mKdmWriter.writeTripleContains(actionId, lhsId);
   writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
 
   if (writeBlockUnit)
@@ -1254,19 +1271,32 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmArraySelect(tree c
     mKdmWriter.writeTripleContains(blockUnitId, lhsId);
   }
   return updateActionFlow(actionFlow, actionId);
-}
 
+}
 
 // foo[0] = 1
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmArrayReplace(gimple const gs)
 {
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
+  //var_decl
   tree op0 = TREE_OPERAND (lhs, 0);
+  //index
   tree op1 = TREE_OPERAND (lhs, 1);
-  FlowPtr rhsFlow(getRhsReferenceId(rhs));
+  FlowPtr rhsFlow = getRhsReferenceId(rhs);
   FlowPtr actionFlow = updateFlow(FlowPtr(), rhsFlow);
-  long op0Id = getReferenceId(op0);
+
+  FlowPtr selectFlow;
+  long tmpId;
+  while (TREE_CODE(op0) == ARRAY_REF)
+  {
+    selectFlow = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), true, tmpId);
+    actionFlow = updateFlow(actionFlow, selectFlow);
+    op1 = TREE_OPERAND (op0, 1);
+    op0 = TREE_OPERAND (op0, 0);
+  }
+
+  long op0Id = (selectFlow) ? tmpId :getReferenceId(op0);
   long op1Id = getReferenceId(op1);
   long actionId = mKdmWriter.getNextElementId();
 

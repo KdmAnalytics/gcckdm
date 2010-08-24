@@ -204,6 +204,7 @@ private:
   FlowPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
   FlowPtr writeKdmArraySelect(gimple const gs);
   FlowPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
+  FlowPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit, long & tmpId);
   FlowPtr writeKdmArrayReplace(gimple const gs);
 
   /**

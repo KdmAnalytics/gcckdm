@@ -660,6 +660,8 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::processGimpleConditionalSt
   mKdmWriter.writeTripleContains(boolBlockId, condId);
 
   writeKdmActionRelation(KdmType::Reads(), actionId, boolId);
+  writeKdmActionRelation(KdmType::Flow(), condId, actionId);
+  actionFlow = updateActionFlow(actionFlow, condId);
 
   if (gimple_cond_true_label(gs))
   {

@@ -347,7 +347,7 @@ void KdmTripleWriter::finishTranslationUnit()
 {
   processNodeQueue();
   writeReferencedSharedUnits();
-  writeUids();
+  //writeUids();
 }
 
 void KdmTripleWriter::processAstNode(tree const ast)

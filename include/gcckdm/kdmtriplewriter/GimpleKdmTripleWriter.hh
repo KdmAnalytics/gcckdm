@@ -68,14 +68,18 @@ private:
 
   struct Flow
   {
-    explicit Flow(long startId)
-    : start(startId), end(startId)
+    explicit Flow(long startId, bool v = true)
+    : start(startId), end(startId), valid(v)
     {}
-    Flow(long startId, long endId)
-    : start(startId), end(endId)
+    Flow(long startId, long endId, bool v = true)
+    : start(startId), end(endId), valid(v)
     {};
+
     long start;
     long end;
+
+    //If false this flow is a container for the end id;
+    bool valid;
   };
 
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
@@ -226,10 +230,13 @@ private:
 
   long getReferenceId(tree const ast);
   FlowPtr getRhsReferenceId(tree const rhs);
+//  FlowPtr getRhsReferenceId(FlowPtr mainFlow, tree const rhs);
 
   tree resolveCall(tree const tree);
 
 
+  FlowPtr updateFlow(FlowPtr mainFlow, FlowPtr update);
+  FlowPtr updateActionFlow(FlowPtr actionFlow,long const actionId);
 
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;

@@ -236,6 +236,7 @@ private:
 
 
   FlowPtr updateFlow(FlowPtr mainFlow, FlowPtr update);
+  FlowPtr updateActionFlow(FlowPtr actionFlow,long const actionId);
 
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;

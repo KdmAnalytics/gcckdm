@@ -229,13 +229,13 @@ private:
   long writeKdmStorableUnit(long const typeId, location_t loc);
 
   long getReferenceId(tree const ast);
-//  FlowPtr getRhsReferenceId(tree const rhs);
-  FlowPtr getRhsReferenceId(FlowPtr mainFlow, tree const rhs);
+  FlowPtr getRhsReferenceId(tree const rhs);
+//  FlowPtr getRhsReferenceId(FlowPtr mainFlow, tree const rhs);
 
   tree resolveCall(tree const tree);
 
 
-  void updateFlow(FlowPtr mainFlow, FlowPtr update);
+  FlowPtr updateFlow(FlowPtr mainFlow, FlowPtr update);
 
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;

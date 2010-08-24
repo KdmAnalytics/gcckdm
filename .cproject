@@ -12,6 +12,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdm/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Debug-Win"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Debug_Win_x86"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="GccKdm"/>
 					</externalSetting>
 				</externalSettings>
@@ -77,9 +78,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
+						<entry excluding="source|include|test" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="source"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="include"/>
-						<entry excluding="test|source|include" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -1005,7 +1006,10 @@
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/GccKdm"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/GccKdmPlugin"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdm/Release"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Release_Win_x86"/>
+						<entry flags="RESOLVED" kind="libraryFile" name="GccKdm"/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -1981,6 +1985,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/GccKdmPlugin"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdm/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Debug"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Debug_Linux_x86"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="GccKdm"/>
 					</externalSetting>
 				</externalSettings>
@@ -2039,9 +2044,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
+						<entry excluding="source|include|test" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="source"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="include"/>
-						<entry excluding="test|source|include" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>
@@ -2970,6 +2975,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/GccKdmPlugin"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdm/Release"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Release"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Release_Linux_x86"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="GccKdm"/>
 					</externalSetting>
 				</externalSettings>
@@ -3015,8 +3021,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="include"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="source"/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="include"/>
 						<entry excluding="source|include" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
@@ -3948,6 +3954,7 @@
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdm/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Debug"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/kyle-gcckdm/Debug_Linux_x64_86"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/GccKdmPlugin/Debug_Linux_x86_64"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="GccKdm"/>
 					</externalSetting>
 				</externalSettings>
@@ -4007,9 +4014,9 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="source"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="include"/>
-						<entry excluding="test|source|include" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="source|include|test" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="source"/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

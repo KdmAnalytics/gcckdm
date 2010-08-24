@@ -82,6 +82,18 @@ private:
     bool valid;
   };
 
+//  struct ActionFlow
+//  {
+//    explicit ActionFlow(long actId, long startId, long endId)
+//    : actionId(actId), start(startId), end(endId)
+//    {
+//    }
+//
+//    long actionId;
+//    long start;
+//    long end;
+//  };
+
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<Flow> FlowPtr;
 

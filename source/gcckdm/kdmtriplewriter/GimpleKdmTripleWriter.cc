@@ -583,17 +583,20 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::updateFlow(FlowPtr mainFlo
   //If there isn't a flow to be begin with the flow update is the start
   if (not newFlow)
   {
-    newFlow = flowUpdate;
+    newFlow = FlowPtr(new Flow(flowUpdate->start, flowUpdate->end, flowUpdate->valid));
+    if (flowUpdate->valid)
+    {
+      writeKdmActionRelation(KdmType::Flow(), newFlow->end, flowUpdate->start);
+    }
   }
   //otherwise update the end of the flow
   else
   {
     newFlow->end = flowUpdate->end;
-  }
-
-  if (flowUpdate->valid)
-  {
-    writeKdmActionRelation(KdmType::Flow(), mainFlow->end, flowUpdate->start);
+    if (flowUpdate->valid)
+    {
+      writeKdmActionRelation(KdmType::Flow(), mainFlow->end, flowUpdate->start);
+    }
   }
   return newFlow;
 }
@@ -1107,7 +1110,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmPtrReplace(gimple 
   tree lhsOp0 = TREE_OPERAND (lhs, 0);
   long lhsId = getReferenceId(lhsOp0);
   FlowPtr rhsFlow = getRhsReferenceId(rhs);
-  FlowPtr actionFlow = updateFlow(actionFlow, rhsFlow);
+  FlowPtr actionFlow = updateFlow(FlowPtr(), rhsFlow);
 
 
   mKdmWriter.writeTripleKind(actionId, KdmKind::PtrReplace());

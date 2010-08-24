@@ -35,7 +35,7 @@
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
 #include <boost/graph/depth_first_search.hpp>
-//#include <boost/graph/graphviz.hpp>
+#include <boost/graph/graphviz.hpp>
 #include <fstream>
 namespace
 {
@@ -310,6 +310,25 @@ void KdmTripleWriter::writeReferencedSharedUnits()
   }
 }
 
+class VertexPropertyWriter
+{
+public:
+  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> Graph;
+  VertexPropertyWriter(Graph& graph) : mGraph(graph)
+  {
+
+  }
+
+  template <class Vertex>
+  void operator()(std::ostream& out, const Vertex v) const
+  {
+    out << "[label=\"" << mGraph[v].elementId << "\"]";
+  }
+
+private:
+  Graph & mGraph;
+};
+
 void KdmTripleWriter::writeUids()
 {
   //Calculate and Write UIDs
@@ -339,8 +358,8 @@ void KdmTripleWriter::writeUids()
     writeComment("Unable to locate root of UID tree, no UIDs will be written");
   }
   //  Use this to view the graph in dot
-  //  std::ofstream out("graph.viz", std::ios::out);
-  //  boost::write_graphviz(out, mUidGraph);
+  std::ofstream out("graph.viz", std::ios::out);
+  boost::write_graphviz(out, mUidGraph, VertexPropertyWriter(mUidGraph));
 }
 
 void KdmTripleWriter::finishTranslationUnit()

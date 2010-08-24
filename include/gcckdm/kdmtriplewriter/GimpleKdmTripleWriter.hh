@@ -199,6 +199,7 @@ private:
 
   FlowPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
   FlowPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
+  FlowPtr writeKdmUnaryConstructor(gimple const gs);
   FlowPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
   FlowPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
   FlowPtr writeKdmArraySelect(gimple const gs);

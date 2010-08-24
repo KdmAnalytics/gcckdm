@@ -359,10 +359,14 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::getRhsReferenceId(tree con
     flow->valid = false;
     mKdmWriter.processAstNode(rhs);
   }
-  else if (TREE_CODE(rhs) == CONSTRUCTOR)
-  {
-    flow = FlowPtr(new Flow(getReferenceId(TREE_TYPE(rhs))));
-  }
+//  else if (TREE_CODE(rhs) == CONSTRUCTOR)
+//  {
+//    location_t loc = gcckdm::locationOf(rhs);
+//    long tmpId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)), loc);
+//    const long blockUnitId(getBlockReferenceId(loc));
+//    mKdmWriter.writeTripleContains(blockUnitId, tmpId);
+//    flow = FlowPtr(new Flow(tmpId, false));
+//  }
   else if (TREE_CODE(rhs) == ADDR_EXPR)
   {
     flow = writeKdmPtrParam(rhs, gcckdm::locationOf(rhs));
@@ -868,7 +872,7 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::processGimpleUnaryAssignSt
     default:
     {
       if (TREE_CODE_CLASS(gimpleRhsCode) == tcc_declaration || TREE_CODE_CLASS(gimpleRhsCode) == tcc_constant
-          || gimpleRhsCode == SSA_NAME || gimpleRhsCode == CONSTRUCTOR)
+          || gimpleRhsCode == SSA_NAME)
       {
         tree lhs = gimple_assign_lhs(gs);
         if (TREE_CODE(lhs) == INDIRECT_REF)
@@ -888,6 +892,10 @@ GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::processGimpleUnaryAssignSt
           flow = writeKdmUnaryOperation(KdmKind::Assign(), gs);
         }
         break;
+      }
+      else if (gimpleRhsCode == CONSTRUCTOR)
+      {
+        flow = writeKdmUnaryConstructor(gs);
       }
       else if (TREE_CODE_CLASS(gimpleRhsCode) == tcc_reference)
       {
@@ -1119,6 +1127,26 @@ void GimpleKdmTripleWriter::writeKdmUnaryRelationships(long const actionId, long
   writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
 }
 
+GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmUnaryConstructor(gimple const gs)
+{
+  tree lhs(gimple_assign_lhs(gs));
+  tree rhs(gimple_assign_rhs1(gs));
+
+  long actionId = mKdmWriter.getNextElementId();
+  long lhsId = getReferenceId(lhs);
+
+  location_t loc = gimple_location(gs);
+  long tmpId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)), loc);
+  const long blockUnitId(getBlockReferenceId(loc));
+  mKdmWriter.writeTripleContains(blockUnitId, tmpId);
+  FlowPtr rhsFlow= FlowPtr(new Flow(tmpId, false));
+
+  FlowPtr actionFlow = updateFlow(FlowPtr(), rhsFlow);
+  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionId, KdmKind::Assign());
+  writeKdmUnaryRelationships(actionId, lhsId, rhsFlow->end);
+  return updateActionFlow(actionFlow, actionId);
+}
 
 GimpleKdmTripleWriter::FlowPtr GimpleKdmTripleWriter::writeKdmUnaryOperation(KdmKind const & kind, gimple const gs)
 {

@@ -630,6 +630,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   //Read each parameter
   if (gimple_call_num_args(gs) > 0)
   {
+    ActionDataPtr lastParamData;
     for (size_t i = 0; i < gimple_call_num_args(gs); i++)
     {
       tree callArg(gimple_call_arg(gs, i));
@@ -649,24 +650,27 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
         paramData->outputId(getReferenceId(callArg));
       }
 
+      //Record the first param
+      if (!actionData->hasStartAction())
+      {
+        actionData->startActionId(*paramData);
+      }
+
+      if (paramData->hasActionId())
+      {
+        if (lastParamData)
+        {
+          writeKdmFlow(lastParamData->actionId(), paramData->actionId());
+        }
+        lastParamData = paramData;
+      }
+
       writeKdmActionRelation(KdmType::Reads(), actionId, paramData->outputId());
-//      if (not flow and paramFlow->valid)
-//      {
-//          flow = paramFlow;
-//      }
-//      else if (flow)
-//      {
-//        flow->end = paramFlow->end;
-//      }
-//      else
-//      {
-//        //do nothing
-//      }
     }
-  }
-  else
-  {
-//    flow = ActionDataPtr(new Flow(actionId));
+    if (lastParamData)
+    {
+      writeKdmFlow(lastParamData->actionId(), actionId);
+    }
   }
 
   //optional write
@@ -1538,6 +1542,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(gimple c
     {
       writeKdmFlow(rhsData->getTargetId(), ptrData->actionId());
     }
+    actionData->actionId(ptrData->actionId());
+    actionData->outputId(ptrData->outputId());
   }
   return actionData;
 }

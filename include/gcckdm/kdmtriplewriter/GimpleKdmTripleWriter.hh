@@ -228,6 +228,9 @@ private:
   ActionDataPtr updateFlow(ActionDataPtr mainFlow, ActionDataPtr update);
   ActionDataPtr updateActionFlow(ActionDataPtr actionFlow,long const actionId);
 
+  void configureDataAndFlow(ActionDataPtr actionData, ActionDataPtr op0Data, ActionDataPtr op1Data);
+
+
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;
 

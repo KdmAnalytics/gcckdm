@@ -32,18 +32,31 @@ public:
 
   ActionData(long actId) : mActionId(actId), mStartActionId(actId), mOutputId(InvalidId){}
 
-  long actionId() { return mActionId; }
+  long actionId() const { return mActionId; }
   void actionId(long id) { mActionId = id; }
 
-  long startActionId() { return mStartActionId; }
+  long startActionId() const { return mStartActionId; }
   void startActionId(long id ) { mStartActionId = id; }
+  void startActionId(ActionData const & data)
+  {
+    if (data.hasActionId())
+    {
+      mStartActionId = data.mStartActionId;
+    }
+  }
 
-  long outputId() { return mOutputId; }
+  bool hasStartAction() const
+  {
+    return mStartActionId != InvalidId;
+  }
+
+
+  long outputId() const { return mOutputId; }
   void outputId(long id) { mOutputId = id; }
 
-  bool hasActionId() { return mActionId != InvalidId; }
+  bool hasActionId() const { return mActionId != InvalidId; }
 
-  long getTargetId() { return hasActionId() ? mActionId : mOutputId; }
+  long getTargetId() const { return hasActionId() ? mActionId : mOutputId; }
 
 private:
   long mActionId;

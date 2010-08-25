@@ -179,6 +179,7 @@ private:
 
   ActionDataPtr writeKdmNopForLabel(tree const label);
   long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
+  long writeKdmFlow(long const fromId, long const toId);
 
   void writeKdmUnaryRelationships(long const actionId, long lhsId, long rhsId);
   void writeKdmBinaryRelationships(long const actionId, long lhsId, long rhs1Id, long rhs2Id);
@@ -190,7 +191,7 @@ private:
   ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
   ActionDataPtr writeKdmArraySelect(gimple const gs);
   ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
-  ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit, long & tmpId);
+  //ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit, long & tmpId);
   ActionDataPtr writeKdmArrayReplace(gimple const gs);
 
   /**
@@ -212,6 +213,7 @@ private:
   ActionDataPtr writeKdmPtrParam(tree const addrExpr, gimple const gs);
   ActionDataPtr writeKdmPtrParam(tree const addrExpr, location_t const loc);
   ActionDataPtr writeKdmPtrReplace(gimple const gs);
+
 
   long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
   long writeKdmStorableUnit(long const typeId, location_t loc);

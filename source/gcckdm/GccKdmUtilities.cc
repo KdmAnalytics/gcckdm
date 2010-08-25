@@ -275,7 +275,7 @@ std::string getDemangledName(tree node)
       if(namePtr)
       {
         std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
-        // Remove class:: part of the name, if it exists
+        // Remove class qualifier part of the name, if it exists
         index = demangledName.find("::");
         size_t braceIndex = demangledName.find("(");
 
@@ -292,6 +292,18 @@ std::string getDemangledName(tree node)
           demangledName.erase(0, index + 2);
           index = demangledName.find("::");
           braceIndex = demangledName.find("(");
+        }
+
+        // Remove the function qualifier part of the name, if it exists. This is
+        // required for local variables (eg. foo()::b)
+        braceIndex = demangledName.find_last_of(")");
+        index = demangledName.find_last_of("::");
+        if(braceIndex != std::string::npos && index != std::string::npos)
+        {
+          if(index > braceIndex)
+          {
+            demangledName.erase(0, index + 2);
+          }
         }
 
         return demangledName;

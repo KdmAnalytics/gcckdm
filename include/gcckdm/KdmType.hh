@@ -91,7 +91,7 @@ public:
   //Kdm Group
   static const KdmType Segment()          { return KdmType(KdmType_Segment, "kdm/Segment");  }
   static const KdmType ExtensionFamily()  { return KdmType(KdmType_ExtensionFamily, "kdm/ExtensionFamily"); }
-  static const KdmType StereoType()       { return KdmType(KdmType_StereoType, "kdm/StereoType"); }
+  static const KdmType Stereotype()       { return KdmType(KdmType_StereoType, "kdm/Stereotype"); }
 
   //Code Group
   static const KdmType CodeModel()        { return KdmType(KdmType_CodeModel, "code/CodeModel"); }

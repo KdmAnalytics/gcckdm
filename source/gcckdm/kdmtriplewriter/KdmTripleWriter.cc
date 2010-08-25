@@ -35,7 +35,7 @@
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
 #include <boost/graph/depth_first_search.hpp>
-//#include <boost/graph/graphviz.hpp>
+#include <boost/graph/graphviz.hpp>
 #include <fstream>
 namespace
 {
@@ -310,6 +310,25 @@ void KdmTripleWriter::writeReferencedSharedUnits()
   }
 }
 
+class VertexPropertyWriter
+{
+public:
+  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> Graph;
+  VertexPropertyWriter(Graph& graph) : mGraph(graph)
+  {
+
+  }
+
+  template <class Vertex>
+  void operator()(std::ostream& out, const Vertex v) const
+  {
+    out << "[label=\"" << mGraph[v].elementId << "\"]";
+  }
+
+private:
+  Graph & mGraph;
+};
+
 void KdmTripleWriter::writeUids()
 {
   //Calculate and Write UIDs
@@ -339,15 +358,15 @@ void KdmTripleWriter::writeUids()
     writeComment("Unable to locate root of UID tree, no UIDs will be written");
   }
   //  Use this to view the graph in dot
-  //  std::ofstream out("graph.viz", std::ios::out);
-  //  boost::write_graphviz(out, mUidGraph);
+  std::ofstream out("graph.viz", std::ios::out);
+  boost::write_graphviz(out, mUidGraph, VertexPropertyWriter(mUidGraph));
 }
 
 void KdmTripleWriter::finishTranslationUnit()
 {
   processNodeQueue();
   writeReferencedSharedUnits();
-  //writeUids();
+  writeUids();
 }
 
 void KdmTripleWriter::processAstNode(tree const ast)
@@ -494,27 +513,27 @@ void KdmTripleWriter::writeKdmTypeQualifiers(tree const decl)
     int qualifiers = gcckdm::getTypeQualifiers(treeValueType);
     if(qualifiers & TYPE_QUAL_CONST)
     {
-      writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereoType);
+      writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereotype);
     }
   }
 
-  // Type qualifiers: Assemble any applicable stereotypes that supply additional information
+  // Type qualifiers: Assemble any applicable Stereotypes that supply additional information
   int qualifiers = gcckdm::getTypeQualifiers(decl);
   if(qualifiers & TYPE_QUAL_CONST)
   {
-    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereoType);
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereotype);
   }
   if(qualifiers & TYPE_QUAL_VOLATILE)
   {
-    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_VolatileStereoType);
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_VolatileStereotype);
   }
   if(qualifiers & TYPE_QUAL_RESTRICT)
   {
-    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_RestrictStereoType);
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_RestrictStereotype);
   }
   if (DECL_MUTABLE_P (decl))
   {
-    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_MutableStereoType);
+    writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_MutableStereotype);
   }
 }
 /**
@@ -855,13 +874,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
     if (DECL_PURE_VIRTUAL_P (functionDecl))
     {
-      // As described in KDM-1, using a stereotype to mark virtual functions instead of the "kind"
-      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_PureVirtualStereoType);
+      // As described in KDM-1, using a Stereotype to mark virtual functions instead of the "kind"
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_PureVirtualStereotype);
     }
     else if (DECL_VIRTUAL_P (functionDecl))
     {
-      // As described in KDM-1, using a stereotype to mark virtual functions instead of the "kind"
-      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
+      // As described in KDM-1, using a Stereotype to mark virtual functions instead of the "kind"
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereotype);
     }
     // C++ uses the mangled name for link:id, if possible
     writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
@@ -877,14 +896,14 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   // Inline keyword
   if (DECL_DECLARED_INLINE_P (functionDecl))
-    writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_InlineStereoType);
+    writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_InlineStereotype);
 
   // Const keyword
   writeKdmTypeQualifiers(functionDecl);
 
   // Static keyword
   if (!DECL_NONSTATIC_MEMBER_FUNCTION_P (functionDecl))
-    writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_StaticStereoType);
+    writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_StaticStereotype);
 
   // Source reference
   writeKdmSourceRef(callableUnitId, functionDecl);
@@ -906,11 +925,11 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
     // Explicit keyword
     if (DECL_NONCONVERTING_P (functionDecl))
-      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_ExplicitStereoType);
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_ExplicitStereotype);
 
     // Explicit keyword
     if (DECL_ARTIFICIAL (functionDecl))
-      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereoType);
+      writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
 
     // Friendship
     writeKdmTripleFriends(callableUnitId, DECL_BEFRIENDING_CLASSES(functionDecl));
@@ -1112,96 +1131,96 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
   writeTripleContains(KdmElementId_Segment, KdmElementId_CodeModel);
 
-  // Workbench stereotypes
+  // Workbench Stereotypes
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "__WORKBENCH__");
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "__WORKBENCH__");
   writeTripleContains(KdmElementId_Segment, KdmElementId_WorkbenchExtensionFamily);
-  writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::Name(), "__HIDDEN__");
-  writeTriple(KdmElementId_HiddenStereoType, KdmPredicate::LinkId(), "__HIDDEN__");
-  writeTripleContains(KdmElementId_WorkbenchExtensionFamily, KdmElementId_HiddenStereoType);
+  writeTriple(KdmElementId_HiddenStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_HiddenStereotype, KdmPredicate::Name(), "__HIDDEN__");
+  writeTriple(KdmElementId_HiddenStereotype, KdmPredicate::LinkId(), "__HIDDEN__");
+  writeTripleContains(KdmElementId_WorkbenchExtensionFamily, KdmElementId_HiddenStereotype);
 
-  // C++ stereotypes
+  // C++ Stereotypes
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "C/C++");
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "C/C++");
   writeTripleContains(KdmElementId_Segment, KdmElementId_CxxExtensionFamily);
 
-  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::Name(), "mutable");
-  writeTriple(KdmElementId_MutableStereoType, KdmPredicate::LinkId(), "mutable");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_MutableStereoType);
+  writeTriple(KdmElementId_MutableStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_MutableStereotype, KdmPredicate::Name(), "mutable");
+  writeTriple(KdmElementId_MutableStereotype, KdmPredicate::LinkId(), "mutable");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_MutableStereotype);
 
-  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::Name(), "volatile");
-  writeTriple(KdmElementId_VolatileStereoType, KdmPredicate::LinkId(), "volatile");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VolatileStereoType);
+  writeTriple(KdmElementId_VolatileStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_VolatileStereotype, KdmPredicate::Name(), "volatile");
+  writeTriple(KdmElementId_VolatileStereotype, KdmPredicate::LinkId(), "volatile");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VolatileStereotype);
 
-  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::Name(), "const");
-  writeTriple(KdmElementId_ConstStereoType, KdmPredicate::LinkId(), "const");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ConstStereoType);
+  writeTriple(KdmElementId_ConstStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_ConstStereotype, KdmPredicate::Name(), "const");
+  writeTriple(KdmElementId_ConstStereotype, KdmPredicate::LinkId(), "const");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ConstStereotype);
 
-  writeTriple(KdmElementId_StaticStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_StaticStereoType, KdmPredicate::Name(), "static");
-  writeTriple(KdmElementId_StaticStereoType, KdmPredicate::LinkId(), "static");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_StaticStereoType);
+  writeTriple(KdmElementId_StaticStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_StaticStereotype, KdmPredicate::Name(), "static");
+  writeTriple(KdmElementId_StaticStereotype, KdmPredicate::LinkId(), "static");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_StaticStereotype);
 
-  writeTriple(KdmElementId_InlineStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_InlineStereoType, KdmPredicate::Name(), "inline");
-  writeTriple(KdmElementId_InlineStereoType, KdmPredicate::LinkId(), "inline");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_InlineStereoType);
+  writeTriple(KdmElementId_InlineStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_InlineStereotype, KdmPredicate::Name(), "inline");
+  writeTriple(KdmElementId_InlineStereotype, KdmPredicate::LinkId(), "inline");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_InlineStereotype);
 
-  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::Name(), "restrict");
-  writeTriple(KdmElementId_RestrictStereoType, KdmPredicate::LinkId(), "restrict");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_RestrictStereoType);
+  writeTriple(KdmElementId_RestrictStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_RestrictStereotype, KdmPredicate::Name(), "restrict");
+  writeTriple(KdmElementId_RestrictStereotype, KdmPredicate::LinkId(), "restrict");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_RestrictStereotype);
 
-  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::Name(), "virtual");
-  writeTriple(KdmElementId_VirtualStereoType, KdmPredicate::LinkId(), "virtual");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VirtualStereoType);
+  writeTriple(KdmElementId_VirtualStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_VirtualStereotype, KdmPredicate::Name(), "virtual");
+  writeTriple(KdmElementId_VirtualStereotype, KdmPredicate::LinkId(), "virtual");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_VirtualStereotype);
 
-  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::Name(), "pure virtual");
-  writeTriple(KdmElementId_PureVirtualStereoType, KdmPredicate::LinkId(), "pure virtual");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PureVirtualStereoType);
+  writeTriple(KdmElementId_PureVirtualStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_PureVirtualStereotype, KdmPredicate::Name(), "pure virtual");
+  writeTriple(KdmElementId_PureVirtualStereotype, KdmPredicate::LinkId(), "pure virtual");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PureVirtualStereotype);
 
-  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::Name(), "abstract");
-  writeTriple(KdmElementId_AbstractStereoType, KdmPredicate::LinkId(), "abstract");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_AbstractStereoType);
+  writeTriple(KdmElementId_AbstractStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_AbstractStereotype, KdmPredicate::Name(), "abstract");
+  writeTriple(KdmElementId_AbstractStereotype, KdmPredicate::LinkId(), "abstract");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_AbstractStereotype);
 
-  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::Name(), "friend");
-  writeTriple(KdmElementId_FriendStereoType, KdmPredicate::LinkId(), "friend");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_FriendStereoType);
+  writeTriple(KdmElementId_FriendStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_FriendStereotype, KdmPredicate::Name(), "friend");
+  writeTriple(KdmElementId_FriendStereotype, KdmPredicate::LinkId(), "friend");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_FriendStereotype);
 
-  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::Name(), "incomplete");
-  writeTriple(KdmElementId_IncompleteStereoType, KdmPredicate::LinkId(), "incomplete");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_IncompleteStereoType);
+  writeTriple(KdmElementId_IncompleteStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_IncompleteStereotype, KdmPredicate::Name(), "incomplete");
+  writeTriple(KdmElementId_IncompleteStereotype, KdmPredicate::LinkId(), "incomplete");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_IncompleteStereotype);
 
-  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::Name(), "public");
-  writeTriple(KdmElementId_PublicStereoType, KdmPredicate::LinkId(), "public");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PublicStereoType);
+  writeTriple(KdmElementId_PublicStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_PublicStereotype, KdmPredicate::Name(), "public");
+  writeTriple(KdmElementId_PublicStereotype, KdmPredicate::LinkId(), "public");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PublicStereotype);
 
-  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::Name(), "private");
-  writeTriple(KdmElementId_PrivateStereoType, KdmPredicate::LinkId(), "private");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PrivateStereoType);
+  writeTriple(KdmElementId_PrivateStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_PrivateStereotype, KdmPredicate::Name(), "private");
+  writeTriple(KdmElementId_PrivateStereotype, KdmPredicate::LinkId(), "private");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_PrivateStereotype);
 
-  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::Name(), "protected");
-  writeTriple(KdmElementId_ProtectedStereoType, KdmPredicate::LinkId(), "protected");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ProtectedStereoType);
+  writeTriple(KdmElementId_ProtectedStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_ProtectedStereotype, KdmPredicate::Name(), "protected");
+  writeTriple(KdmElementId_ProtectedStereotype, KdmPredicate::LinkId(), "protected");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ProtectedStereotype);
 
-  writeTriple(KdmElementId_ExplicitStereoType, KdmPredicate::KdmType(), KdmType::StereoType());
-  writeTriple(KdmElementId_ExplicitStereoType, KdmPredicate::Name(), "explicit");
-  writeTriple(KdmElementId_ExplicitStereoType, KdmPredicate::LinkId(), "explicit");
-  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ExplicitStereoType);
+  writeTriple(KdmElementId_ExplicitStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_ExplicitStereotype, KdmPredicate::Name(), "explicit");
+  writeTriple(KdmElementId_ExplicitStereotype, KdmPredicate::LinkId(), "explicit");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ExplicitStereotype);
 
   // Code Model contents
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
@@ -1270,7 +1289,7 @@ long KdmTripleWriter::writeTripleFriend(long const subclass, long const supercla
   writeTripleKdmType(extendsId, KdmType::CodeRelationship());
   writeTriple(extendsId, KdmPredicate::From(), subclass);
   writeTriple(extendsId, KdmPredicate::To(), superclass);
-  writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_FriendStereoType);
+  writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_FriendStereotype);
   return extendsId;
 }
 
@@ -1646,6 +1665,39 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   tree t2(TYPE_MAIN_VARIANT(treeType));
   long arrayTypeKdmElementId = getReferenceId(t2);
   writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
+
+  //for (tree tmp = arrayType; TREE_CODE (tmp) == ARRAY_TYPE; tmp = TREE_TYPE (tmp))
+//    dump_array_domain (buffer, TYPE_DOMAIN (tmp), spc, flags);
+    tree domain = TYPE_DOMAIN(arrayType);
+    if (domain)
+    {
+      tree min = TYPE_MIN_VALUE (domain);
+      tree max = TYPE_MAX_VALUE (domain);
+      if (min && max && integer_zerop (min) && host_integerp (max, 0))
+      {
+        std::string nameStr = boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % (TREE_INT_CST_LOW (max) + 1));
+        writeTriple(arrayKdmElementId, KdmPredicate::Size(), nameStr);
+      }
+      else
+      {
+        if (min)
+        {
+          std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%  ") % BOOST_CURRENT_FUNCTION % __LINE__ ));
+          writeUnsupportedComment(msg);
+          //dump the node?
+        }
+        if (max)
+        {
+          std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
+          //dump the node?
+        }
+      }
+    }
+    else
+    {
+      writeTriple(arrayKdmElementId, KdmPredicate::Size(), "<unknown>");
+    }
+
 }
 
 /**
@@ -1767,14 +1819,14 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 
   // Is this an abstract class?
   if (CLASSTYPE_PURE_VIRTUALS (recordType) != 0)
-    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_AbstractStereoType);
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_AbstractStereotype);
 
   if (!COMPLETE_TYPE_P (recordType))
-    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereoType);
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereotype);
 
   // Hide artificial classes
   if (DECL_ARTIFICIAL (recordType))
-    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereoType);
+    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
 
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
@@ -1793,12 +1845,12 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 
     long extendsId = writeTripleExtends(classId, superClassId);
 
-    // Add some stereotypes to the relationship
+    // Add some Stereotypes to the relationship
     // Virtual subclass?
     bool virt (BINFO_VIRTUAL_P (bi));
     if(virt)
     {
-      writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereoType);
+      writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereotype);
     }
 
     // Access specifier.
@@ -1807,14 +1859,14 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
       tree ac (BINFO_BASE_ACCESS (biv, i));
 
       if (ac == 0 || ac == access_public_node)
-        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereoType);
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereotype);
       else if (ac == access_protected_node)
-        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_ProtectedStereoType);
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_ProtectedStereotype);
       else
-        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PrivateStereoType);
+        writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PrivateStereotype);
 
     }
-    else writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereoType);
+    else writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereotype);
 
     // Write the containment
     writeTripleContains(classId, extendsId);

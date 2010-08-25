@@ -82,6 +82,18 @@ private:
     bool valid;
   };
 
+//  struct ActionFlow
+//  {
+//    explicit ActionFlow(long actId, long startId, long endId)
+//    : actionId(actId), start(startId), end(endId)
+//    {
+//    }
+//
+//    long actionId;
+//    long start;
+//    long end;
+//  };
+
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<Flow> FlowPtr;
 
@@ -199,10 +211,12 @@ private:
 
   FlowPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
   FlowPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
+  FlowPtr writeKdmUnaryConstructor(gimple const gs);
   FlowPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
   FlowPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
   FlowPtr writeKdmArraySelect(gimple const gs);
   FlowPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
+  FlowPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit, long & tmpId);
   FlowPtr writeKdmArrayReplace(gimple const gs);
 
   /**

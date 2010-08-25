@@ -523,69 +523,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmNopForLabel(
   return actionData;
 }
 
-
-
-
-
-//GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::updateActionFlow(ActionDataPtr actionData, long const actionId)
-//{
-//  ActionDataPtr newFlow;
-//
-//  if (actionData)
-//  {
-//    actionData->end = actionId;
-//    newFlow = ActionDataPtr(new Flow(*actionData));
-//  }
-//  else
-//  {
-//    newFlow = ActionDataPtr(new Flow(actionId));
-//  }
-//  return newFlow;
-//}
-//
-//GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::updateFlow(ActionDataPtr mainFlow, ActionDataPtr flowUpdate)
-//{
-//  if (flowUpdate->isComplex())
-//  {
-//    if (mainFlow->hasEndPoints())
-//    {
-//      writeKdmActionRelation(KdmType::Flow(), mainFlow->end, flowUpdate->start);
-//      mainFlow->end(flowUpdate->end());
-//    }
-//    else
-//    {
-//      mainFlow->start(flowUpdate->start());
-//      mainFlow->end(flowUpdate->end());
-//    }
-//  }
-//  else
-//  {
-//    return mainFlow;
-//  }
-//}
-
-//GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::updateFlow(ActionDataPtr mainFlow, ActionDataPtr flowUpdate)
-//{
-//  ActionDataPtr newFlow;
-//
-//  if (flowUpdate->valid)
-//  {
-//    if (mainFlow)
-//    {
-//      writeKdmActionRelation(KdmType::Flow(), mainFlow->end, flowUpdate->start);
-//      newFlow = ActionDataPtr(new Flow(mainFlow->start, flowUpdate->end, flowUpdate->valid));
-//    }
-//  }
-//  else
-//  {
-//    if (mainFlow)
-//    {
-//      newFlow = ActionDataPtr(new Flow(*mainFlow));
-//    }
-//  }
-//  return newFlow;
-//}
-
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditionalStatement(gimple const gs)
 {
   //Reserve an id
@@ -1165,7 +1102,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrReplace(g
   //where does the write relationship go?
   mKdmWriter.writeComment("FIXME: KDM spec states there should be a writes relationship here.. ");
   //writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
-  //return updateActionFlow(actionData, actionId);
   return actionData;
 }
 
@@ -1185,23 +1121,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmBinaryOperat
   mKdmWriter.writeTripleKind(actionId, kind);
 
   ActionDataPtr rhs1Data = getRhsReferenceId(rhs1);
-
-  if (rhs1Data->hasActionId())
-  {
-    writeKdmActionRelation(KdmType::Flow(), rhs1Data->actionId(), actionId);
-    actionData->startActionId(rhs1Data->actionId());
-  }
-
   ActionDataPtr rhs2Data = getRhsReferenceId(rhs2);
-  if (rhs2Data->hasActionId())
-  {
-    writeKdmActionRelation(KdmType::Flow(), rhs2Data->actionId(), actionId);
-    actionData->startActionId(rhs2Data->actionId());
-  }
+  configureDataAndFlow(actionData, rhs1Data, rhs2Data);
 
   long lhsId = getReferenceId(lhs);
-  writeKdmBinaryRelationships(actionId, lhsId, rhs1Data->getTargetId(), rhs2Data->getTargetId());
-  //return updateActionFlow(actionData, actionId);
+  writeKdmBinaryRelationships(actionId, lhsId, rhs1Data->outputId(), rhs2Data->outputId());
+  actionData->outputId(lhsId);
   return actionData;
 }
 
@@ -1342,7 +1267,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
     //perform memberselect using temp
     ActionDataPtr op1Data = getRhsReferenceId(op1);
-    //actionData = updateFlow(actionData, op1Data);
     if (op1Data->hasActionId())
     {
       writeKdmActionRelation(KdmType::Flow(), ptrData->actionId(), op1Data->actionId());
@@ -1350,7 +1274,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
     ActionDataPtr memberSelectData = writeKdmMemberSelect(lhsId, op1Data->getTargetId(), ptrData->getTargetId());
     mKdmWriter.writeTripleContains(memberSelectData->actionId(), ptrData->getTargetId());
-    //actionData = updateFlow(actionData, memberSelectData);
     writeKdmActionRelation(KdmType::Flow(), op1Data->getTargetId(), op1Data->actionId());
 
     if (writeBlockUnit)

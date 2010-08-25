@@ -1568,7 +1568,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(gimple c
   {
     ActionDataPtr rhsData = getRhsReferenceId(op0);
 //    actionData = updateFlow(ActionDataPtr(), rhsData);
-    ActionDataPtr ptrData = writeKdmPtr(getReferenceId(lhs),rhsData->getTargetId());
+    actionData = writeKdmPtr(getReferenceId(lhs),rhsData->getTargetId());
     //actionData = updateActionFlow(actionData, ptrData->getTargetId());
   }
   return actionData;
@@ -1578,6 +1578,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(long con
 {
   long actionId = mKdmWriter.getNextElementId();
   ActionDataPtr actionData(new ActionData(actionId));
+  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::Ptr());
   writeKdmActionRelation(KdmType::Addresses(), actionId, addressesId);
   writeKdmActionRelation(KdmType::Writes(), actionId, writesId);

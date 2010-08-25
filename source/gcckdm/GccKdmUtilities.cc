@@ -263,10 +263,18 @@ std::string getDemangledName(tree node)
     {
       std::string mangledName(namePtr);
 
+      // Remove INTERNAL name
       size_t index = mangledName.find(" *INTERNAL* ");
       if (index != std::string::npos)
       {
         mangledName.erase(index, 12);
+      }
+
+      // Remove class:: part of the name, if it exists
+      index = mangledName.find("::");
+      if (index != std::string::npos)
+      {
+        mangledName.erase(0, index);
       }
 
       const int demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_TYPES | DMGL_ANSI) & ~DMGL_JAVA;

@@ -1486,18 +1486,18 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplac
   tree lhsOp0 = TREE_OPERAND (lhs, 0);
   long actionId = mKdmWriter.getNextElementId();
   ActionDataPtr actionData(new ActionData(actionId));
-  long lhsId = getReferenceId(lhsOp0);
 
+  ActionDataPtr lhsData = getRhsReferenceId(lhsOp0);
   ActionDataPtr rhsData = getRhsReferenceId(rhs);
-  actionData->startActionId(*rhsData);
-  actionData->outputId(rhsData->outputId());
+
+  configureDataAndFlow(actionData, lhsData, rhsData);
 
   //Write Member Replace
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::MemberReplace());
   writeKdmActionRelation(KdmType::Reads(), actionId, rhsData->outputId());
-  writeKdmActionRelation(KdmType::Invokes(), actionId, lhsId);
-  writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+  writeKdmActionRelation(KdmType::Invokes(), actionId, lhsData->outputId());
+  writeKdmActionRelation(KdmType::Writes(), actionId, lhsData->outputId());
   return actionData;
 }
 

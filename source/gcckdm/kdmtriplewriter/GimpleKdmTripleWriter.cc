@@ -224,8 +224,7 @@ namespace kdmtriplewriter
 GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter) :
       mKdmWriter(tripleWriter),
       mLabelFlag(false),
-      mRegisterVariableIndex(0),
-      mHasLastFlow(false)
+      mRegisterVariableIndex(0)
 {
 }
 
@@ -250,8 +249,8 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
     mCurrentFunctionDeclarationNode = functionDeclNode;
     mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
     //
-    mHasLastFlow = false;
     mFunctionEntryData.reset();
+    mLastData.reset();
 
     mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);

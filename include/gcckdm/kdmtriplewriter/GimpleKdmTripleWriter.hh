@@ -253,8 +253,6 @@ private:
   long mRegisterVariableIndex;
 
   ActionDataPtr mLastData;
-  bool mHasLastFlow;
-
   ActionDataPtr mFunctionEntryData;
 
 };

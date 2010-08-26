@@ -888,6 +888,8 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   else
   {
     writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
+    if(DECL_REALLY_EXTERN(functionDecl)) writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::External().name());
+    else writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Regular().name());
     // Standard C does not require mangled names for link:id
     writeTripleLinkId(callableUnitId, name);
   }

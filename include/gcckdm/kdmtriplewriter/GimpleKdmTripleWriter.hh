@@ -28,6 +28,7 @@
 
 #include "gcckdm/kdmtriplewriter/KdmTripleWriterFwd.hh"
 #include "gcckdm/kdmtriplewriter/ExpandedLocationFunctors.hh"
+#include "gcckdm/kdmtriplewriter/ActionData.hh"
 
 namespace gcckdm
 {
@@ -65,37 +66,10 @@ public:
   void processAstFunctionDeclarationNode(tree functionDecl);
 
 private:
-
-  struct Flow
-  {
-    explicit Flow(long startId, bool v = true)
-    : start(startId), end(startId), valid(v)
-    {}
-    Flow(long startId, long endId, bool v = true)
-    : start(startId), end(endId), valid(v)
-    {};
-
-    long start;
-    long end;
-
-    //If false this flow is a container for the end id;
-    bool valid;
-  };
-
-//  struct ActionFlow
-//  {
-//    explicit ActionFlow(long actId, long startId, long endId)
-//    : actionId(actId), start(startId), end(endId)
-//    {
-//    }
-//
-//    long actionId;
-//    long start;
-//    long end;
-//  };
-
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
-  typedef boost::shared_ptr<Flow> FlowPtr;
+  typedef boost::shared_ptr<ActionData> ActionDataPtr;
+  //typedef boost::shared_ptr<Flow> ActionDataPtr;
+  //typedef boost::shared_ptr<ActionFlow> ActionActionDataPtr;
 
 
   /**
@@ -187,70 +161,75 @@ private:
    * sink.
    *
    */
-  FlowPtr processGimpleAssignStatement(gimple const gs);
+  ActionDataPtr processGimpleAssignStatement(gimple const gs);
 
 
-  FlowPtr processGimpleReturnStatement(gimple const gs);
-  FlowPtr processGimpleConditionalStatement(gimple const gs);
-  FlowPtr processGimpleLabelStatement(gimple const gs);
-  FlowPtr processGimpleCallStatement(gimple const gs);
-  FlowPtr processGimpleGotoStatement(gimple const gs);
-  FlowPtr processGimpleSwitchStatement(gimple const gs);
+  ActionDataPtr processGimpleReturnStatement(gimple const gs);
+  ActionDataPtr processGimpleConditionalStatement(gimple const gs);
+  ActionDataPtr processGimpleLabelStatement(gimple const gs);
+  ActionDataPtr processGimpleCallStatement(gimple const gs);
+  ActionDataPtr processGimpleGotoStatement(gimple const gs);
+  ActionDataPtr processGimpleSwitchStatement(gimple const gs);
 
-  FlowPtr processGimpleUnaryAssignStatement(gimple const gs);
-  FlowPtr processGimpleBinaryAssignStatement(gimple const gs);
-  FlowPtr processGimpleTernaryAssignStatement(gimple const gs);
+  ActionDataPtr processGimpleUnaryAssignStatement(gimple const gs);
+  ActionDataPtr processGimpleBinaryAssignStatement(gimple const gs);
+  ActionDataPtr processGimpleTernaryAssignStatement(gimple const gs);
 
   long processGimpleAstNode(long const actionId, gimple const gs, tree const ast);
 
-  FlowPtr writeKdmNopForLabel(tree const label);
+  ActionDataPtr writeKdmNopForLabel(tree const label);
   long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
+  long writeKdmFlow(long const fromId, long const toId);
 
   void writeKdmUnaryRelationships(long const actionId, long lhsId, long rhsId);
   void writeKdmBinaryRelationships(long const actionId, long lhsId, long rhs1Id, long rhs2Id);
 
-  FlowPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
-  FlowPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
-  FlowPtr writeKdmUnaryConstructor(gimple const gs);
-  FlowPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
-  FlowPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
-  FlowPtr writeKdmArraySelect(gimple const gs);
-  FlowPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
-  FlowPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit, long & tmpId);
-  FlowPtr writeKdmArrayReplace(gimple const gs);
+  ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
+  ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
+  ActionDataPtr writeKdmUnaryConstructor(gimple const gs);
+  ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
+  ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
+  ActionDataPtr writeKdmArraySelect(gimple const gs);
+  ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
+  //ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit, long & tmpId);
+  ActionDataPtr writeKdmArrayReplace(gimple const gs);
 
   /**
    * D.1716 = this->m_bar;
    */
-  FlowPtr writeKdmMemberSelect(gimple const gs);
-  FlowPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
-  FlowPtr writeKdmMemberSelect(long const writesId, long const readsId, long const invokesId);
+  ActionDataPtr writeKdmMemberSelect(gimple const gs);
+  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
+  ActionDataPtr writeKdmMemberSelect(long const writesId, long const readsId, long const invokesId);
 
   /**
    * sin.sin_family = 2;
    */
-  FlowPtr writeKdmMemberSelectParam(tree const compRef, gimple const gs);
-  FlowPtr writeKdmMemberSelectParam(tree const compRef, location_t const loc);
+  ActionDataPtr writeKdmMemberSelectParam(tree const compRef, gimple const gs);
+  ActionDataPtr writeKdmMemberSelectParam(tree const compRef, location_t const loc);
 
-  FlowPtr writeKdmMemberReplace(gimple const gs);
-  FlowPtr writeKdmPtr(gimple const gs);
-  FlowPtr writeKdmPtr(long const lhsId, long const rhsId);
-  FlowPtr writeKdmPtrParam(tree const addrExpr, gimple const gs);
-  FlowPtr writeKdmPtrParam(tree const addrExpr, location_t const loc);
-  FlowPtr writeKdmPtrReplace(gimple const gs);
+  ActionDataPtr writeKdmMemberReplace(gimple const gs);
+  ActionDataPtr writeKdmPtr(gimple const gs);
+  ActionDataPtr writeKdmPtr(long const lhsId, long const rhsId);
+  ActionDataPtr writeKdmPtrParam(tree const addrExpr, gimple const gs);
+  ActionDataPtr writeKdmPtrParam(tree const addrExpr, location_t const loc);
+  ActionDataPtr writeKdmPtrReplace(gimple const gs);
+
 
   long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
   long writeKdmStorableUnit(long const typeId, location_t loc);
 
   long getReferenceId(tree const ast);
-  FlowPtr getRhsReferenceId(tree const rhs);
-//  FlowPtr getRhsReferenceId(FlowPtr mainFlow, tree const rhs);
+  ActionDataPtr getRhsReferenceId(tree const rhs);
+//  ActionDataPtr getRhsReferenceId(ActionDataPtr mainFlow, tree const rhs);
 
   tree resolveCall(tree const tree);
 
 
-  FlowPtr updateFlow(FlowPtr mainFlow, FlowPtr update);
-  FlowPtr updateActionFlow(FlowPtr actionFlow,long const actionId);
+  ActionDataPtr updateFlow(ActionDataPtr mainFlow, ActionDataPtr update);
+  ActionDataPtr updateActionFlow(ActionDataPtr actionFlow,long const actionId);
+
+  void configureDataAndFlow(ActionDataPtr actionData, ActionDataPtr op0Data, ActionDataPtr op1Data);
+
 
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;
@@ -270,13 +249,11 @@ private:
 
 
   bool mLabelFlag;
-  FlowPtr mLastLabelFlow;
+  ActionDataPtr mLastLabelData;
   long mRegisterVariableIndex;
 
-  FlowPtr mLastFlow;
-  bool mHasLastFlow;
-
-  FlowPtr mFunctionEntryFlow;
+  ActionDataPtr mLastData;
+  ActionDataPtr mFunctionEntryData;
 
 };
 

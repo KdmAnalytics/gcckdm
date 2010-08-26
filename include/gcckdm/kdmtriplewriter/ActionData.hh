@@ -35,7 +35,14 @@ public:
   long actionId() const { return mActionId; }
   void actionId(long id) { mActionId = id; }
 
-  long startActionId() const { return mStartActionId; }
+  /**
+   * Returns the start action id if explicity set otherwise returns the actionid
+   */
+  long startActionId() const
+  {
+    return (mStartActionId == InvalidId) ? mActionId : mStartActionId;
+  }
+
   void startActionId(long id ) { mStartActionId = id; }
   void startActionId(ActionData const & data)
   {

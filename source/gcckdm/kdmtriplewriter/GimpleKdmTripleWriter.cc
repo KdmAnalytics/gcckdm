@@ -1211,12 +1211,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   }
 
   ActionDataPtr selectData;
-  //long tmpId;
   while (TREE_CODE(op0) == ARRAY_REF)
   {
-    selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), true);
+    selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), false);
 
-    if (actionData->startActionId() == ActionData::InvalidId)
+    if (!actionData->hasStartAction())
     {
       actionData->startActionId(selectData->actionId());
     }
@@ -1224,6 +1223,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
     {
       writeKdmActionRelation(KdmType::Flow(), lastId ,selectData->actionId());
     }
+    mKdmWriter.writeTripleContains(actionId, selectData->actionId());
     lastId = selectData->actionId();
 
     op1 = TREE_OPERAND (op0, 1);
@@ -1242,6 +1242,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   //Have to determine if there is a bug in the spec here or not
   //where does the write relationship go?
   mKdmWriter.writeComment("FIXME: KDM spec states there should be a writes relationship here..");
+  actionData->outputId(op0Id);
   return actionData;
 }
 
@@ -1512,13 +1513,13 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(gimple c
   if (TREE_CODE(op0) == ARRAY_REF)
   {
     //Write Array Select Action Element into a temporary
-    ActionDataPtr selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), true);
+    ActionDataPtr selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), false);
     actionData->startActionId(*selectData);
     //Write Ptr Element
     ActionDataPtr ptrData = writeKdmPtr(getReferenceId(lhs), selectData->outputId());
 
-    //contain the array select in the ptr
-    mKdmWriter.writeTripleContains(ptrData->actionId(),selectData->actionId());
+    //contain the arrayselect in the ptr
+    mKdmWriter.writeTripleContains(ptrData->actionId(), selectData->actionId());
 
     // Hook up the flows between the select and ptr
     writeKdmFlow(selectData->actionId(), ptrData->actionId());
@@ -1531,18 +1532,16 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(gimple c
   else
   {
     ActionDataPtr rhsData = getRhsReferenceId(op0);
-    actionData->startActionId(*rhsData);
 
     //Write Ptr Element
-    ActionDataPtr ptrData = writeKdmPtr(getReferenceId(lhs),rhsData->getTargetId());
+    actionData = writeKdmPtr(getReferenceId(lhs),rhsData->getTargetId());
 
     //Hook up flow if nessecsary
     if (rhsData->hasActionId())
     {
-      writeKdmFlow(rhsData->getTargetId(), ptrData->actionId());
+      actionData->startActionId(rhsData->actionId());
+      writeKdmFlow(rhsData->actionId(), actionData->actionId());
     }
-    actionData->actionId(ptrData->actionId());
-    actionData->outputId(ptrData->outputId());
   }
   return actionData;
 }
@@ -1578,7 +1577,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrParam(tre
   {
     tree refOp0 = TREE_OPERAND (op0, 0);
     //Perform arraySelect
-    ActionDataPtr selectData = writeKdmArraySelect(NULL_TREE, op0, loc, true);
+    ActionDataPtr selectData = writeKdmArraySelect(NULL_TREE, op0, loc, false);
     actionData->startActionId(*selectData);
 
     //we have to create a second temp variable... aka temp2
@@ -1588,6 +1587,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrParam(tre
     //perform address on temp1 assign to temp2    temp2 = &rhs
     ActionDataPtr ptrData = writeKdmPtr(storable2Id, selectData->outputId());
     mKdmWriter.writeTripleContains(blockUnitId, ptrData->actionId());
+
+    //Contain the arraySelect in the ptr
+    mKdmWriter.writeTripleContains(ptrData->actionId(), selectData->actionId());
 
     //Hook up flow from select to ptr
     writeKdmFlow(selectData->actionId(),ptrData->actionId());

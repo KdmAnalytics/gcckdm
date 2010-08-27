@@ -118,15 +118,21 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
   switch (code)
   {
     case VAR_DECL:
+      //Fall Through
     case PARM_DECL:
+      //Fall Through
     case FUNCTION_DECL:
     {
+      //Do nothing
       break;
     }
     case INDIRECT_REF:
+      //Fall Through
     case NOP_EXPR:
+      //Fall Through
     case ADDR_EXPR:
     {
+      //Recursively call ourselves
       op0 = TREE_OPERAND(op0, 0);
       resolveCall(op0);
       break;
@@ -176,7 +182,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
     data = ActionDataPtr(new ActionData());
     data->outputId(getReferenceId(rhs));
   }
-
 
   return data;
 }
@@ -342,6 +347,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleReturnS
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
   tree t = gimple_return_retval(gs);
+
+  //If this statement is returning a value then we process it
+  //and write a reads
   if (t)
   {
     long id = getReferenceId(t);
@@ -408,11 +416,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
    writeKdmActionRelation(KdmType::Flow(), rhs2Data->actionId(), condId);
    mKdmWriter.writeTripleContains(condId, rhs2Data->actionId());
   }
+  //otherwise we just mark the start as the condition
   else
   {
     actionData->startActionId(condId);
   }
-
   mKdmWriter.writeTripleContains(actionId, condId);
 
   // Write read for the if
@@ -421,6 +429,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
   // Write flow for the if from comparison to if
   writeKdmActionRelation(KdmType::Flow(), condId, actionId);
 
+  //Write true flow
   if (gimple_cond_true_label(gs))
   {
     tree trueNode(gimple_cond_true_label(gs));
@@ -432,6 +441,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
     mKdmWriter.writeTriple(trueFlowId, KdmPredicate::To(), trueNodeId);
     mKdmWriter.writeTripleContains(actionId, trueFlowId);
   }
+
+  //Write false flow
   if (gimple_cond_false_label(gs))
   {
     tree falseNode(gimple_cond_false_label(gs));
@@ -443,6 +454,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
     mKdmWriter.writeTripleContains(actionId, falseFlowId);
   }
 
+  //Contain this action in a block unit
   long blockId = getBlockReferenceId(gimple_location(gs));
   mKdmWriter.writeTripleContains(blockId, actionId);
 
@@ -453,7 +465,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 {
   long actionId(mKdmWriter.getNextElementId());
   ActionDataPtr actionData(new ActionData(actionId));
-
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
 
   tree op0 = gimple_call_fn(gs);
@@ -510,8 +521,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
         actionData->startActionId(*paramData);
       }
 
+      //Compound parameter?
       if (paramData->hasActionId())
       {
+        //Hook up the flow if it's an action element and we have more than one param
         if (lastParamData)
         {
           writeKdmFlow(lastParamData->actionId(), paramData->actionId());
@@ -519,9 +532,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
         lastParamData = paramData;
       }
 
+      //Hook up the read to each parameter
       writeKdmActionRelation(KdmType::Reads(), actionId, paramData->outputId());
     }
 
+    //Write flow from the last parameter
     if (lastParamData)
     {
       writeKdmFlow(lastParamData->actionId(), actionId);
@@ -529,6 +544,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   }
 
   //optional write
+  // a = foo(b);
   tree lhs = gimple_call_lhs(gs);
   if (lhs)
   {
@@ -536,6 +552,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
   }
 
+  //Contain this Call within a block unit
   long blockId = getBlockReferenceId(gimple_location(gs));
   mKdmWriter.writeTripleContains(blockId, actionId);
 

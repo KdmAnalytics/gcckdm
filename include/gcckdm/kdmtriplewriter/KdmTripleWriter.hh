@@ -77,7 +77,8 @@ public:
       : functionBodies(true),
         generateUids(true),
         generateUidGraph(false),
-        containmentCheck(false)
+        containmentCheck(false),
+        outputDir("")
     {}
 
     /// If true function body information written to output
@@ -88,6 +89,8 @@ public:
     bool generateUidGraph;
     /// If true the write will issue a warning when a child is contained in two parents
     bool containmentCheck;
+    ///Output directory all output is placed here, if it's empty the output is place right beside the input file
+    KdmTripleWriter::Path outputDir;
   };
 
   /**

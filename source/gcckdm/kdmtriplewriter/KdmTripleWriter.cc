@@ -214,12 +214,20 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
 }
 
 KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings)
-: mKdmSink(new boost::filesystem::ofstream(filename)),
-  mKdmElementId(KdmElementId_DefaultStart),
+: mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
   mUid(0),
   mSettings(settings)
 {
+  if (settings.outputDir.filename().empty())
+  {
+    mKdmSink.reset(new boost::filesystem::ofstream(filename));
+  }
+  else
+  {
+    mKdmSink.reset(new boost::filesystem::ofstream(mSettings.outputDir / filename.filename()));
+  }
+
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 

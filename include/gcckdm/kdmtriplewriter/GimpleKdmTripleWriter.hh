@@ -68,9 +68,6 @@ public:
 private:
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<ActionData> ActionDataPtr;
-  //typedef boost::shared_ptr<Flow> ActionDataPtr;
-  //typedef boost::shared_ptr<ActionFlow> ActionActionDataPtr;
-
 
   /**
    * Iterates through all gimple statements in the given gimple_seq and

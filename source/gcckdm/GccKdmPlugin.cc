@@ -30,6 +30,7 @@
  * Have to define this to ensure that GCC is able to play nice with our plugin
  */
 int plugin_is_GPL_compatible = 1;
+namespace ktw = gcckdm::kdmtriplewriter;
 
 namespace
 {
@@ -43,7 +44,7 @@ extern "C" unsigned int executeKdmGimplePass();
 extern "C" void executeFinishUnit(void *event_data, void *data);
 
 void registerCallbacks(char const * pluginName);
-void processPluginArguments(struct plugin_name_args *plugin_info, gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink, gcckdm::kdmtriplewriter::KdmTripleWriter::Settings & settings);
+void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr kdmSink, ktw::KdmTripleWriter::Settings & settings);
 
 boost::unique_ptr<gcckdm::GccAstListener> gccAstListener;
 // Queue up tree object for latest processing (ie because gcc will fill in more info or
@@ -147,7 +148,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   return retValue;
 }
 
-void processPluginArguments(struct plugin_name_args *plugin_info, gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink, gcckdm::kdmtriplewriter::KdmTripleWriter::Settings & settings)
+void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr kdmSink, ktw::KdmTripleWriter::Settings & settings)
 {
   // Process any plugin arguments
   int argc = plugin_info->argc;
@@ -208,6 +209,18 @@ void processPluginArguments(struct plugin_name_args *plugin_info, gcckdm::kdmtri
       {
         settings.containmentCheck = true;
       }
+    }
+    else if (key == "output-dir")
+    {
+      namespace fs = boost::filesystem;
+
+      std::string value(argv[i].value);
+      fs::path outputDir(value);
+      if (!fs::exists(outputDir))
+      {
+        fs::create_directory(outputDir);
+      }
+      settings.outputDir = outputDir;
     }
     else
     {

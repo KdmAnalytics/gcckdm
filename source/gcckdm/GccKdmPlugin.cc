@@ -117,18 +117,6 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
         pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename, settings));
       }
 
-//      //Set if we are to process bodies or not...
-//      pWriter->bodies(options.processFunctionBodies);
-//      //Generate uids or no
-//      pWriter->generateUids(options.generateUids);
-//
-//      //Generate uid graph or not
-//      pWriter->generateUidGraph(options.generateUidGraph);
-//
-//      //Enable double containment check
-//      pWriter->doubleContainmentCheck(options.doubleContainmentCheck);
-
-
       //Set out listener pointer
       gccAstListener.reset(pWriter.release());
 

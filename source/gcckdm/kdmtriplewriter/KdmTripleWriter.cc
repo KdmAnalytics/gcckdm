@@ -237,16 +237,6 @@ KdmTripleWriter::~KdmTripleWriter()
 }
 
 
-//bool KdmTripleWriter::bodies() const
-//{
-//  return mBodies;
-//}
-
-//void KdmTripleWriter::bodies(bool const value)
-//{
-//  mBodies = value;
-//}
-
 void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
   try
@@ -365,16 +355,23 @@ void KdmTripleWriter::writeUids()
   {
     writeComment("Unable to locate root of UID tree, no UIDs will be written");
   }
-  //  Use this to view the graph in dot
-  std::ofstream out("graph.viz", std::ios::out);
-  boost::write_graphviz(out, mUidGraph, VertexPropertyWriter(mUidGraph));
+
+  if (mSettings.generateUidGraph)
+  {
+    //  Use this to view the graph in dot
+    std::ofstream out("graph.viz", std::ios::out);
+    boost::write_graphviz(out, mUidGraph, VertexPropertyWriter(mUidGraph));
+  }
 }
 
 void KdmTripleWriter::finishTranslationUnit()
 {
   processNodeQueue();
   writeReferencedSharedUnits();
-  writeUids();
+  if (mSettings.generateUids)
+  {
+    writeUids();
+  }
 }
 
 void KdmTripleWriter::processAstNode(tree const ast)

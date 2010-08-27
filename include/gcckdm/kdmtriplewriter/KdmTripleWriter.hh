@@ -282,7 +282,7 @@ private:
   typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
   typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
-
+  typedef std::list<long> ElementList;
   /**
    * Returns the id for source file containing the given node
    *
@@ -469,6 +469,7 @@ private:
   class UidVisitor;
   long mUid;
   TypeMap mUserTypes;
+  ElementList eList;
 };
 
 } // namespace kdmtriplewriter

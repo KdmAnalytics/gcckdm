@@ -212,6 +212,7 @@ private:
   ActionDataPtr writeKdmPtr(long const lhsId, long const rhsId);
   ActionDataPtr writeKdmPtrParam(tree const addrExpr, gimple const gs);
   ActionDataPtr writeKdmPtrParam(tree const addrExpr, location_t const loc);
+  ActionDataPtr writeKdmPtrParam(tree const addrExpr, location_t const loc, bool writeBlockUnit);
   ActionDataPtr writeKdmPtrReplace(gimple const gs);
 
 

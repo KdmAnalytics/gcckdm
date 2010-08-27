@@ -1286,6 +1286,8 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
     }
   }
 
+
+
   //If we don't have the parent in graph already create a new vertex otherwise
   //use the one we found
   if (not foundParentFlag)
@@ -1300,6 +1302,16 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
     childVertex = boost::add_vertex(mUidGraph);
     mUidGraph[childVertex].elementId = child;
   }
+
+  if (std::find(eList.begin(), eList.end(), child) != eList.end())
+  {
+    std::cerr << "Double containment of element " << child << std::endl;
+  }
+  else
+  {
+    eList.push_back(child);
+  }
+
 
   //create the edge between them
   boost::add_edge(parentVertex, childVertex, mUidGraph);
@@ -1647,12 +1659,11 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
       {
         if (min)
         {
-          std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%  ") % BOOST_CURRENT_FUNCTION % __LINE__ ));
-          writeUnsupportedComment(msg);
-          //dump the node?
+          writeTriple(arrayKdmElementId, KdmPredicate::Size(), nodeName(min));
         }
         if (max)
         {
+          processAstNode(max);
           std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
           //dump the node?
         }

@@ -63,7 +63,7 @@ public:
 
   bool hasActionId() const { return mActionId != InvalidId; }
 
-  long getTargetId() const { return hasActionId() ? mActionId : mOutputId; }
+//  long getTargetId() const { return hasActionId() ? mActionId : mOutputId; }
 
 private:
   long mActionId;

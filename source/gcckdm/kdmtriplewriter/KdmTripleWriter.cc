@@ -203,22 +203,22 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 
 
 
-KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr)
+KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter::Settings const & settings)
 : mKdmSink(kdmSinkPtr),
   mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
-  mBodies(true),
-  mUid(0)
+  mUid(0),
+  mSettings(settings)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
-KdmTripleWriter::KdmTripleWriter(Path const & filename)
+KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings)
 : mKdmSink(new boost::filesystem::ofstream(filename)),
   mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
-  mBodies(true),
-  mUid(0)
+  mUid(0),
+  mSettings(settings)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
@@ -229,15 +229,15 @@ KdmTripleWriter::~KdmTripleWriter()
 }
 
 
-bool KdmTripleWriter::bodies() const
-{
-  return mBodies;
-}
+//bool KdmTripleWriter::bodies() const
+//{
+//  return mBodies;
+//}
 
-void KdmTripleWriter::bodies(bool const value)
-{
-  mBodies = value;
-}
+//void KdmTripleWriter::bodies(bool const value)
+//{
+//  mBodies = value;
+//}
 
 void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
@@ -950,7 +950,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   long signatureId = writeKdmSignature(functionDecl);
   writeTripleContains(callableUnitId, signatureId);
 
-  if (mBodies)
+  if (mSettings.functionBodies)
   {
     mGimpleWriter->processAstFunctionDeclarationNode(functionDecl);
   }
@@ -1302,6 +1302,7 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
     childVertex = boost::add_vertex(mUidGraph);
     mUidGraph[childVertex].elementId = child;
   }
+
 
   if (std::find(eList.begin(), eList.end(), child) != eList.end())
   {

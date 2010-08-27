@@ -43,6 +43,7 @@ extern "C" unsigned int executeKdmGimplePass();
 extern "C" void executeFinishUnit(void *event_data, void *data);
 
 void registerCallbacks(char const * pluginName);
+void processPluginArguments(struct plugin_name_args *plugin_info, gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink, gcckdm::kdmtriplewriter::KdmTripleWriter::Settings & settings);
 
 boost::unique_ptr<gcckdm::GccAstListener> gccAstListener;
 // Queue up tree object for latest processing (ie because gcc will fill in more info or
@@ -97,66 +98,35 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   {
     if (!std::string(gcc_version.basever).empty())
     {
-      // Process any plugin arguments
-      int argc = plugin_info->argc;
-      struct plugin_argument *argv = plugin_info->argv;
       gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink;
-      bool processFunctionBodies = true;
-
-      for (int i = 0; i < argc; ++i)
-      {
-        std::string key(argv[i].key);
-        if (key == "output")
-        {
-          std::string value(argv[i].value);
-          if (value == "stdout")
-          {
-            kdmSink.reset(&std::cout, null_deleter());
-          }
-          else if (value == "stderr")
-          {
-            kdmSink.reset(&std::cout, null_deleter());
-          }
-          else if (value == "file")
-          {
-            //this is the default... handled below
-          }
-          else
-          {
-            warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, value.c_str());
-            continue;
-          }
-        }
-        else if (key == "bodies")
-        {
-          std::string value(argv[i].value);
-          if (value == "false")
-          {
-            processFunctionBodies = false;
-          }
-        }
-        else
-        {
-          warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, key.c_str());
-        }
-      }
+      gcckdm::kdmtriplewriter::KdmTripleWriter::Settings settings;
+      processPluginArguments(plugin_info, kdmSink, settings);
 
       boost::unique_ptr<gcckdm::kdmtriplewriter::KdmTripleWriter> pWriter;
       //User specified non-default output
       if (kdmSink)
       {
-        pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink));
+        pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(kdmSink, settings));
       }
       // default output is file
       else
       {
         boost::filesystem::path filename(main_input_filename);
         filename.replace_extension(".tkdm");
-        pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename));
+        pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename, settings));
       }
 
-      //Set if we are to process bodies or not...
-      pWriter->bodies(processFunctionBodies);
+//      //Set if we are to process bodies or not...
+//      pWriter->bodies(options.processFunctionBodies);
+//      //Generate uids or no
+//      pWriter->generateUids(options.generateUids);
+//
+//      //Generate uid graph or not
+//      pWriter->generateUidGraph(options.generateUidGraph);
+//
+//      //Enable double containment check
+//      pWriter->doubleContainmentCheck(options.doubleContainmentCheck);
+
 
       //Set out listener pointer
       gccAstListener.reset(pWriter.release());
@@ -167,9 +137,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
       // Register callbacks.
       //
       registerCallbacks(plugin_info->base_name);
-
     }
-
   }
   else
   {
@@ -178,6 +146,77 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
 
   return retValue;
 }
+
+void processPluginArguments(struct plugin_name_args *plugin_info, gcckdm::kdmtriplewriter::KdmTripleWriter::KdmSinkPtr kdmSink, gcckdm::kdmtriplewriter::KdmTripleWriter::Settings & settings)
+{
+  // Process any plugin arguments
+  int argc = plugin_info->argc;
+  struct plugin_argument *argv = plugin_info->argv;
+
+  for (int i = 0; i < argc; ++i)
+  {
+    std::string key(argv[i].key);
+    if (key == "output")
+    {
+      std::string value(argv[i].value);
+      if (value == "stdout")
+      {
+        kdmSink.reset(&std::cout, null_deleter());
+      }
+      else if (value == "stderr")
+      {
+        kdmSink.reset(&std::cout, null_deleter());
+      }
+      else if (value == "file")
+      {
+        //this is the default... handled below
+      }
+      else
+      {
+        warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, value.c_str());
+        continue;
+      }
+    }
+    else if (key == "bodies")
+    {
+      std::string value(argv[i].value);
+      if (value == "false")
+      {
+        settings.functionBodies = false;
+      }
+    }
+    else if (key == "uids")
+    {
+      std::string value(argv[i].value);
+      if (value == "false")
+      {
+        settings.generateUids = false;
+      }
+    }
+    else if (key == "uid-graph")
+    {
+      std::string value(argv[i].value);
+      if (value == "true")
+      {
+        settings.generateUidGraph = true;
+      }
+    }
+    else if (key == "debug-contains-check")
+    {
+      std::string value(argv[i].value);
+      if (value == "true")
+      {
+        settings.containmentCheck = true;
+      }
+    }
+    else
+    {
+      warning(0, G_("plugin %qs: unrecognized argument %qs ignored"), plugin_info->base_name, key.c_str());
+    }
+  }
+
+}
+
 
 /**
  * Convenience function to register all gcc plugin callback functions
@@ -233,11 +272,6 @@ extern "C" void executeStartUnit(void *event_data, void *data)
 }
 
 
-//
-//extern "C" void executeAllPassStart(void *event_data, void *data)
-//{
-//}
-
 /**
  * Called after GCC finishes parsing a type
  */
@@ -255,11 +289,6 @@ extern "C" void executeFinishType(void *event_data, void *data)
     //gccAstListener->processAstNode(static_cast<tree>(event_data));
   }
 }
-
-//extern "C" void executePreGeneric(void *event_data, void *data)
-//{
-//  gccAstListener->processAstNode(static_cast<tree> (event_data));
-//}
 
 /**
  * Called once for each function that is parsed by GCC

@@ -55,162 +55,12 @@ BinaryOperationKindMap treeCodeToKind =
                               (BIT_IOR_EXPR, gcckdm::KdmKind::BitOr())
                               ;
 
+/**
+ * Returns true is the TREE_CODE of the given node is a value aka Integer, real or string
+ */
 bool isValueNode(tree const node)
 {
   return TREE_CODE(node) == INTEGER_CST || TREE_CODE(node) == REAL_CST || TREE_CODE(node) == STRING_CST;
-}
-
-std::string getUnaryRhsString(gimple const gs)
-{
-  std::string rhsString;
-
-  enum tree_code gimpleRhsCode = gimple_assign_rhs_code(gs);
-  tree lhs = gimple_assign_lhs(gs);
-  tree rhs = gimple_assign_rhs1(gs);
-
-  switch (gimpleRhsCode)
-  {
-    case VIEW_CONVERT_EXPR:
-      //Fall Through
-    case ASSERT_EXPR:
-    {
-      rhsString += gcckdm::getAstNodeName(rhs);
-      break;
-    }
-    case FIXED_CONVERT_EXPR:
-      //Fall Through
-    case ADDR_SPACE_CONVERT_EXPR:
-      //Fall Through
-    case FIX_TRUNC_EXPR:
-      //Fall Through
-    case FLOAT_EXPR:
-      //Fall Through
-    case NOP_EXPR:
-      //Fall Through
-    case CONVERT_EXPR:
-    {
-      rhsString += "(" + gcckdm::getAstNodeName(TREE_TYPE(lhs)) + ") ";
-      if (op_prio(rhs) < op_code_prio(gimpleRhsCode))
-      {
-        rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
-      }
-      else
-      {
-        rhsString += gcckdm::getAstNodeName(rhs);
-      }
-      break;
-    }
-    case PAREN_EXPR:
-    {
-      rhsString += "((" + gcckdm::getAstNodeName(rhs) + "))";
-      break;
-    }
-    case ABS_EXPR:
-    {
-      rhsString += "ABS_EXPR <" + gcckdm::getAstNodeName(rhs) + ">";
-      break;
-    }
-    default:
-    {
-      if (TREE_CODE_CLASS(gimpleRhsCode) == tcc_declaration || TREE_CODE_CLASS(gimpleRhsCode) == tcc_constant || TREE_CODE_CLASS(gimpleRhsCode) == tcc_reference
-          || gimpleRhsCode == SSA_NAME || gimpleRhsCode == ADDR_EXPR || gimpleRhsCode == CONSTRUCTOR)
-      {
-        rhsString += gcckdm::getAstNodeName(rhs);
-        break;
-      }
-      else if (gimpleRhsCode == BIT_NOT_EXPR)
-      {
-        rhsString += '~';
-      }
-      else if (gimpleRhsCode == TRUTH_NOT_EXPR)
-      {
-        rhsString += '!';
-      }
-      else if (gimpleRhsCode == NEGATE_EXPR)
-      {
-        rhsString += "-";
-      }
-      else
-      {
-        rhsString += "[" + std::string(tree_code_name[gimpleRhsCode]) + "]";
-      }
-
-      if (op_prio(rhs) < op_code_prio(gimpleRhsCode))
-      {
-        rhsString += "(" + gcckdm::getAstNodeName(rhs) + ")";
-      }
-      else
-      {
-        rhsString += gcckdm::getAstNodeName(rhs);
-      }
-      break;
-    }
-  }
-  return rhsString;
-}
-
-std::string getBinaryRhsString(gimple const gs)
-{
-  std::string rhsString("");
-  enum tree_code code = gimple_assign_rhs_code(gs);
-  switch (code)
-  {
-    case COMPLEX_EXPR:
-      //Fall Through
-    case MIN_EXPR:
-      //Fall Through
-    case MAX_EXPR:
-      //Fall Through
-    case VEC_WIDEN_MULT_HI_EXPR:
-      //Fall Through
-    case VEC_WIDEN_MULT_LO_EXPR:
-      //Fall Through
-    case VEC_PACK_TRUNC_EXPR:
-      //Fall Through
-    case VEC_PACK_SAT_EXPR:
-      //Fall Through
-    case VEC_PACK_FIX_TRUNC_EXPR:
-      //Fall Through
-    case VEC_EXTRACT_EVEN_EXPR:
-      //Fall Through
-    case VEC_EXTRACT_ODD_EXPR:
-      //Fall Through
-    case VEC_INTERLEAVE_HIGH_EXPR:
-      //Fall Through
-    case VEC_INTERLEAVE_LOW_EXPR:
-    {
-      rhsString += tree_code_name[static_cast<int> (code)];
-      std::transform(rhsString.begin(), rhsString.end(), rhsString.begin(), toupper);
-      rhsString += " <" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ", " + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ">";
-      break;
-    }
-    default:
-    {
-      if (op_prio(gimple_assign_rhs1(gs)) <= op_code_prio(code))
-      {
-        rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + ")";
-      }
-      else
-      {
-        rhsString += gcckdm::getAstNodeName(gimple_assign_rhs1(gs)) + " " + std::string(op_symbol_code(gimple_assign_rhs_code(gs))) + " ";
-      }
-      if (op_prio(gimple_assign_rhs2(gs)) <= op_code_prio(code))
-      {
-        rhsString += "(" + gcckdm::getAstNodeName(gimple_assign_rhs2(gs)) + ")";
-      }
-      else
-      {
-        rhsString += gcckdm::getAstNodeName(gimple_assign_rhs2(gs));
-      }
-    }
-  }
-  return rhsString;
-
-}
-
-std::string getTernaryRhsString(gimple const gs)
-{
-  return "<TODO: ternary not implemented>";
 }
 
 } // namespace
@@ -671,6 +521,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 
       writeKdmActionRelation(KdmType::Reads(), actionId, paramData->outputId());
     }
+
     if (lastParamData)
     {
       writeKdmFlow(lastParamData->actionId(), actionId);
@@ -1266,56 +1117,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 {
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
-//  tree op0 = TREE_OPERAND (rhs, 0);
-//  tree op1 = TREE_OPERAND (rhs, 1);
-//  long lhsId = getReferenceId(lhs);
   return writeKdmMemberSelect(lhs, rhs, gimple_location(gs), false);
-//  ActionDataPtr actionData(new ActionData());
-//
-//  if (TREE_CODE(op0) == INDIRECT_REF)
-//  {
-//    tree indirectRef = TREE_OPERAND (op0, 0);
-//    long refId = getReferenceId(indirectRef);
-//    ActionDataPtr op1Data = getRhsReferenceId(op1);
-//
-//    //we have to create a temp variable to hold the Ptr result
-//    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(indirectRef)),expand_location(gimple_location(gs)));
-//
-//    //Resolve the indirect reference put result in temp
-//    long ptrActionId = mKdmWriter.getNextElementId();
-//    mKdmWriter.writeTripleKdmType(ptrActionId, KdmType::ActionElement());
-//    mKdmWriter.writeTripleKind(ptrActionId, KdmKind::Ptr());
-//    writeKdmActionRelation(KdmType::Addresses(), ptrActionId, refId);
-//    writeKdmActionRelation(KdmType::Writes(), ptrActionId, storableId);
-//    mKdmWriter.writeTripleContains(ptrActionId, storableId);
-//
-//    //perform memberselect using temp
-//    ActionDataPtr memberSelectData = writeKdmMemberSelect(lhsId, op1Data->outputId(), ptrActionId);
-//    mKdmWriter.writeTripleContains(memberSelectData->actionId(), ptrActionId);
-//
-//    if (op1Data->hasActionId())
-//    {
-//      actionData->startActionId(op1Data->actionId());
-//      writeKdmFlow(op1Data->actionId(), ptrActionId);
-//    }
-//    else
-//    {
-//      actionData->startActionId(ptrActionId);
-//    }
-//    writeKdmFlow(ptrActionId, memberSelectData->actionId());
-//    actionData->actionId(memberSelectData->actionId());
-//    actionData->outputId(storableId);
-//  }
-//  else
-//  {
-//    ActionDataPtr op0Data = getRhsReferenceId(op0);
-//    ActionDataPtr op1Data = getRhsReferenceId(op1);
-//    ActionDataPtr memberSelectData = writeKdmMemberSelect(lhsId, op1Data->outputId(), op0Data->outputId());
-//    actionData->actionId(memberSelectData->actionId());
-//    actionData->outputId(lhsId);
-//    configureDataAndFlow(actionData, op0Data, op1Data);
-//  }
-//  return actionData;
 }
 
 
@@ -1402,7 +1204,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
   }
   return actionData;
 }
-
 
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect(long const writesId, long const readsId, long const addressesId)

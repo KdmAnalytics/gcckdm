@@ -909,24 +909,19 @@ void GimpleKdmTripleWriter::writeKdmUnaryRelationships(long const actionId, long
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstructor(gimple const gs)
 {
+  ActionDataPtr actionData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
   tree lhs(gimple_assign_lhs(gs));
   tree rhs(gimple_assign_rhs1(gs));
-
-  long actionId = mKdmWriter.getNextElementId();
   long lhsId = getReferenceId(lhs);
+  long tmpId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)), gimple_location(gs));
+  mKdmWriter.writeTripleContains(actionData->actionId(), tmpId);
 
-  location_t loc = gimple_location(gs);
-  long tmpId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)), loc);
-  const long blockUnitId(getBlockReferenceId(loc));
-  mKdmWriter.writeTripleContains(blockUnitId, tmpId);
-  ActionDataPtr rhsData= ActionDataPtr(new ActionData());
-  rhsData->outputId(tmpId);
+  actionData->outputId(tmpId);
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Assign());
+  writeKdmUnaryRelationships(actionData->actionId(), lhsId, tmpId);
 
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::Assign());
-  writeKdmUnaryRelationships(actionId, lhsId, tmpId);
-
-  return rhsData;
+  return actionData;
 }
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryOperation(KdmKind const & kind, gimple const gs)

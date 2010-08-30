@@ -29,7 +29,6 @@
 #include "gcckdm/kdmtriplewriter/KdmTripleWriterFwd.hh"
 #include "gcckdm/kdmtriplewriter/ExpandedLocationFunctors.hh"
 #include "gcckdm/kdmtriplewriter/ActionData.hh"
-#include "gcckdm/kdmtriplewriter/KdmElementContext.hh"
 
 namespace gcckdm
 {

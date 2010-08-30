@@ -1020,8 +1020,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
 
   ActionDataPtr arraySelectFlow;
 
-  long actionId = mKdmWriter.getNextElementId();
-  ActionDataPtr actionData = ActionDataPtr(new ActionData(actionId));
+  ActionDataPtr actionData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
   expanded_location xloc = expand_location(loc);
 
   tree op0 = TREE_OPERAND (rhs, 0); //var_decl
@@ -1033,31 +1032,19 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
   //Configure Flows and containment
   configureDataAndFlow(actionData, op0Data, op1Data);
 
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::ArraySelect());
-  writeKdmActionRelation(KdmType::Reads(), actionId, op1Data->outputId());
-  writeKdmActionRelation(KdmType::Addresses(), actionId, op0Data->outputId());
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::ArraySelect());
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), op1Data->outputId());
+  writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), op0Data->outputId());
 
-  long lhsId;
-  if (lhs == NULL_TREE)
+  long lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),xloc) : getReferenceId(lhs);
+
+  if (not lhs)
   {
-    //we have to create a temp and contain it in the action element
-    lhsId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),xloc);
-    mKdmWriter.writeTripleContains(actionId, lhsId);
-  }
-  else
-  {
-    //variable defined by gimple it is contained in the callable
-    lhsId = getReferenceId(lhs);
+    mKdmWriter.writeTripleContains(actionData->actionId(), lhsId);
   }
 
-  if (writeBlockUnit)
-  {
-    const long blockUnitId(getBlockReferenceId(loc));
-    mKdmWriter.writeTripleContains(blockUnitId, lhsId);
-  }
-
-  writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
+  writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), lhsId);
   actionData->outputId(lhsId);
 
   return actionData;
@@ -1082,8 +1069,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   if (rhsData->hasActionId())
   {
     actionData->startActionId(rhsData->actionId());
-    lastId = rhsData->actionId();
   }
+  lastId = rhsData->outputId();
+
 
   ActionDataPtr selectData;
   while (TREE_CODE(op0) == ARRAY_REF)
@@ -1148,7 +1136,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
   expanded_location xloc = expand_location(loc);
   tree op0 = TREE_OPERAND (rhs, 0);
   tree op1 = TREE_OPERAND (rhs, 1);
-  ActionDataPtr actionData(new ActionData());
+  ActionDataPtr actionData;
   long lhsId;
 
   if (TREE_CODE(op0) == INDIRECT_REF)
@@ -1160,32 +1148,30 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
     //Resolve the indirect reference put result in temp
     ActionDataPtr ptrData = writeKdmPtr(lhsId, refId);
-    actionData->startActionId(ptrData->actionId());
 
     //Contain the temp variable in the Ptr
     mKdmWriter.writeTripleContains(ptrData->actionId(), lhsId);
 
     //perform memberselect using temp
     ActionDataPtr op1Data = getRhsReferenceId(op1);
-    ActionDataPtr memberSelectData = writeKdmMemberSelect(lhsId, op1Data->outputId(), ptrData->outputId());
+    actionData = writeKdmMemberSelect(lhsId, op1Data->outputId(), ptrData->outputId());
+    actionData->startActionId(ptrData->actionId());
 
     //contain ptr in memberselect
-    mKdmWriter.writeTripleContains(memberSelectData->actionId(), ptrData->actionId());
+    mKdmWriter.writeTripleContains(actionData->actionId(), ptrData->actionId());
 
     //Hook up flows and containment if the rhs is an actionElement
     if (op1Data->hasActionId())
     {
-      mKdmWriter.writeTripleContains(memberSelectData->actionId(), op1Data->actionId());
+      mKdmWriter.writeTripleContains(actionData->actionId(), op1Data->actionId());
       writeKdmFlow(ptrData->actionId(), op1Data->actionId());
-      writeKdmFlow(op1Data->actionId(), memberSelectData->actionId());
+      writeKdmFlow(op1Data->actionId(), actionData->actionId());
     }
     //otherwise just flow from the ptr to the memberselect
     else
     {
-      writeKdmFlow(ptrData->actionId(), memberSelectData->actionId());
+      writeKdmFlow(ptrData->actionId(), actionData->actionId());
     }
-
-    actionData->outputId(memberSelectData->outputId());
   }
 
   // Example: a = s.m

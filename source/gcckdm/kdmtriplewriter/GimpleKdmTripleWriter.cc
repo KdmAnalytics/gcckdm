@@ -1139,11 +1139,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
 
 
+// Example: a = s.m
 //D.1716 = this->m_bar;
 //D.4427 = hp->h_length;
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc, bool writeBlockUnit)
 {
   assert(TREE_CODE(rhs) == COMPONENT_REF);
+
+  mKdmWriter.writeComment("=============KDM MemberSelect Start==================");
 
   expanded_location xloc = expand_location(loc);
   tree op0 = TREE_OPERAND (rhs, 0);
@@ -1161,7 +1164,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
     //Resolve the indirect reference put result in temp
     ActionDataPtr ptrData = writeKdmPtr(lhsId, refId);
     actionData->startActionId(ptrData->actionId());
-    mKdmWriter.writeTripleContains(ptrData->outputId(), lhsId);
+
+    //Contain the temp variable in the Ptr
+    mKdmWriter.writeTripleContains(ptrData->actionId(), lhsId);
 
     //perform memberselect using temp
     ActionDataPtr op1Data = getRhsReferenceId(op1);
@@ -1219,6 +1224,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
     configureDataAndFlow(actionData, op0Data, op1Data);
     actionData->outputId(memberData->outputId());
   }
+  mKdmWriter.writeComment("=============KDM MemberSelect Finish==================");
   return actionData;
 }
 

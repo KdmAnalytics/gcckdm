@@ -77,7 +77,7 @@ public:
       : functionBodies(true),
         generateUids(true),
         generateUidGraph(false),
-        containmentCheck(false),
+        containmentCheck(true),
         outputDir("")
     {}
 
@@ -298,7 +298,7 @@ private:
   typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
   typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
-  typedef std::list<long> ElementList;
+  typedef std::tr1::unordered_map<long, long> ContainmentMap;
 
   /**
    * Functor for hashing KdmType's.
@@ -489,7 +489,8 @@ private:
   TreeMap mReferencedNodes;
   TreeMap mReferencedSharedUnits;
 
-  Path mCompilationFile; /// The complete (absolute) path to the file being compiled
+  /// The complete (absolute) path to the file being compiled
+  Path mCompilationFile;
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
@@ -497,13 +498,17 @@ private:
   //Graph to store generated UID's
   UidGraph mUidGraph;
 
-  //bool mBodies;
-
+  //Allow UidVisitor functor access to private members
   friend class UidVisitor;
   class UidVisitor;
+
+  /// The currrent uid.  Incremented for each new contains relationship
   long mUid;
+
   TypeMap mUserTypes;
-  ElementList eList;
+
+  ///List of element elements.  Used for duplicate contains detection
+  ContainmentMap mContainment;
 
   ///User configuration settings
   Settings mSettings;

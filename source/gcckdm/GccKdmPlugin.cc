@@ -121,7 +121,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
       gccAstListener.reset(pWriter.release());
 
       //Disable assembly output
-      asm_file_name = HOST_BIT_BUCKET;
+      //asm_file_name = HOST_BIT_BUCKET;
 
       // Register callbacks.
       //
@@ -321,7 +321,6 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
 
   if (!errorcount && !sorrycount)
   {
-
     tree t;
     for (int i = 0; treeQueueVec && VEC_iterate (tree, treeQueueVec, i, t); ++i)
     {
@@ -331,8 +330,9 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
     VEC_free (tree, heap, treeQueueVec);
     treeQueueVec = nullptr;
   }
-  int retValue(0);
-  exit(retValue);
+
+  //int retValue(0);
+  //exit(retValue);
 }
 }
 

@@ -1309,15 +1309,18 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
   }
 
 
-  if (std::find(eList.begin(), eList.end(), child) != eList.end())
+  if (mSettings.containmentCheck)
   {
-    std::cerr << "Double containment of element " << child << std::endl;
+    ContainmentMap::const_iterator ci = mContainment.find(child);
+    if (ci != mContainment.end())
+    {
+      std::cerr << mCompilationFile <<": Double containment element (" << child << ") is contained in " << ci->second << " and " << parent << ".\n";
+    }
+    else
+    {
+      mContainment.insert(std::make_pair(child, parent));
+    }
   }
-  else
-  {
-    eList.push_back(child);
-  }
-
 
   //create the edge between them
   boost::add_edge(parentVertex, childVertex, mUidGraph);

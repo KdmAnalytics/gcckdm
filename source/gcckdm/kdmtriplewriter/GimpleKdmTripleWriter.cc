@@ -300,6 +300,11 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
       mKdmWriter.writeComment("Skipping external variable in bind statement....");
       continue;
     }
+    if (TREE_CODE(var) == LABEL_DECL)
+    {
+      mKdmWriter.writeComment("Skipping label decl in bind statement....");
+      continue;
+    }
 
     long declId = getReferenceId(var);
     mKdmWriter.processAstNode(var);

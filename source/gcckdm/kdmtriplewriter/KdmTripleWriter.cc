@@ -261,8 +261,11 @@ void KdmTripleWriter::startKdmGimplePass()
     struct varpool_node *pNode;
     for ((pNode) = varpool_nodes_queue; (pNode); (pNode) = (pNode)->next_needed)
     {
-      long unitId = writeKdmStorableUnit(pNode->decl);
-      writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
+      if (!hasReferenceId(pNode->decl))
+      {
+        long unitId = writeKdmStorableUnit(pNode->decl);
+        writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
+      }
     }
   }
   catch (KdmTripleWriterException & e)

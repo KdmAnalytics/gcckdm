@@ -44,7 +44,7 @@ extern "C" unsigned int executeKdmGimplePass();
 extern "C" void executeFinishUnit(void *event_data, void *data);
 
 void registerCallbacks(char const * pluginName);
-void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr kdmSink, ktw::KdmTripleWriter::Settings & settings);
+void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr & kdmSink, ktw::KdmTripleWriter::Settings & settings);
 
 boost::unique_ptr<gcckdm::GccAstListener> gccAstListener;
 // Queue up tree object for latest processing (ie because gcc will fill in more info or
@@ -136,7 +136,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   return retValue;
 }
 
-void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr kdmSink, ktw::KdmTripleWriter::Settings & settings)
+void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr & kdmSink, ktw::KdmTripleWriter::Settings & settings)
 {
   // Process any plugin arguments
   int argc = plugin_info->argc;

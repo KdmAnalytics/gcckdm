@@ -29,6 +29,7 @@
 #include "gcckdm/kdmtriplewriter/KdmTripleWriterFwd.hh"
 #include "gcckdm/kdmtriplewriter/ExpandedLocationFunctors.hh"
 #include "gcckdm/kdmtriplewriter/ActionData.hh"
+#include "gcckdm/kdmtriplewriter/KdmElementContext.hh"
 
 namespace gcckdm
 {
@@ -68,6 +69,7 @@ public:
 private:
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<ActionData> ActionDataPtr;
+
 
   /**
    * Iterates through all gimple statements in the given gimple_seq and
@@ -193,23 +195,43 @@ private:
 
   /**
    * D.1716 = this->m_bar;
-   */
-  ActionDataPtr writeKdmMemberSelect(gimple const gs);
-  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
-  ActionDataPtr writeKdmMemberSelect(long const writesId, long const readsId, long const invokesId);
-
-  /**
    * sin.sin_family = 2;
    */
-  ActionDataPtr writeKdmMemberSelectParam(tree const compRef, gimple const gs);
-  ActionDataPtr writeKdmMemberSelectParam(tree const compRef, location_t const loc);
+  ActionDataPtr writeKdmMemberSelect(gimple const gs);
+
+
+  /**
+   * @param lhs
+   * @param rhs
+   * @param loc
+   */
+  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc);
+
+
+  ActionDataPtr writeKdmMemberSelect(long const writesId, long const readsId, long const addressesId);
 
   ActionDataPtr writeKdmMemberReplace(gimple const gs);
+
+
   ActionDataPtr writeKdmPtr(gimple const gs);
-  ActionDataPtr writeKdmPtr(long const lhsId, long const rhsId);
-  ActionDataPtr writeKdmPtrParam(tree const addrExpr, gimple const gs);
-  ActionDataPtr writeKdmPtrParam(tree const addrExpr, location_t const loc);
-  ActionDataPtr writeKdmPtrParam(tree const addrExpr, location_t const loc, bool writeBlockUnit);
+
+  /**
+   *
+   *
+   * @param lhs target of the writes relationship, if null Ptr is written to register variable
+   * @param rhs ADDR_EXPR
+   * @param loc location of the gimple statement that this element is generated from
+   */
+  ActionDataPtr writeKdmPtr(tree const lhs, tree const rhs, location_t const loc);
+
+  /**
+   * Writes the KDM Ptr ActionElement
+   *
+   * @param writesId the id of to side of the writes relationship for this Ptr Element
+   * @param addressesId the id of the to side of the addresses relationship for this Ptr Element
+   */
+  ActionDataPtr writeKdmPtr(long const writesId, long const addressesId);
+
   ActionDataPtr writeKdmPtrReplace(gimple const gs);
 
 

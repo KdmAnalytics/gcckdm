@@ -619,8 +619,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       //Fall Through
     case ASSERT_EXPR:
     {
-      std::string msg(boost::str(boost::format("GIMPLE assignment statement (%1%) in %2%") % std::string(tree_code_name[gimpleRhsCode])
-      % BOOST_CURRENT_FUNCTION));
+      std::string msg(boost::str(boost::format("GIMPLE assignment statement assert expression (%1%) in %2%:%3%") % std::string(tree_code_name[gimpleRhsCode]) % BOOST_CURRENT_FUNCTION % __LINE__));
       mKdmWriter.writeUnsupportedComment(msg);
       break;
     }
@@ -654,10 +653,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
        //Fall Through
     case ABS_EXPR:
     {
-      std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[gimpleRhsCode])
-      % BOOST_CURRENT_FUNCTION));
-      mKdmWriter.writeUnsupportedComment(msg);
-      //            rhsString += "ABS_EXPR <" + gcckdm::getAstNodeName(rhs) + ">";
+      actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
       break;
     }
     default:

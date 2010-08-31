@@ -649,13 +649,13 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       }
       break;
     }
-    case PAREN_EXPR:
-       //Fall Through
     case ABS_EXPR:
     {
       actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
       break;
     }
+    case PAREN_EXPR:
+       //Fall Through
     default:
     {
       if (TREE_CODE_CLASS(gimpleRhsCode) == tcc_declaration || TREE_CODE_CLASS(gimpleRhsCode) == tcc_constant

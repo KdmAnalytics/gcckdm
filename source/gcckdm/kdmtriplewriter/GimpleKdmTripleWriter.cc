@@ -150,6 +150,11 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
+  if (TREE_CODE(ast) == INDIRECT_REF)
+  {
+    int i = 0;
+  }
+
   return mKdmWriter.getReferenceId(ast);
 }
 
@@ -1242,28 +1247,95 @@ void GimpleKdmTripleWriter::configureDataAndFlow(ActionDataPtr actionData, Actio
   }
 }
 
-
-
 //Example: sin.sin_family = 2;
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplace(gimple const gs)
 {
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
-  tree lhsOp0 = TREE_OPERAND (lhs, 0);
-  long actionId = mKdmWriter.getNextElementId();
-  ActionDataPtr actionData = ActionDataPtr(new ActionData(actionId));
-  ActionDataPtr lhsData = getRhsReferenceId(lhsOp0);
-  ActionDataPtr rhsData = getRhsReferenceId(rhs);
+  tree op = TREE_OPERAND (lhs, 0);  //either . or  ->
+  return writeKdmMemberReplace(lhs, op, rhs, gimple_location(gs));
+}
 
-  configureDataAndFlow(actionData, lhsData, rhsData);
 
-  //Write Member Replace
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::MemberReplace());
-  writeKdmActionRelation(KdmType::Reads(), actionId, rhsData->outputId());
-  writeKdmActionRelation(KdmType::Invokes(), actionId, lhsData->outputId());
-  writeKdmActionRelation(KdmType::Writes(), actionId, lhsData->outputId());
+//Example: sin.sin_family = 2;
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplace(tree const lhs, tree const op, tree const rhs, location_t const loc)
+{
+  ActionDataPtr actionData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
+  long lhsId;
 
+  //Operation is "->"
+  //Example a->a = 1;
+  if (TREE_CODE(op) == INDIRECT_REF)
+  {
+    //Similar to memberselect we have to break this statement down
+    //further to make it proper KDM.  We have to first do Ptr
+    // and then a memberSelect
+    //
+    // Original: a->b = 1;
+    //
+    // Output: tmpA = *a;
+    //         tmpB = tmpA.b
+    //         tmpB = 1;
+
+    //Create our temp
+    tree indirectRef = TREE_OPERAND (op, 0);
+    long refId = getReferenceId(indirectRef);
+    lhsId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(indirectRef)),loc);
+
+    //Resolve the indirect reference put result in temp
+    ActionDataPtr ptrData = writeKdmPtr(lhsId, refId);
+
+    //Contain the temp variable in the Ptr
+    mKdmWriter.writeTripleContains(ptrData->actionId(), lhsId);
+
+    ActionDataPtr rhsData = getRhsReferenceId(rhs);
+
+    //perform member replace
+    actionData = writeKdmMemberReplace(lhsId, rhsData->outputId(), ptrData->outputId());
+
+    //contain ptr in memberselect
+    mKdmWriter.writeTripleContains(actionData->actionId(), ptrData->actionId());
+
+    //Hook up flows and containment
+    if (rhsData->hasActionId())
+    {
+      mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
+      writeKdmFlow(ptrData->actionId(), rhsData->actionId());
+      writeKdmFlow(rhsData->actionId(), actionData->actionId());
+    }
+    else
+    {
+      writeKdmFlow(ptrData->actionId(), actionData->actionId());
+    }
+  }
+  //Operation is "."
+  //Example: a.a = 1
+  else
+  {
+    //lhs is a component_ref... we need to get the member to write to
+    //which should be second operand if I read my gcc code properly....
+    tree member = TREE_OPERAND(lhs, 1);
+    long memberId = getReferenceId(member);
+
+    //We just need the reference to the containing struct
+    //which should be the first operand....
+    ActionDataPtr lhsData = getRhsReferenceId(TREE_OPERAND(lhs, 0));
+    ActionDataPtr rhsData = getRhsReferenceId(rhs);
+    actionData = writeKdmMemberReplace(memberId, rhsData->outputId(), lhsData->outputId());
+    configureDataAndFlow(actionData, lhsData, rhsData);
+  }
+
+  return actionData;
+}
+
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplace(long const writesId, long const readsId, long const addressesId)
+{
+  ActionDataPtr actionData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::MemberReplace());
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), readsId);
+  writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), addressesId);
+  writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), writesId);
   return actionData;
 }
 

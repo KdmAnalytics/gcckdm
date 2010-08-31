@@ -205,11 +205,11 @@ private:
    * @param loc
    */
   ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc);
-
-
   ActionDataPtr writeKdmMemberSelect(long const writesId, long const readsId, long const addressesId);
 
   ActionDataPtr writeKdmMemberReplace(gimple const gs);
+  ActionDataPtr writeKdmMemberReplace(tree const lhs, tree const op, tree const rhs, location_t const loc);
+  ActionDataPtr writeKdmMemberReplace(long const writesId, long const readsId, long const addressesId);
 
 
   ActionDataPtr writeKdmPtr(gimple const gs);

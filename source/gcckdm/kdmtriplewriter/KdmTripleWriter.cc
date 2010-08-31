@@ -702,7 +702,7 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
       }
       case ENUMERAL_TYPE:
       {
-        processAstEnumTypeNode(typeNode);
+        writeEnumType(typeNode);
         break;
       }
       case UNION_TYPE:
@@ -753,12 +753,35 @@ void KdmTripleWriter::processAstRecordTypeNode(tree const typeNode)
   }
 }
 
-void KdmTripleWriter::processAstEnumTypeNode(tree const typeNode)
+void KdmTripleWriter::writeEnumType(tree const enumType)
 {
-  int treeCode(TREE_CODE(typeNode));
-  std::string msg(str(boost::format("AST Type Node Enum (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-  writeUnsupportedComment(msg);
+  long enumId = getReferenceId(enumType);
+  writeTripleKdmType(enumId, KdmType::EnumeratedType());
+  writeTripleName(enumId, nodeName(enumType));
+
+  for (tree tv = TYPE_VALUES (enumType); tv ; tv = TREE_CHAIN (tv))
+  {
+    if(TREE_CODE (TREE_VALUE (tv)) == INTEGER_CST)
+    {
+      long valueId = getReferenceId(tv);
+      int value = TREE_INT_CST_LOW (TREE_VALUE (tv));
+      writeTripleKdmType(valueId, KdmType::Value());
+      writeTripleName(valueId, boost::lexical_cast<std::string>(value));
+      writeTriple(valueId, KdmPredicate::Type(), KdmType::IntegerType());
+      writeTriple(valueId, KdmPredicate::EnumName(), nodeName(TREE_PURPOSE(tv)));
+      writeTripleContains(enumId, valueId);
+    }
+    else
+    {
+        int treeCode(TREE_CODE(TREE_VALUE (tv)));
+        std::string msg(str(boost::format("AST Type Node Enum (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+        writeUnsupportedComment(msg);
+    }
+  }
+  long compilationUnitId = getSourceFileReferenceId(enumType);
+  writeTripleContains(compilationUnitId, enumId);
 }
+
 
 void KdmTripleWriter::processAstVariableDeclarationNode(tree const varDeclaration)
 {
@@ -1247,10 +1270,13 @@ void KdmTripleWriter::writeTripleName(long const subject, std::string const & na
 void KdmTripleWriter::writeTripleContains(long const parent, long const child)
 {
   //add the node(s) to the uid graph
-  updateUidGraph(parent, child);
+  bool result = updateUidGraph(parent, child);
 
-  //write contains relationship to file
-  writeTriple(parent, KdmPredicate::Contains(), child);
+  if (result)
+  {
+    //write contains relationship to file
+    writeTriple(parent, KdmPredicate::Contains(), child);
+  }
 }
 
 /**
@@ -1278,7 +1304,7 @@ long KdmTripleWriter::writeTripleFriend(long const subclass, long const supercla
   return extendsId;
 }
 
-void KdmTripleWriter::updateUidGraph(long const parent, long const child)
+bool KdmTripleWriter::updateUidGraph(long const parent, long const child)
 {
   //We check to see if the parent or the child already has a node
   //in the graph since the creation of subtrees can happen in
@@ -1323,13 +1349,15 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
     mUidGraph[childVertex].elementId = child;
   }
 
-
+  bool retVal = true;
   if (mSettings.containmentCheck)
   {
     ContainmentMap::const_iterator ci = mContainment.find(child);
     if (ci != mContainment.end())
     {
-      std::cerr << mCompilationFile <<": Double containment element (" << child << ") is contained in " << ci->second << " and " << parent << ".\n";
+      std::string msg(str(boost::format("FIXME: %1% : Double containment element <%2%> is contained in <%3%> and <%4%>. %5%:%6%") % mCompilationFile % child % ci->second % parent % BOOST_CURRENT_FUNCTION % __LINE__ ));
+      writeComment(msg);
+      retVal = false;
     }
     else
     {
@@ -1337,8 +1365,12 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
     }
   }
 
-  //create the edge between them
-  boost::add_edge(parentVertex, childVertex, mUidGraph);
+  if (retVal)
+  {
+    //create the edge between them
+    boost::add_edge(parentVertex, childVertex, mUidGraph);
+  }
+  return retVal;
 }
 void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & name)
 {

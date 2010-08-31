@@ -48,6 +48,7 @@ private:
     KdmPredicate_Export,
     KdmPredicate_Stereotype,
     KdmPredicate_Size,
+    KdmPredicate_EnumName,
   };
 
 public:
@@ -66,6 +67,7 @@ public:
   static const KdmPredicate Export()     { return KdmPredicate(KdmPredicate_Export, "export"); }
   static const KdmPredicate Stereotype() { return KdmPredicate(KdmPredicate_Stereotype, "stereotype"); }
   static const KdmPredicate Size()       { return KdmPredicate(KdmPredicate_Size, "size"); }
+  static const KdmPredicate EnumName()   { return KdmPredicate(KdmPredicate_EnumName, "enumName"); }
 
   int const id() const
   {

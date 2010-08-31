@@ -376,7 +376,7 @@ private:
 
   void processAstTypeNode(tree const decl);
 
-  void processAstEnumTypeNode(tree const typeNode);
+
   void processAstRecordTypeNode(tree const typeNode);
 
   /**
@@ -435,7 +435,7 @@ private:
   long writeKdmParameterUnit(tree const param);
   void writeKdmPrimitiveType(tree const type);
   void writeKdmPointerType(tree const type);
-
+  void writeEnumType(tree const enumType);
   /**
    * Handles output of enums, and structs, pass through of class to writeKdmClassType
    */
@@ -481,8 +481,10 @@ private:
   /**
    * Adds nodes for the given id's if they don't already exist
    * and adds the relationship between them.
+   *
+   * @returns true if the graph was updated (no duplicate containment)
    */
-  void updateUidGraph(const long parent, const long child);
+  bool updateUidGraph(const long parent, const long child);
 
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
   long mKdmElementId; /// The current element id, incremented for each new element

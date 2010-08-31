@@ -150,15 +150,6 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
-  if (TREE_CODE(ast) == COMPONENT_REF)
-  {
-    int i = 0;
-  }
-  if (TREE_CODE(ast) == INDIRECT_REF)
-  {
-    int i = 0;
-  }
-
   return mKdmWriter.getReferenceId(ast);
 }
 

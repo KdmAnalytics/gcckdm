@@ -38,6 +38,8 @@ BinaryOperationKindMap treeCodeToKind =
                               (MINUS_EXPR, gcckdm::KdmKind::Subtract())
                               (MULT_EXPR, gcckdm::KdmKind::Multiply())
                               (RDIV_EXPR, gcckdm::KdmKind::Divide())
+                              (TRUNC_DIV_EXPR, gcckdm::KdmKind::Divide())
+                              (EXACT_DIV_EXPR, gcckdm::KdmKind::Divide())
                               (GT_EXPR, gcckdm::KdmKind::GreaterThan())
                               (GE_EXPR, gcckdm::KdmKind::GreaterThanOrEqual())
                               (LE_EXPR, gcckdm::KdmKind::LessThanOrEqual())
@@ -734,7 +736,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         actionData = writeKdmPtr(gs);
         break;
       }
-      else if (gimpleRhsCode == NEGATE_EXPR)
+      else if (gimpleRhsCode == NEGATE_EXPR || gimpleRhsCode == TRUTH_NOT_EXPR)
       {
         actionData = writeKdmUnaryOperation(KdmKind::Negate(), gs);
         break;
@@ -797,7 +799,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleBinaryA
           case MINUS_EXPR:
           case MULT_EXPR:
           case RDIV_EXPR:
+          case EXACT_DIV_EXPR:
           case TRUNC_MOD_EXPR:
+          case TRUNC_DIV_EXPR:
           case LT_EXPR:
           case LE_EXPR:
           case GT_EXPR:

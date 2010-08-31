@@ -673,12 +673,12 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
       }
       case FUNCTION_TYPE:
       {
-        writeKdmSignature(typeNode);
+        //writeKdmSignature(typeNode);
         break;
       }
       case METHOD_TYPE:
       {
-        writeKdmSignature(typeNode);
+        //writeKdmSignature(typeNode);
         break;
       }
       case REFERENCE_TYPE:

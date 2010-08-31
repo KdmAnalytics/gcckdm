@@ -700,6 +700,11 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
         writeKdmPrimitiveType(typeNode);
         break;
       }
+      case ENUMERAL_TYPE:
+      {
+        processAstEnumTypeNode(typeNode);
+        break;
+      }
       case UNION_TYPE:
         //Fall Through
       case RECORD_TYPE:
@@ -746,6 +751,13 @@ void KdmTripleWriter::processAstRecordTypeNode(tree const typeNode)
     // This is a struct or class type.
     writeKdmRecordType(typeNode);
   }
+}
+
+void KdmTripleWriter::processAstEnumTypeNode(tree const typeNode)
+{
+  int treeCode(TREE_CODE(typeNode));
+  std::string msg(str(boost::format("AST Type Node Enum (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+  writeUnsupportedComment(msg);
 }
 
 void KdmTripleWriter::processAstVariableDeclarationNode(tree const varDeclaration)
@@ -1713,7 +1725,6 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     writeKdmClassType(recordType);
   }
   else //Record or Union
-
   {
     long compilationUnitId(getSourceFileReferenceId(mainRecordType));
 

@@ -376,6 +376,7 @@ private:
 
   void processAstTypeNode(tree const decl);
 
+  void processAstEnumTypeNode(tree const typeNode);
   void processAstRecordTypeNode(tree const typeNode);
 
   /**

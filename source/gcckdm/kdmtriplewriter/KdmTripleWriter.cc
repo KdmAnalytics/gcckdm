@@ -891,28 +891,28 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     if(DECL_CONSTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Constructor().name());
+      writeTripleKind(callableUnitId, KdmKind::Constructor());
     }
     else if(DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Destructor().name());
+      writeTripleKind(callableUnitId, KdmKind::Destructor());
     }
     else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Operator().name());
+      writeTripleKind(callableUnitId, KdmKind::Operator());
     }
     else if(DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
-      writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Method().name());
+      writeTripleKind(callableUnitId, KdmKind::Method());
     }
     else
     {
       writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
-      if(DECL_REALLY_EXTERN(functionDecl)) writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::External().name());
-      else writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Regular().name());
+      if(DECL_REALLY_EXTERN(functionDecl)) writeTripleKind(callableUnitId, KdmKind::External());
+      else writeTripleKind(callableUnitId, KdmKind::Regular());
     }
     // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
     if (DECL_PURE_VIRTUAL_P (functionDecl))
@@ -931,8 +931,11 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   else
   {
     writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
-    if(DECL_REALLY_EXTERN(functionDecl)) writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::External().name());
-    else writeTriple(callableUnitId, KdmPredicate::Kind(), KdmKind::Regular().name());
+    //    if(DECL_REALLY_EXTERN(functionDecl))
+    if (DECL_EXTERNAL(functionDecl))
+      writeTripleKind(callableUnitId, KdmKind::External());
+    else
+      writeTripleKind(callableUnitId, KdmKind::Regular());
     // Standard C does not require mangled names for link:id
     writeTripleLinkId(callableUnitId, name);
   }

@@ -245,6 +245,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         actionData = processGimpleSwitchStatement(gs);
         break;
       }
+      case GIMPLE_PREDICT:
+      {
+        //This statement doesn't appear to have any relevance to KDM
+        break;
+      }
       default:
       {
         std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))] % BOOST_CURRENT_FUNCTION));

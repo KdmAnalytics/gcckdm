@@ -451,6 +451,11 @@ private:
    */
   void writeKdmMethodType(tree const type);
 
+  /**
+   * Handles output of friend relationships, which are stereotyped CodeRelationships
+   */
+  void writeKdmTripleFriends(long const id, tree const t);
+
   void writeKdmSharedUnit(tree const file);
   void writeKdmSharedUnit(Path const & filename, long const id);
 
@@ -463,6 +468,12 @@ private:
   long writeKdmStorableUnit(tree const var);
   long writeKdmSignature(tree const function);
   long writeKdmSignatureDeclaration(tree const functionDecl);
+
+  /**
+   * Write a variable that represents a value that is thrown
+   */
+  long writeKdmThrows(long const id);
+
   long writeKdmSignatureType(tree const functionType);
   long writeKdmSourceRef(long id, tree const var);
   long writeKdmValue(tree const val);

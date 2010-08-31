@@ -263,6 +263,7 @@ std::string getDemangledName(tree node)
     {
       std::string mangledName(namePtr);
 
+      // Remove INTERNAL name
       size_t index = mangledName.find(" *INTERNAL* ");
       if (index != std::string::npos)
       {
@@ -274,6 +275,37 @@ std::string getDemangledName(tree node)
       if(namePtr)
       {
         std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
+        // Remove class qualifier part of the name, if it exists
+        index = demangledName.find("::");
+        size_t braceIndex = demangledName.find("(");
+
+        // Loop until the demangled name is cleaned up
+        while(true)
+        {
+          // No :: delimiters left
+          if(index == std::string::npos) break;
+          if(braceIndex != std::string::npos)
+          {
+            // :: is inside brace
+            if(braceIndex < index) break;
+          }
+          demangledName.erase(0, index + 2);
+          index = demangledName.find("::");
+          braceIndex = demangledName.find("(");
+        }
+
+        // Remove the function qualifier part of the name, if it exists. This is
+        // required for local variables (eg. foo()::b)
+        braceIndex = demangledName.find_last_of(")");
+        index = demangledName.find_last_of("::");
+        if(braceIndex != std::string::npos && index != std::string::npos)
+        {
+          if(index > braceIndex)
+          {
+            demangledName.erase(0, index + 2);
+          }
+        }
+
         return demangledName;
       }
     }

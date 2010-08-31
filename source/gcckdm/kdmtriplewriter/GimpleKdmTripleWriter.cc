@@ -150,6 +150,15 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
+  if (TREE_CODE(ast) == COMPONENT_REF)
+  {
+    int i = 0;
+  }
+  if (TREE_CODE(ast) == INDIRECT_REF)
+  {
+    int i = 0;
+  }
+
   return mKdmWriter.getReferenceId(ast);
 }
 
@@ -710,6 +719,26 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         break;
       }
       else if (gimpleRhsCode == ADDR_EXPR)
+      {
+        tree lhs = gimple_assign_lhs(gs);
+        if (TREE_CODE(lhs) == COMPONENT_REF)
+        {
+          //Example: ccf->username = &"nobody"[0];
+          actionData = writeKdmMemberReplace(gs);
+        }
+        else if (TREE_CODE(lhs) == INDIRECT_REF)
+        {
+          //Example: *a = &b;
+          actionData = writeKdmPtrReplace(gs);
+        }
+        else
+        {
+          //Example: a = &b;
+          actionData = writeKdmPtr(gs);
+        }
+        break;
+      }
+      else if (gimpleRhsCode == ADDR_EXPR )
       {
         actionData = writeKdmPtr(gs);
         break;

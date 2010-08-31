@@ -203,23 +203,31 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 
 
 
-KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr)
+KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter::Settings const & settings)
 : mKdmSink(kdmSinkPtr),
   mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
-  mBodies(true),
-  mUid(0)
+  mUid(0),
+  mSettings(settings)
 {
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
-KdmTripleWriter::KdmTripleWriter(Path const & filename)
-: mKdmSink(new boost::filesystem::ofstream(filename)),
-  mKdmElementId(KdmElementId_DefaultStart),
+KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings)
+: mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
-  mBodies(true),
-  mUid(0)
+  mUid(0),
+  mSettings(settings)
 {
+  if (settings.outputDir.filename().empty())
+  {
+    mKdmSink.reset(new boost::filesystem::ofstream(filename));
+  }
+  else
+  {
+    mKdmSink.reset(new boost::filesystem::ofstream(mSettings.outputDir / filename.filename()));
+  }
+
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
@@ -228,16 +236,6 @@ KdmTripleWriter::~KdmTripleWriter()
   mKdmSink->flush();
 }
 
-
-bool KdmTripleWriter::bodies() const
-{
-  return mBodies;
-}
-
-void KdmTripleWriter::bodies(bool const value)
-{
-  mBodies = value;
-}
 
 void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
@@ -263,8 +261,11 @@ void KdmTripleWriter::startKdmGimplePass()
     struct varpool_node *pNode;
     for ((pNode) = varpool_nodes_queue; (pNode); (pNode) = (pNode)->next_needed)
     {
-      long unitId = writeKdmStorableUnit(pNode->decl);
-      writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
+      if (!hasReferenceId(pNode->decl))
+      {
+        long unitId = writeKdmStorableUnit(pNode->decl);
+        writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
+      }
     }
   }
   catch (KdmTripleWriterException & e)
@@ -357,16 +358,23 @@ void KdmTripleWriter::writeUids()
   {
     writeComment("Unable to locate root of UID tree, no UIDs will be written");
   }
-  //  Use this to view the graph in dot
-  std::ofstream out("graph.viz", std::ios::out);
-  boost::write_graphviz(out, mUidGraph, VertexPropertyWriter(mUidGraph));
+
+  if (mSettings.generateUidGraph)
+  {
+    //  Use this to view the graph in dot
+    std::ofstream out("graph.viz", std::ios::out);
+    boost::write_graphviz(out, mUidGraph, VertexPropertyWriter(mUidGraph));
+  }
 }
 
 void KdmTripleWriter::finishTranslationUnit()
 {
   processNodeQueue();
   writeReferencedSharedUnits();
-  writeUids();
+  if (mSettings.generateUids)
+  {
+    writeUids();
+  }
 }
 
 void KdmTripleWriter::processAstNode(tree const ast)
@@ -957,7 +965,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   long signatureId = writeKdmSignature(functionDecl);
   writeTripleContains(callableUnitId, signatureId);
 
-  if (mBodies)
+  if (mSettings.functionBodies)
   {
     mGimpleWriter->processAstFunctionDeclarationNode(functionDecl);
   }
@@ -1072,7 +1080,7 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
   writeTripleContains(signatureId, paramId);
 
   //Iterator through argument list
-  tree argType(TYPE_ARG_TYPES (functionType));
+  tree argType = TYPE_ARG_TYPES (functionType);
   while (argType && (argType != void_list_node))
   {
     long refId = writeKdmParameterUnit(argType);
@@ -1323,6 +1331,8 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
     }
   }
 
+
+
   //If we don't have the parent in graph already create a new vertex otherwise
   //use the one we found
   if (not foundParentFlag)
@@ -1336,6 +1346,20 @@ void KdmTripleWriter::updateUidGraph(long const parent, long const child)
     //Create our child vertex
     childVertex = boost::add_vertex(mUidGraph);
     mUidGraph[childVertex].elementId = child;
+  }
+
+
+  if (mSettings.containmentCheck)
+  {
+    ContainmentMap::const_iterator ci = mContainment.find(child);
+    if (ci != mContainment.end())
+    {
+      std::cerr << mCompilationFile <<": Double containment element (" << child << ") is contained in " << ci->second << " and " << parent << ".\n";
+    }
+    else
+    {
+      mContainment.insert(std::make_pair(child, parent));
+    }
   }
 
   //create the edge between them
@@ -1684,12 +1708,11 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
       {
         if (min)
         {
-          std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%  ") % BOOST_CURRENT_FUNCTION % __LINE__ ));
-          writeUnsupportedComment(msg);
-          //dump the node?
+          writeTriple(arrayKdmElementId, KdmPredicate::Size(), nodeName(min));
         }
         if (max)
         {
+          processAstNode(max);
           std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
           //dump the node?
         }
@@ -1924,8 +1947,6 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 {
   long id = getSharedUnitReferenceId(file);
-  writeTripleKdmType(id, KdmType::SharedUnit());
-
   Path filename(IDENTIFIER_POINTER(file));
   writeKdmSharedUnit(filename, id);
 }

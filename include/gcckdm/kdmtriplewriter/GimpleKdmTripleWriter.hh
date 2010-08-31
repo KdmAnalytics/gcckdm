@@ -68,8 +68,6 @@ public:
 private:
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<ActionData> ActionDataPtr;
-  //typedef boost::shared_ptr<Flow> ActionDataPtr;
-  //typedef boost::shared_ptr<ActionFlow> ActionActionDataPtr;
 
 
   /**
@@ -196,22 +194,43 @@ private:
 
   /**
    * D.1716 = this->m_bar;
-   */
-  ActionDataPtr writeKdmMemberSelect(gimple const gs);
-  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit);
-  ActionDataPtr writeKdmMemberSelect(long const writesId, long const readsId, long const invokesId);
-
-  /**
    * sin.sin_family = 2;
    */
-  ActionDataPtr writeKdmMemberSelectParam(tree const compRef, gimple const gs);
-  ActionDataPtr writeKdmMemberSelectParam(tree const compRef, location_t const loc);
+  ActionDataPtr writeKdmMemberSelect(gimple const gs);
+
+
+  /**
+   * @param lhs
+   * @param rhs
+   * @param loc
+   */
+  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc);
+  ActionDataPtr writeKdmMemberSelect(long const writesId, long const readsId, long const addressesId);
 
   ActionDataPtr writeKdmMemberReplace(gimple const gs);
+  ActionDataPtr writeKdmMemberReplace(tree const lhs, tree const op, tree const rhs, location_t const loc);
+  ActionDataPtr writeKdmMemberReplace(long const writesId, long const readsId, long const addressesId);
+
+
   ActionDataPtr writeKdmPtr(gimple const gs);
-  ActionDataPtr writeKdmPtr(long const lhsId, long const rhsId);
-  ActionDataPtr writeKdmPtrParam(tree const addrExpr, gimple const gs);
-  ActionDataPtr writeKdmPtrParam(tree const addrExpr, location_t const loc);
+
+  /**
+   *
+   *
+   * @param lhs target of the writes relationship, if null Ptr is written to register variable
+   * @param rhs ADDR_EXPR
+   * @param loc location of the gimple statement that this element is generated from
+   */
+  ActionDataPtr writeKdmPtr(tree const lhs, tree const rhs, location_t const loc);
+
+  /**
+   * Writes the KDM Ptr ActionElement
+   *
+   * @param writesId the id of to side of the writes relationship for this Ptr Element
+   * @param addressesId the id of the to side of the addresses relationship for this Ptr Element
+   */
+  ActionDataPtr writeKdmPtr(long const writesId, long const addressesId);
+
   ActionDataPtr writeKdmPtrReplace(gimple const gs);
 
 
@@ -220,16 +239,12 @@ private:
 
   long getReferenceId(tree const ast);
   ActionDataPtr getRhsReferenceId(tree const rhs);
-//  ActionDataPtr getRhsReferenceId(ActionDataPtr mainFlow, tree const rhs);
-
   tree resolveCall(tree const tree);
-
 
   ActionDataPtr updateFlow(ActionDataPtr mainFlow, ActionDataPtr update);
   ActionDataPtr updateActionFlow(ActionDataPtr actionFlow,long const actionId);
 
   void configureDataAndFlow(ActionDataPtr actionData, ActionDataPtr op0Data, ActionDataPtr op1Data);
-
 
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;

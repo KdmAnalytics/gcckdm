@@ -1043,7 +1043,7 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
   writeTripleContains(signatureId, paramId);
 
   //Iterator through argument list
-  tree argType(TYPE_ARG_TYPES (functionType));
+  tree argType = TYPE_ARG_TYPES (functionType);
   while (argType && (argType != void_list_node))
   {
     long refId = writeKdmParameterUnit(argType);
@@ -1902,8 +1902,6 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 {
   long id = getSharedUnitReferenceId(file);
-  writeTripleKdmType(id, KdmType::SharedUnit());
-
   Path filename(IDENTIFIER_POINTER(file));
   writeKdmSharedUnit(filename, id);
 }

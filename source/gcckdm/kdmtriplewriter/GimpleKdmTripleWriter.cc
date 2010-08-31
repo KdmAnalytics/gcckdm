@@ -300,6 +300,8 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
       mKdmWriter.writeComment("Skipping external variable in bind statement....");
       continue;
     }
+    // NGINX has LABEL_DECLS in the bind vars... don't think we need them
+    // so we are skipping them until we actually know what they are for
     if (TREE_CODE(var) == LABEL_DECL)
     {
       mKdmWriter.writeComment("Skipping label decl in bind statement....");
@@ -1051,9 +1053,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
 
   writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), lhsId);
   actionData->outputId(lhsId);
-
   return actionData;
-
 }
 
 // foo[0] = 1

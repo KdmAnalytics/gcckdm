@@ -1759,9 +1759,10 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
         }
         if (max)
         {
+          //dump the node?
           processAstNode(max);
           std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
-          //dump the node?
+          writeUnsupportedComment(msg);
         }
       }
     }

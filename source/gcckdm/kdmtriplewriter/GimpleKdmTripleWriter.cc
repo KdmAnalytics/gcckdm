@@ -179,6 +179,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
   {
     data = writeKdmMemberSelect(NULL_TREE, rhs, gcckdm::locationOf(rhs));
   }
+  else if (TREE_CODE(rhs) == BIT_FIELD_REF)
+  {
+    std::string msg(str(boost::format("BIT_FIELD_REF unsupported : %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
+    mKdmWriter.writeUnsupportedComment(msg);
+  }
   else
   {
     data = ActionDataPtr(new ActionData());

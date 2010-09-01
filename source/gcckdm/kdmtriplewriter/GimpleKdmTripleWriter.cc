@@ -152,6 +152,19 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
+  if (TREE_CODE(ast) == COMPONENT_REF)
+  {
+    int i  = 0;
+  }
+  if (TREE_CODE(ast) == INDIRECT_REF)
+  {
+    int i = 0;
+  }
+  if (TREE_CODE(ast) == ADDR_EXPR)
+  {
+    int i = 0;
+  }
+
   return mKdmWriter.getReferenceId(ast);
 }
 
@@ -699,7 +712,21 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         }
         else if(gimpleRhsCode == COMPONENT_REF)
         {
-          actionData = writeKdmMemberSelect(gs);
+          tree lhs = gimple_assign_lhs(gs);
+
+          //Example: a->b = c.d;
+          if (TREE_CODE(lhs) == COMPONENT_REF)
+          {
+            actionData = writeKdmMemberReplace(gs);
+          }
+          else if (TREE_CODE(lhs) == INDIRECT_REF)
+          {
+            actionData = writeKdmPtrReplace(gs);
+          }
+          else
+          {
+            actionData = writeKdmMemberSelect(gs);
+          }
           break;
         }
         else if (gimpleRhsCode == INDIRECT_REF)
@@ -814,6 +841,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleBinaryA
           case EXACT_DIV_EXPR:
           case TRUNC_MOD_EXPR:
           case TRUNC_DIV_EXPR:
+          case TRUTH_AND_EXPR:
+          case TRUTH_OR_EXPR:
+          case TRUTH_XOR_EXPR:
           case LT_EXPR:
           case LE_EXPR:
           case GT_EXPR:
@@ -1267,19 +1297,32 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
   // Example: a = s.m
   else
   {
-    lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc) :  getReferenceId(lhs);
+    ActionDataPtr lhsData = ActionDataPtr(new ActionData());
+    if (not lhs)
+    {
+      writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc);
+      lhsData->outputId(writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc));
+    }
+    else
+    {
+      lhsData = getRhsReferenceId(lhs);
+    }
 
     ActionDataPtr op0Data = getRhsReferenceId(op0);
     ActionDataPtr op1Data = getRhsReferenceId(op1);
-    actionData = writeKdmMemberSelect(lhsId, op1Data->outputId(), op0Data->outputId());
+    actionData = writeKdmMemberSelect(lhsData->outputId(), op1Data->outputId(), op0Data->outputId());
 
-    if (not lhs)
+    if(lhsData->hasActionId())
     {
-      mKdmWriter.writeTripleContains(actionData->actionId(), lhsId);
+      //shouldn't happen
+    }
+    else
+    {
+      mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
+      //Configure data and flows
+      configureDataAndFlow(actionData, op0Data, op1Data);
     }
 
-    //Configure data and flows
-    configureDataAndFlow(actionData, op0Data, op1Data);
   }
   mKdmWriter.writeComment("=============KDM MemberSelect Finish==================");
   return actionData;

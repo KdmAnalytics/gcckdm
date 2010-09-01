@@ -1173,6 +1173,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
     //D.11082->level[1] = D.11083;
     selectData = writeKdmMemberSelect(NULL_TREE, op0, gimple_location(gs));
   }
+  else if (TREE_CODE(op0) == VAR_DECL)
+  {
+    //Do Nothing
+  }
   else
   {
     std::string msg(boost::str(boost::format("ArrayReplace type (%1%) in %2%:%3%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION % __LINE__));

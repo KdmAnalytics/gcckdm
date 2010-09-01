@@ -482,6 +482,12 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       processAstTypeDecl(decl);
       break;
     }
+    case CONST_DECL:
+    {
+      //For the moment we ignore these.  Gimple seems to sub in the
+      //actual value anyways
+      break;
+    }
     case TEMPLATE_DECL:
     {
       processAstTemplateDecl(decl);

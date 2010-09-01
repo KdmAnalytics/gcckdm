@@ -32,6 +32,7 @@ private:
   {
     //Micro Kdm Group
     KdmKind_Assign,
+    KdmKind_BitAssign,
     KdmKind_Add,
     KdmKind_Subtract,
     KdmKind_Multiply,
@@ -104,6 +105,7 @@ private:
 public:
 
   static const KdmKind Assign()               { return KdmKind(KdmKind_Assign, "Assign");  }
+  static const KdmKind BitAssign()            { return KdmKind(KdmKind_BitAssign, "BitAssign");  }
   static const KdmKind Add()                  { return KdmKind(KdmKind_Add, "Add");  }
   static const KdmKind Subtract()             { return KdmKind(KdmKind_Subtract, "Subtract");  }
   static const KdmKind Multiply()             { return KdmKind(KdmKind_Multiply, "Multiply");  }

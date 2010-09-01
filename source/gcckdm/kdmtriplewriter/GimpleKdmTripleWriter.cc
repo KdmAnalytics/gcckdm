@@ -181,10 +181,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
   }
   else if (TREE_CODE(rhs) == BIT_FIELD_REF)
   {
-    data = ActionDataPtr(new ActionData());
-    data->outputId(getReferenceId(TREE_OPERAND(rhs, 0)));
-//    std::string msg(str(boost::format("BIT_FIELD_REF unsupported : %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
-//    mKdmWriter.writeUnsupportedComment(msg);
+    data = writeBitAssign(NULL_TREE, rhs, gcckdm::locationOf(rhs));
   }
   else
   {
@@ -194,6 +191,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
 
   return data;
 }
+
+
+
 
 
 void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
@@ -708,7 +708,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         }
         else if (gimpleRhsCode == BIT_FIELD_REF)
         {
-          actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
+          actionData = writeBitAssign(gs);
         }
         else
         {
@@ -1027,6 +1027,33 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrReplace(g
   return actionData;
 }
 
+
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeBitAssign(gimple const gs)
+{
+  tree lhs(gimple_assign_lhs(gs));
+  tree rhs(gimple_assign_rhs1(gs));
+  return writeBitAssign(lhs, rhs, gimple_location(gs));
+}
+
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeBitAssign(tree const lhs, tree const rhs, location_t const loc)
+{
+  ActionDataPtr actionData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
+  tree op1 = TREE_OPERAND(rhs, 0);
+  long structId = (TREE_CODE(op1) == INDIRECT_REF) ? getReferenceId(TREE_OPERAND(op1, 0)) : getReferenceId(op1);
+  long sizeBitId = getReferenceId(TREE_OPERAND(rhs, 1));
+  long startBitId = getReferenceId(TREE_OPERAND(rhs, 2));
+  long lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc) :  getReferenceId(lhs);
+
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::BitAssign());
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), sizeBitId);
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), startBitId);
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), structId);
+  writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), lhsId);
+  return actionData;
+}
+
+
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmBinaryOperation(KdmKind const & kind, gimple const gs)
 {
   tree lhs(gimple_assign_lhs(gs));
@@ -1118,26 +1145,40 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   }
   lastId = rhsData->outputId();
 
-
   ActionDataPtr selectData;
-  while (TREE_CODE(op0) == ARRAY_REF)
+  if (TREE_CODE(op0) == ARRAY_REF)
   {
-    selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), false);
-
-    if (!actionData->hasStartAction())
+    //Multi-dimensional arrays
+    while (TREE_CODE(op0) == ARRAY_REF)
     {
-      actionData->startActionId(selectData->actionId());
-    }
-    else
-    {
-      writeKdmActionRelation(KdmType::Flow(), lastId ,selectData->actionId());
-    }
-    mKdmWriter.writeTripleContains(actionId, selectData->actionId());
-    lastId = selectData->actionId();
+      selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), false);
 
-    op1 = TREE_OPERAND (op0, 1);
-    op0 = TREE_OPERAND (op0, 0);
+      if (!actionData->hasStartAction())
+      {
+        actionData->startActionId(selectData->actionId());
+      }
+      else
+      {
+        writeKdmActionRelation(KdmType::Flow(), lastId ,selectData->actionId());
+      }
+      mKdmWriter.writeTripleContains(actionId, selectData->actionId());
+      lastId = selectData->actionId();
+
+      op1 = TREE_OPERAND (op0, 1);
+      op0 = TREE_OPERAND (op0, 0);
+    }
   }
+  else if (TREE_CODE(op0) == COMPONENT_REF)
+  {
+    //D.11082->level[1] = D.11083;
+    selectData = writeKdmMemberSelect(NULL_TREE, op0, gimple_location(gs));
+  }
+  else
+  {
+    std::string msg(boost::str(boost::format("ArrayReplace type (%1%) in %2%:%3%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION % __LINE__));
+    mKdmWriter.writeUnsupportedComment(msg);
+  }
+
 
   long op0Id = (selectData) ? selectData->outputId() :getReferenceId(op0);
   long op1Id = getReferenceId(op1);

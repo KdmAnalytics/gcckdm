@@ -116,7 +116,6 @@ public:
   static const KdmKind PtrReplace()           { return KdmKind(KdmKind_PtrReplace, "PtrReplace"); }
   static const KdmKind PtrSelect()            { return KdmKind(KdmKind_PtrSelect, "PtrSelect");  }
   static const KdmKind PtrCall()              { return KdmKind(KdmKind_PtrCall, "PtrCall");  }
-  static const KdmKind Regular()              { return KdmKind(KdmKind_Regular, "regular");  }
   static const KdmKind Local()                { return KdmKind(KdmKind_Local, "local");  }
   static const KdmKind Condition()            { return KdmKind(KdmKind_Local, "Condition"); }
   static const KdmKind Nop()                  { return KdmKind(KdmKind_Nop, "Nop"); }
@@ -129,6 +128,7 @@ public:
   static const KdmKind LessThan()             { return KdmKind(KdmKind_LessThan, "LessThan"); }
   static const KdmKind GreaterThan()          { return KdmKind(KdmKind_GreaterThan, "GreaterThan"); }
   static const KdmKind GreaterThanOrEqual()   { return KdmKind(KdmKind_GreaterThanOrEqual, "GreaterThanOrEqual"); }
+  static const KdmKind Not()                  { return KdmKind(KdmKind_Not, "Not"); }
   static const KdmKind And()                  { return KdmKind(KdmKind_And, "And"); }
   static const KdmKind Or()                   { return KdmKind(KdmKind_Or, "Or"); }
   static const KdmKind Xor()                  { return KdmKind(KdmKind_Xor, "Xor"); }
@@ -156,20 +156,19 @@ public:
   static const KdmKind Switch()               { return KdmKind(KdmKind_Switch, "Switch"); }
   static const KdmKind Compound()             { return KdmKind(KdmKind_Compound, "Compound"); }
 
+  // CallableKind
+  static const KdmKind External()             { return KdmKind(KdmKind_External, "external"); }
+  static const KdmKind Regular()              { return KdmKind(KdmKind_Regular, "regular");  }
+  static const KdmKind Operator()             { return KdmKind(KdmKind_Operator, "operator"); }
+  static const KdmKind Unknown()              { return KdmKind(KdmKind_Unknown, "unknown"); }
+
   // Method Kind
   static const KdmKind Method()               { return KdmKind(KdmKind_Method, "method"); }
   static const KdmKind Constructor()          { return KdmKind(KdmKind_Constructor, "constructor"); }
   static const KdmKind Destructor()           { return KdmKind(KdmKind_Destructor, "destructor"); }
-  static const KdmKind Operator()             { return KdmKind(KdmKind_Operator, "operator"); }
   static const KdmKind Virtual()              { return KdmKind(KdmKind_Virtual, "virtual"); }
   static const KdmKind Abstract()             { return KdmKind(KdmKind_Abstract, "abstract"); }
-  static const KdmKind Unknown()              { return KdmKind(KdmKind_Unknown, "unknown"); }
 
-  // CallableKind
-  static const KdmKind External()             { return KdmKind(KdmKind_External, "external"); }
-  //static const KdmKind Regular()              { return KdmKind(KdmKind_Regular, "regular"); }
-  //static const KdmKind Operator()             { return KdmKind(KdmKind_Operator, "operator"); }
-  //static const KdmKind Unknown()              { return KdmKind(KdmKind_Unknown, "unknown"); }
 
   int const id() const
   {

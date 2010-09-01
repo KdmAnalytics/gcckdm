@@ -276,6 +276,7 @@ void KdmTripleWriter::startKdmGimplePass()
 
 void KdmTripleWriter::finishKdmGimplePass()
 {
+  processNodeQueue();
 }
 
 
@@ -438,7 +439,7 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else
       {
-        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%:%4%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast) % __LINE__));
+        std::string msg(str(boost::format("<%3%> AST Node. Name=(%1%) code=(%5%) in %2%:%4%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast) % __LINE__ % treeCode));
         writeUnsupportedComment(msg);
       }
       mProcessedNodes.insert(ast);

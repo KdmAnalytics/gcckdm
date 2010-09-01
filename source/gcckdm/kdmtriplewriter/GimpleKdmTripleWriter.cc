@@ -181,8 +181,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
   }
   else if (TREE_CODE(rhs) == BIT_FIELD_REF)
   {
-    std::string msg(str(boost::format("BIT_FIELD_REF unsupported : %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
-    mKdmWriter.writeUnsupportedComment(msg);
+    data = ActionDataPtr(new ActionData());
+    data->outputId(getReferenceId(TREE_OPERAND(rhs, 0)));
+//    std::string msg(str(boost::format("BIT_FIELD_REF unsupported : %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
+//    mKdmWriter.writeUnsupportedComment(msg);
   }
   else
   {
@@ -616,8 +618,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleGotoSta
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAssignStatement(gimple const gs)
 {
   ActionDataPtr actionData;
-  tree rhsNode = gimple_assign_rhs1(gs);
   enum tree_code gimpleRhsCode = gimple_assign_rhs_code(gs);
+  tree rhsNode = gimple_assign_rhs1(gs);
   switch (gimpleRhsCode)
   {
     case VIEW_CONVERT_EXPR:
@@ -704,6 +706,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         {
           actionData = writeKdmPtr(gs);
         }
+        else if (gimpleRhsCode == BIT_FIELD_REF)
+        {
+          actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
+        }
         else
         {
           std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
@@ -737,9 +743,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         actionData = writeKdmPtr(gs);
         break;
       }
-      else if (gimpleRhsCode == NEGATE_EXPR || gimpleRhsCode == TRUTH_NOT_EXPR)
+      else if (gimpleRhsCode == NEGATE_EXPR)
       {
         actionData = writeKdmUnaryOperation(KdmKind::Negate(), gs);
+        break;
+      }
+      else if (gimpleRhsCode == TRUTH_NOT_EXPR)
+      {
+        actionData = writeKdmUnaryOperation(KdmKind::Not(), gs);
         break;
       }
       else if (gimpleRhsCode == BIT_NOT_EXPR)

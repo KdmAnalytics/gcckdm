@@ -216,25 +216,25 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
  */
 void registerCallbacks(char const * pluginName)
 {
-  // Look for a pass introduced in GCC 4.5 prunes useful info(class members/etc) & disable it
-  // taken from dehyrda don't know if it effects us or not...
-#define DEFTIMEVAR(identifier__, name__) \
-    identifier__,
-    enum
-    {
-      TV_NONE,
-#include "timevar.def"
-      TIMEVAR_LAST
-    };
-
-    struct opt_pass *p;
-    for(p = all_small_ipa_passes;p;p=p->next) {
-      if (p->tv_id != TV_IPA_FREE_LANG_DATA)
-        continue;
-      //disable it
-      p->execute = NULL;
-      break;
-    }
+//  // Look for a pass introduced in GCC 4.5 prunes useful info(class members/etc) & disable it
+//  // taken from dehyrda don't know if it effects us or not...
+//#define DEFTIMEVAR(identifier__, name__)
+//    identifier__,
+//    enum
+//    {
+//      TV_NONE,
+//#include "timevar.def"
+//      TIMEVAR_LAST
+//    };
+//
+//    struct opt_pass *p;
+//    for(p = all_small_ipa_passes;p;p=p->next) {
+//      if (p->tv_id != TV_IPA_FREE_LANG_DATA)
+//        continue;
+//      //disable it
+//      p->execute = NULL;
+//      break;
+//    }
 
 
 

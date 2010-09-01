@@ -370,7 +370,7 @@ void KdmTripleWriter::writeUids()
 void KdmTripleWriter::finishTranslationUnit()
 {
   processNodeQueue();
-  writeReferencedSharedUnits();
+  //writeReferencedSharedUnits();
   if (mSettings.generateUids)
   {
     writeUids();
@@ -433,12 +433,12 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else if (treeCode == COMPONENT_REF)
       {
-        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast)));
+        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%:%4%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast) % __LINE__));
         writeUnsupportedComment(msg);
       }
       else
       {
-        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast)));
+        std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%:%4%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast) % __LINE__));
         writeUnsupportedComment(msg);
       }
       mProcessedNodes.insert(ast);
@@ -1358,8 +1358,9 @@ bool KdmTripleWriter::updateUidGraph(long const parent, long const child)
   boost::graph_traits<UidGraph>::vertex_iterator i, end;
   bool foundParentFlag = false;
   bool foundChildFlag = false;
-  Vertex parentVertex;
-  Vertex childVertex;
+  Vertex parentVertex = boost::graph_traits<UidGraph>::null_vertex();
+  Vertex childVertex = boost::graph_traits<UidGraph>::null_vertex();
+
   for (boost::tie(i, end) = boost::vertices(mUidGraph); i != end; ++i)
   {
     if (parent == mUidGraph[*i].elementId)
@@ -1668,6 +1669,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
   if (result.second)
   {
     retValue = ++mKdmElementId;
+    writeKdmSharedUnit(identifierNode);
   }
   // We have already encountered that identifier return the id for it
   else

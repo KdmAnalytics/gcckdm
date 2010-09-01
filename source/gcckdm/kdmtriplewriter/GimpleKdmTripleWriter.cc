@@ -419,49 +419,53 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmNopForLabel(
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditionalStatement(gimple const gs)
 {
   //Reserve an id
-  long actionId = mKdmWriter.getNextElementId();
-  ActionDataPtr actionData(new ActionData(actionId));
+  ActionDataPtr actionData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
 
   //write the basic condition attributes
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::Condition());
-  mKdmWriter.writeTripleName(actionId, "if");
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Condition());
+  mKdmWriter.writeTripleName(actionData->actionId(), "if");
 
   //get reference id's for the gimple condition
-  long rhs1Id = getReferenceId(gimple_cond_lhs (gs));
+  //The condition can be an addr_expr or a var_decl
+  //Examples:  &a == b;
+  //            a == b;
+  ActionDataPtr rhs1Data = getRhsReferenceId(gimple_cond_lhs (gs));
   ActionDataPtr rhs2Data = getRhsReferenceId(gimple_cond_rhs(gs));
 
   //Create a boolean variable to store the result of the upcoming comparison
   long boolId = writeKdmStorableUnit(mKdmWriter.getUserTypeId(KdmType::BooleanType()), gimple_location(gs) );
-  mKdmWriter.writeTripleContains(actionId, boolId);
+  mKdmWriter.writeTripleContains(actionData->actionId(), boolId);
   //store reference to created variable
   actionData->outputId(boolId);
 
   //Write the action Element containing the comparison... lessthan, greaterthan etc. etc.
-  long condId = mKdmWriter.getNextElementId();
-  mKdmWriter.writeTripleKdmType(condId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(condId, treeCodeToKind.find(gimple_cond_code (gs))->second);
-  writeKdmBinaryRelationships(condId, boolId, rhs1Id, rhs2Data->outputId());
+  ActionDataPtr condData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
+  mKdmWriter.writeTripleKdmType(condData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(condData->actionId(), treeCodeToKind.find(gimple_cond_code (gs))->second);
+  writeKdmBinaryRelationships(condData->actionId(), boolId, rhs1Data->outputId(), rhs2Data->outputId());
 
-  //Write Flow from rhs of the condition if required
-  if (rhs2Data->hasActionId())
-  {
-   actionData->startActionId(rhs2Data->actionId());
-   writeKdmActionRelation(KdmType::Flow(), rhs2Data->actionId(), condId);
-   mKdmWriter.writeTripleContains(condId, rhs2Data->actionId());
-  }
-  //otherwise we just mark the start as the condition
-  else
-  {
-    actionData->startActionId(condId);
-  }
-  mKdmWriter.writeTripleContains(actionId, condId);
+  //Hook up flows and data
+  configureDataAndFlow(condData,rhs1Data,rhs2Data);
+//  //Write Flow from rhs of the condition if required
+//  if (rhs2Data->hasActionId())
+//  {
+//   actionData->startActionId(rhs2Data->actionId());
+//   writeKdmActionRelation(KdmType::Flow(), rhs2Data->actionId(), condId);
+//   mKdmWriter.writeTripleContains(condId, rhs2Data->actionId());
+//  }
+//  //otherwise we just mark the start as the condition
+//  else
+//  {
+//    actionData->startActionId(condId);
+//  }
+  mKdmWriter.writeTripleContains(actionData->actionId(), condData->actionId());
 
   // Write read for the if
-  writeKdmActionRelation(KdmType::Reads(), actionId, boolId);
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), boolId);
 
   // Write flow for the if from comparison to if
-  writeKdmActionRelation(KdmType::Flow(), condId, actionId);
+  writeKdmActionRelation(KdmType::Flow(), condData->actionId(), actionData->actionId());
 
   //Write true flow
   if (gimple_cond_true_label(gs))
@@ -471,9 +475,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
     long trueNodeId(getReferenceId(trueNode));
 
     mKdmWriter.writeTripleKdmType(trueFlowId, KdmType::TrueFlow());
-    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::From(), actionId);
+    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::From(), actionData->actionId());
     mKdmWriter.writeTriple(trueFlowId, KdmPredicate::To(), trueNodeId);
-    mKdmWriter.writeTripleContains(actionId, trueFlowId);
+    mKdmWriter.writeTripleContains(actionData->actionId(), trueFlowId);
   }
 
   //Write false flow
@@ -483,14 +487,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
     long falseFlowId(mKdmWriter.getNextElementId());
     long falseNodeId(getReferenceId(falseNode));
     mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
-    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionId);
+    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionData->actionId());
     mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
-    mKdmWriter.writeTripleContains(actionId, falseFlowId);
+    mKdmWriter.writeTripleContains(actionData->actionId(), falseFlowId);
   }
 
   //Contain this action in a block unit
   long blockId = getBlockReferenceId(gimple_location(gs));
-  mKdmWriter.writeTripleContains(blockId, actionId);
+  mKdmWriter.writeTripleContains(blockId, actionData->actionId());
 
   return actionData;
 }

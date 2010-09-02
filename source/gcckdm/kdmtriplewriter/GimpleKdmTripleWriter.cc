@@ -227,6 +227,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
   {
     switch (gimple_code(gs))
     {
+      case GIMPLE_ASM:
+      {
+        actionData = processGimpleAsmStatement(gs);
+        break;
+      }
       case GIMPLE_ASSIGN:
       {
         actionData = processGimpleAssignStatement(gs);
@@ -343,6 +348,70 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
   mKdmWriter.writeComment("================GIMPLE END BIND STATEMENT " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
 }
 
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStatement(gimple const gs)
+{
+  ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Asm());
+  mKdmWriter.writeTripleName(actionData->actionId(), gimple_asm_string (gs));
+
+  unsigned int fields = 0;
+
+  if (gimple_asm_nlabels (gs))
+  {
+    fields = 4;
+  }
+  else if (gimple_asm_nclobbers (gs))
+  {
+    fields = 3;
+  }
+  else if (gimple_asm_ninputs (gs))
+  {
+    fields = 2;
+  }
+  else if (gimple_asm_noutputs (gs))
+  {
+    fields = 1;
+  }
+  unsigned n;
+  for (unsigned f = 0; f < fields; ++f)
+  {
+    switch (f)
+    {
+      case 0:
+      {
+        n = gimple_asm_noutputs (gs);
+        if (n != 0)
+        {
+          for (unsigned i = 0; i < n; i++)
+          {
+            long id = getReferenceId(gimple_asm_output_op (gs, i));
+            writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), id);
+          }
+        }
+        break;
+      }
+      case 1:
+      {
+        n = gimple_asm_ninputs (gs);
+        if (n != 0)
+        {
+          for (unsigned i = 0; i < n; i++)
+          {
+            long id = getReferenceId(gimple_asm_input_op (gs, i));
+            writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), id);
+          }
+        }
+      }
+      default:
+      {
+        //do nothing
+      }
+    }
+  }
+  return actionData;
+}
+
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAssignStatement(gimple const gs)
 {
   ActionDataPtr actionData;
@@ -447,18 +516,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
 
   //Hook up flows and data
   configureDataAndFlow(condData,rhs1Data,rhs2Data);
-//  //Write Flow from rhs of the condition if required
-//  if (rhs2Data->hasActionId())
-//  {
-//   actionData->startActionId(rhs2Data->actionId());
-//   writeKdmActionRelation(KdmType::Flow(), rhs2Data->actionId(), condId);
-//   mKdmWriter.writeTripleContains(condId, rhs2Data->actionId());
-//  }
-//  //otherwise we just mark the start as the condition
-//  else
-//  {
-//    actionData->startActionId(condId);
-//  }
   mKdmWriter.writeTripleContains(actionData->actionId(), condData->actionId());
 
   // Write read for the if

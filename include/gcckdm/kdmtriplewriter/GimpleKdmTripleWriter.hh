@@ -127,6 +127,9 @@ private:
    */
   void processGimpleBindStatement(gimple const gs);
 
+
+  ActionDataPtr processGimpleAsmStatement(gimple const gs);
+
   /**
    * Info taken from GCC Doc's....
    *

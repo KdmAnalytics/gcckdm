@@ -32,7 +32,6 @@ private:
   {
     //Micro Kdm Group
     KdmKind_Assign,
-    KdmKind_BitAssign,
     KdmKind_Add,
     KdmKind_Subtract,
     KdmKind_Multiply,
@@ -45,7 +44,6 @@ private:
     KdmKind_PtrReplace,
     KdmKind_PtrSelect,
     KdmKind_PtrCall,
-    KdmKind_Regular,
     KdmKind_Local,
     KdmKind_Condition,
     KdmKind_Goto,
@@ -86,26 +84,29 @@ private:
     KdmKind_Switch,
     KdmKind_Compound,
 
+    // CallableKinds
+    KdmKind_External,
+    KdmKind_Regular,
+    KdmKind_Operator,
+    KdmKind_Unknown,
+
+
     // Method kinds
     KdmKind_Method,
     KdmKind_Constructor,
     KdmKind_Destructor,
-    KdmKind_Operator,
     KdmKind_Virtual,
     KdmKind_Abstract,
-    KdmKind_Unknown,
 
-    // CallableKinds
-    KdmKind_External,
-    //KdmKind_Regular,
-    //KdmKind_Operator,
-    //KdmKind_Unknown,
+    // Library Kinds
+    KdmKind_Asm, //Not in KdmSpec
+    KdmKind_BitAssign, //Not in KdmSpec
+
   };
 
 public:
 
   static const KdmKind Assign()               { return KdmKind(KdmKind_Assign, "Assign");  }
-  static const KdmKind BitAssign()            { return KdmKind(KdmKind_BitAssign, "BitAssign");  }
   static const KdmKind Add()                  { return KdmKind(KdmKind_Add, "Add");  }
   static const KdmKind Subtract()             { return KdmKind(KdmKind_Subtract, "Subtract");  }
   static const KdmKind Multiply()             { return KdmKind(KdmKind_Multiply, "Multiply");  }
@@ -170,6 +171,10 @@ public:
   static const KdmKind Destructor()           { return KdmKind(KdmKind_Destructor, "destructor"); }
   static const KdmKind Virtual()              { return KdmKind(KdmKind_Virtual, "virtual"); }
   static const KdmKind Abstract()             { return KdmKind(KdmKind_Abstract, "abstract"); }
+
+  // Library Kinds
+  static const KdmKind Asm()                  { return KdmKind(KdmKind_Asm, "Asm");  } //Not in KdmSpec
+  static const KdmKind BitAssign()            { return KdmKind(KdmKind_BitAssign, "BitAssign");  } //Not in KdmSpec
 
 
   int const id() const

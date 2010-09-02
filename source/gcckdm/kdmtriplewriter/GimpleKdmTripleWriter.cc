@@ -834,6 +834,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         {
           actionData = writeKdmMemberSelect(gs);
         }
+        else if (gimpleRhsCode == INDIRECT_REF)
+        {
+          actionData = writeKdmPtrSelect(gs);
+        }
         else
         {
           boost::format f=boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode]) % BOOST_CURRENT_FUNCTION % __LINE__;
@@ -1654,7 +1658,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(tr
   ActionDataPtr rhsData = getRhsReferenceId(op0);
   actionData = writeKdmPtrSelect(lhsData->outputId(), rhsData->outputId());
   //Contain the tmp in the ptr action element
-  mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
+  if (not lhs)
+  {
+    mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
+  }
   configureDataAndFlow(actionData, lhsData, rhsData);
 
   return actionData;
@@ -1667,6 +1674,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(lo
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrSelect());
   writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), writesId);
+  //FIXME: We skip this reads for the momment need to clarification in the KDM Spec
   //writeKdmActionRelation(KdmType::Reads(), actionId, readsId);
   writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), addressesId);
   actionData->outputId(writesId);

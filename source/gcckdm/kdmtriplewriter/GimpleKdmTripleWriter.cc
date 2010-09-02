@@ -155,18 +155,18 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
-//  if (TREE_CODE(ast) == COMPONENT_REF)
-//  {
-//    int i  = 0;
-//  }
-//  if (TREE_CODE(ast) == INDIRECT_REF)
-//  {
-//    int i = 0;
-//  }
-//  if (TREE_CODE(ast) == ADDR_EXPR)
-//  {
-//    int i = 0;
-//  }
+  if (TREE_CODE(ast) == COMPONENT_REF)
+  {
+    int i  = 0;
+  }
+  if (TREE_CODE(ast) == INDIRECT_REF)
+  {
+    int i = 0;
+  }
+  if (TREE_CODE(ast) == ADDR_EXPR)
+  {
+    int i = 0;
+  }
 
   //Labels are apparently reused causing different
   //labels to be referenced as the same label which
@@ -215,6 +215,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
   else if (TREE_CODE(rhs) == COMPONENT_REF)
   {
     data = writeKdmMemberSelect(NULL_TREE, rhs, gcckdm::locationOf(rhs));
+  }
+  else if (TREE_CODE(rhs) == INDIRECT_REF)
+  {
+    data = writeKdmPtrSelect(NULL_TREE, rhs, gcckdm::locationOf(rhs));
   }
   else if (TREE_CODE(rhs) == BIT_FIELD_REF)
   {
@@ -369,7 +373,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
 
     if (TREE_CODE(var) == TYPE_DECL)
     {
-      //User has declared type within a function so we skip it currently
+      //User has declared a type within a function so we skip it currently
       //to prevent double containment when it is output at the
       //end of the translation unit
     }
@@ -641,6 +645,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       {
         paramData = writeKdmMemberSelect(NULL_TREE, callArg, gimple_location(gs));
       }
+      else if (TREE_CODE(callArg) == INDIRECT_REF)
+      {
+        paramData = writeKdmPtrSelect(NULL_TREE, callArg, gimple_location(gs));
+      }
       else
       {
         paramData = ActionDataPtr(new ActionData());
@@ -805,44 +813,72 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       }
       else if (TREE_CODE_CLASS(gimpleRhsCode) == tcc_reference)
       {
-        if (gimpleRhsCode == ARRAY_REF)
-        {
-          actionData = writeKdmArraySelect(gs);
-        }
-        else if(gimpleRhsCode == COMPONENT_REF)
-        {
-          tree lhs = gimple_assign_lhs(gs);
-
-          //Example: a->b = c.d;
-          if (TREE_CODE(lhs) == COMPONENT_REF)
-          {
-            actionData = writeKdmMemberReplace(gs);
-          }
-          else if (TREE_CODE(lhs) == INDIRECT_REF)
-          {
-            actionData = writeKdmPtrReplace(gs);
-          }
-          else
-          {
-            actionData = writeKdmMemberSelect(gs);
-          }
-          break;
-        }
-        else if (gimpleRhsCode == INDIRECT_REF)
-        {
-          actionData = writeKdmPtr(gs);
-        }
-        else if (gimpleRhsCode == BIT_FIELD_REF)
+        tree lhs = gimple_assign_lhs(gs);
+        if (gimpleRhsCode == BIT_FIELD_REF)
         {
           actionData = writeBitAssign(gs);
         }
+        else if (TREE_CODE(lhs) == COMPONENT_REF)
+        {
+          actionData = writeKdmMemberReplace(gs);
+        }
+        else if (TREE_CODE(lhs) == INDIRECT_REF)
+        {
+          actionData = writeKdmPtrReplace(gs);
+        }
+        else if (gimpleRhsCode == ARRAY_REF)
+        {
+          actionData = writeKdmArraySelect(gs);
+        }
+        else if (gimpleRhsCode == COMPONENT_REF)
+        {
+          actionData = writeKdmMemberSelect(gs);
+        }
         else
         {
-          std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
-          % BOOST_CURRENT_FUNCTION % __LINE__));
-          mKdmWriter.writeUnsupportedComment(msg);
+          boost::format f=boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode]) % BOOST_CURRENT_FUNCTION % __LINE__;
+          mKdmWriter.writeUnsupportedComment(boost::str(f));
         }
         break;
+//        if (gimpleRhsCode == ARRAY_REF)
+//        {
+//          actionData = writeKdmArraySelect(gs);
+//        }
+//        else if(gimpleRhsCode == COMPONENT_REF)
+//        {
+//          tree lhs = gimple_assign_lhs(gs);
+//
+//          //Example: a->b = c.d;
+//          if (TREE_CODE(lhs) == COMPONENT_REF)
+//          {
+//            actionData = writeKdmMemberReplace(gs);
+//          }
+//          else if (TREE_CODE(lhs) == INDIRECT_REF)
+//          {
+//            actionData = writeKdmPtrReplace(gs);
+//          }
+//          else
+//          {
+//            actionData = writeKdmMemberSelect(gs);
+//          }
+//          break;
+//        }
+//        else if (gimpleRhsCode == INDIRECT_REF)
+//        {
+//          tree lhs = gimple_assign_lhs(gs);
+//          actionData = writeKdmPtr(gs);
+//        }
+//        else if (gimpleRhsCode == BIT_FIELD_REF)
+//        {
+//          actionData = writeBitAssign(gs);
+//        }
+//        else
+//        {
+//          std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
+//          % BOOST_CURRENT_FUNCTION % __LINE__));
+//          mKdmWriter.writeUnsupportedComment(msg);
+//        }
+//        break;
       }
       else if (gimpleRhsCode == ADDR_EXPR)
       {
@@ -1364,7 +1400,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
     lhsId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(indirectRef)),loc);
 
     //Resolve the indirect reference put result in temp
-    ActionDataPtr ptrData = writeKdmPtr(lhsId, refId);
+    ActionDataPtr ptrData = writeKdmPtrSelect(lhsId, refId);
 
     //Contain the temp variable in the Ptr
     mKdmWriter.writeTripleContains(ptrData->actionId(), lhsId);
@@ -1397,7 +1433,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
     ActionDataPtr lhsData = ActionDataPtr(new ActionData());
     if (not lhs)
     {
-      writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc);
       lhsData->outputId(writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc));
     }
     else
@@ -1529,7 +1564,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
     ActionDataPtr selectData = writeKdmArraySelect(NULL_TREE, op0, loc, false);
 
     //Determine lhsid
-    lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),gcckdm::locationOf(rhs)) : getReferenceId(lhs);
+    lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),loc) : getReferenceId(lhs);
 
     //Write Ptr Element
     actionData = writeKdmPtr(lhsId, selectData->outputId());
@@ -1548,13 +1583,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
   }
   else if (TREE_CODE(op0) == COMPONENT_REF)
   {
+    // a = &b.d;
     actionData = writeKdmMemberSelect(NULL_TREE, op0, loc);
   }
-  //  // Example: int *ptr = &a;
+  //  // Example: a = &b;
   else
   {
     //we have to create a temp variable... aka temp1
-    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (rhs, 0))),gcckdm::locationOf(rhs));
+    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),gcckdm::locationOf(rhs));
 
     //Address.... temp1 = &rhs
     ActionDataPtr rhsData = getRhsReferenceId(op0);
@@ -1585,6 +1621,54 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(long con
   mKdmWriter.writeTripleKind(actionId, KdmKind::Ptr());
   writeKdmActionRelation(KdmType::Addresses(), actionId, addressesId);
   writeKdmActionRelation(KdmType::Writes(), actionId, writesId);
+  actionData->outputId(writesId);
+  return actionData;
+}
+
+
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(gimple const gs)
+{
+  tree lhs = gimple_assign_lhs(gs);
+  tree rhs = gimple_assign_rhs1(gs);
+  return writeKdmPtrSelect(lhs, rhs, gimple_location(gs));
+
+}
+
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(tree const lhs, tree const rhs, location_t const loc)
+{
+  assert(TREE_CODE(rhs) == INDIRECT_REF);
+
+  tree op0 = TREE_OPERAND (rhs, 0);
+  ActionDataPtr actionData = ActionDataPtr(new ActionData());
+  ActionDataPtr lhsData;
+  if (not lhs)
+  {
+    lhsData = ActionDataPtr(new ActionData());
+    lhsData->outputId(writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),loc));
+  }
+  else
+  {
+    lhsData = getRhsReferenceId(lhs);
+  }
+
+  ActionDataPtr rhsData = getRhsReferenceId(op0);
+  actionData = writeKdmPtrSelect(lhsData->outputId(), rhsData->outputId());
+  //Contain the tmp in the ptr action element
+  mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
+  configureDataAndFlow(actionData, lhsData, rhsData);
+
+  return actionData;
+}
+
+//GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(long const writesId, long const readsId, long const addressesId)
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(long const writesId, long const addressesId)
+{
+  ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrSelect());
+  writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), writesId);
+  //writeKdmActionRelation(KdmType::Reads(), actionId, readsId);
+  writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), addressesId);
   actionData->outputId(writesId);
   return actionData;
 }

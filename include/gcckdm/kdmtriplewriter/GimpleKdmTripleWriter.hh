@@ -240,6 +240,12 @@ private:
   ActionDataPtr writeKdmPtrReplace(gimple const gs);
 
 
+
+  ActionDataPtr writeKdmPtrSelect(gimple const gs);
+  ActionDataPtr writeKdmPtrSelect(tree const lhs, tree const rhs, location_t const loc);
+//  ActionDataPtr writeKdmPtrSelect(long writesId /*, long readsId/*,adtree const rhs, location_t const loc);
+  ActionDataPtr writeKdmPtrSelect(long const writesId, long const addressesId);
+
   long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
   long writeKdmStorableUnit(long const typeId, location_t loc);
 

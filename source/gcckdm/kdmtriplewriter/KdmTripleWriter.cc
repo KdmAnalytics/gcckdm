@@ -572,13 +572,12 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
     }
   }
 
-  // Otherwise it is a typedef
+  // Otherwise it is a typedef...
   long typedefKdmElementId = getReferenceId(typeDecl);
   writeTripleKdmType(typedefKdmElementId, KdmType::TypeUnit());
 
   // Get the name for the typedef, if available
   tree id (DECL_NAME (typeDecl));
-  std::string name(id ? nodeName(id) : unnamedNode);
   writeTripleName(typedefKdmElementId, nodeName(id));
 
   long typeKdmElementId = getReferenceId(typeNode);

@@ -103,6 +103,9 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
     //
     mFunctionEntryData.reset();
     mLastData.reset();
+    //Labels are only unique within a function, have to clear map for each function or
+    //we get double containment if the user used the same label in to functions
+    mLabelMap.clear();
 
     mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
@@ -165,7 +168,28 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 //    int i = 0;
 //  }
 
-  return mKdmWriter.getReferenceId(ast);
+  //Labels are apparently reused causing different
+  //labels to be referenced as the same label which
+  //causes double containment problems
+  //we use the name of the label instead
+  if (TREE_CODE(ast) == LABEL_DECL)
+  {
+    std::string labelName = gcckdm::getAstNodeName(ast);
+    LabelMap::const_iterator i = mLabelMap.find(labelName);
+    if (i == mLabelMap.end())
+    {
+      std::pair<LabelMap::iterator, bool> result = mLabelMap.insert(std::make_pair(labelName, mKdmWriter.getNextElementId()));
+      return result.first->second;
+    }
+    else
+    {
+      return i->second;
+    }
+  }
+  else
+  {
+    return mKdmWriter.getReferenceId(ast);
+  }
 }
 
 
@@ -313,8 +337,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     if (mLabelFlag and actionData)
     {
       long blockId = getBlockReferenceId(gimple_location(gs));
-      mKdmWriter.writeTripleContains(blockId, mLastLabelData->actionId());
-      writeKdmActionRelation(KdmType::Flow(), mLastLabelData->actionId(), actionData->actionId());
+      for (; !mLabelQueue.empty(); mLabelQueue.pop())
+      {
+        mKdmWriter.writeTripleContains(blockId, mLabelQueue.front()->actionId());
+        writeKdmActionRelation(KdmType::Flow(), mLabelQueue.front()->actionId(), actionData->actionId());
+      }
       mLabelFlag = !mLabelFlag;
     }
   }
@@ -340,9 +367,18 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
       continue;
     }
 
-    long declId = getReferenceId(var);
-    mKdmWriter.processAstNode(var);
-    mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
+    if (TREE_CODE(var) == TYPE_DECL)
+    {
+      //User has declared type within a function so we skip it currently
+      //to prevent double containment when it is output at the
+      //end of the translation unit
+    }
+    else
+    {
+      long declId = getReferenceId(var);
+      mKdmWriter.processAstNode(var);
+      mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
+    }
   }
   processGimpleSequence(gimple_bind_body(gs));
   mKdmWriter.writeComment("================GIMPLE END BIND STATEMENT " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
@@ -470,18 +506,19 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleReturnS
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleLabelStatement(gimple const gs)
 {
   tree label = gimple_label_label(gs);
-  mLastLabelData = writeKdmNopForLabel(label);
+  ActionDataPtr actionData = writeKdmNopForLabel(label);
+  mLabelQueue.push(actionData);
+//  mLastLabelData = writeKdmNopForLabel(label);
   mLabelFlag = true;
-  return mLastLabelData;
+  return actionData;
 }
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmNopForLabel(tree const label)
 {
-  long actionId = getReferenceId(label);
-  ActionDataPtr actionData(new ActionData(actionId));
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::Nop());
-  mKdmWriter.writeTripleName(actionId, gcckdm::getAstNodeName(label));
+  ActionDataPtr actionData(new ActionData(getReferenceId(label)));
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Nop());
+  mKdmWriter.writeTripleName(actionData->actionId(), gcckdm::getAstNodeName(label));
   return actionData;
 }
 
@@ -677,7 +714,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleGotoSta
   {
     //this goto doesn't have a location.... use the destination location?
     mKdmWriter.writeComment("FIXME: This GOTO doesn't have a location... what should we use instead");
-    mLastLabelData = actionData;
+    //mLastLabelData = actionData;
+    mLabelQueue.push(actionData);
     mLabelFlag = true;
   }
   else

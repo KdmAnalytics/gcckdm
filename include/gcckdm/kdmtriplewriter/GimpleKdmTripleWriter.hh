@@ -22,6 +22,7 @@
 #ifndef GCCKDM_KDMTRIPLEWRITER_GIMPLEKDMTRIPLEWRITER_HH_
 #define GCCKDM_KDMTRIPLEWRITER_GIMPLEKDMTRIPLEWRITER_HH_
 
+#include <queue>
 #include <tr1/unordered_map>
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/GccKdmUtilities.hh"
@@ -68,6 +69,8 @@ public:
 private:
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<ActionData> ActionDataPtr;
+  typedef std::queue<ActionDataPtr> LabelQueue;
+  typedef std::tr1::unordered_map<std::string, long> LabelMap;
 
 
   /**
@@ -275,7 +278,10 @@ private:
 
 
   bool mLabelFlag;
-  ActionDataPtr mLastLabelData;
+
+  LabelQueue mLabelQueue;
+  LabelMap   mLabelMap;
+  //ActionDataPtr mLastLabelData;
   long mRegisterVariableIndex;
 
   ActionDataPtr mLastData;

@@ -1312,8 +1312,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 {
   assert(TREE_CODE(rhs) == COMPONENT_REF);
 
-  mKdmWriter.writeComment("=============KDM MemberSelect Start==================");
-
   expanded_location xloc = expand_location(loc);
   tree op0 = TREE_OPERAND (rhs, 0);
   tree op1 = TREE_OPERAND (rhs, 1);
@@ -1373,19 +1371,23 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
     ActionDataPtr op1Data = getRhsReferenceId(op1);
     actionData = writeKdmMemberSelect(lhsData->outputId(), op1Data->outputId(), op0Data->outputId());
 
-    if(lhsData->hasActionId())
+    if (lhsData->hasActionId())
     {
-      //shouldn't happen
+      //Shouldn't happen;
+      boost::format f = boost::format("MemberSelect has unsupported LHS. %1%") % BOOST_CURRENT_FUNCTION;
+      mKdmWriter.writeUnsupportedComment(boost::str(f));
+
     }
     else
     {
-      mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
-      //Configure data and flows
       configureDataAndFlow(actionData, op0Data, op1Data);
     }
 
+    if (not lhs)
+    {
+      mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
+    }
   }
-  mKdmWriter.writeComment("=============KDM MemberSelect Finish==================");
   return actionData;
 }
 

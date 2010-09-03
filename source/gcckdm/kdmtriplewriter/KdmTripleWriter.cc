@@ -494,6 +494,12 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       processAstTemplateDecl(decl);
       break;
     }
+    case RESULT_DECL:
+    {
+      //Ignore for the moment.  In tree-pretty-print.c they simply print "<retval>"
+      //It's possible that we should do something with this but for now.....
+      break;
+    }
     case LABEL_DECL:
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");

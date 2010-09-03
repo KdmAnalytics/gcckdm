@@ -47,9 +47,9 @@ void registerCallbacks(char const * pluginName);
 void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr & kdmSink, ktw::KdmTripleWriter::Settings & settings);
 
 boost::unique_ptr<gcckdm::GccAstListener> gccAstListener;
-// Queue up tree object for latest processing (ie because gcc will fill in more info or
-// loose track of them)
-VEC(tree,heap) *treeQueueVec = NULL;
+
+// Queue up tree object for latest processing (ie because gcc will fill in more info or loose track of them)
+std::queue<tree> typeQueue;
 
 struct opt_pass kdmGimplePass =
 { GIMPLE_PASS, // type
@@ -82,9 +82,6 @@ extern "C" int kdm_plugin_init(struct plugin_name_args *plugin_info, struct plug
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version)
 {
   int retValue(0);
-
-  treeQueueVec = VEC_alloc(tree, heap, 10);
-
 
   //Recommended version check
   if (plugin_default_version_check(version, &gcc_version))
@@ -300,8 +297,7 @@ extern "C" void executeFinishType(void *event_data, void *data)
     //because gcc is overly lazy and does some things (like setting annonymous struct names)
     //sometime after completing the type
     // taken from dehyra_plugin.c
-    VEC_safe_push(tree, heap, treeQueueVec, type);
-    //gccAstListener->processAstNode(static_cast<tree>(event_data));
+    typeQueue.push(type);
   }
 }
 
@@ -335,14 +331,16 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
 
   if (!errorcount && !sorrycount)
   {
-    tree t;
-    for (int i = 0; treeQueueVec && VEC_iterate (tree, treeQueueVec, i, t); ++i)
+    //Process all recorded types
+    for (; !typeQueue.empty(); typeQueue.pop())
     {
-      gccAstListener->processAstNode(t);
+      //TODO: It appears that GCC GC's some types before the end of the translation unit
+      // Skip these for now and how that we don't need them
+      if (!TYPE_P (typeQueue.front()))
+        continue;
+      gccAstListener->processAstNode(typeQueue.front());
     }
     gccAstListener->finishTranslationUnit();
-    VEC_free (tree, heap, treeQueueVec);
-    treeQueueVec = nullptr;
   }
 
   //int retValue(0);

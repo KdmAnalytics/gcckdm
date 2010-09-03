@@ -844,45 +844,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
           mKdmWriter.writeUnsupportedComment(boost::str(f));
         }
         break;
-//        if (gimpleRhsCode == ARRAY_REF)
-//        {
-//          actionData = writeKdmArraySelect(gs);
-//        }
-//        else if(gimpleRhsCode == COMPONENT_REF)
-//        {
-//          tree lhs = gimple_assign_lhs(gs);
-//
-//          //Example: a->b = c.d;
-//          if (TREE_CODE(lhs) == COMPONENT_REF)
-//          {
-//            actionData = writeKdmMemberReplace(gs);
-//          }
-//          else if (TREE_CODE(lhs) == INDIRECT_REF)
-//          {
-//            actionData = writeKdmPtrReplace(gs);
-//          }
-//          else
-//          {
-//            actionData = writeKdmMemberSelect(gs);
-//          }
-//          break;
-//        }
-//        else if (gimpleRhsCode == INDIRECT_REF)
-//        {
-//          tree lhs = gimple_assign_lhs(gs);
-//          actionData = writeKdmPtr(gs);
-//        }
-//        else if (gimpleRhsCode == BIT_FIELD_REF)
-//        {
-//          actionData = writeBitAssign(gs);
-//        }
-//        else
-//        {
-//          std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2% on line (%3%)") % std::string(tree_code_name[gimpleRhsCode])
-//          % BOOST_CURRENT_FUNCTION % __LINE__));
-//          mKdmWriter.writeUnsupportedComment(msg);
-//        }
-//        break;
       }
       else if (gimpleRhsCode == ADDR_EXPR)
       {

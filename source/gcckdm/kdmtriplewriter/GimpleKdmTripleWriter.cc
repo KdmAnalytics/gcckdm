@@ -221,7 +221,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
   }
   else if (TREE_CODE(rhs) == ARRAY_REF)
   {
-    data = writeKdmArraySelect(NULL_TREE, rhs, gcckdm::locationOf(rhs), true);
+    data = writeKdmArraySelect(NULL_TREE, rhs, gcckdm::locationOf(rhs));
   }
   else if (TREE_CODE(rhs) == COMPONENT_REF)
   {
@@ -247,10 +247,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
 
   return data;
 }
-
-
-
-
 
 void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
 {
@@ -683,6 +679,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       {
         paramData = writeKdmPtrSelect(NULL_TREE, callArg, gimple_location(gs));
       }
+      else if (TREE_CODE(callArg) == ARRAY_REF)
+      {
+        paramData = writeKdmArraySelect(NULL_TREE, callArg, gimple_location(gs));
+      }
       else
       {
         paramData = ActionDataPtr(new ActionData());
@@ -867,6 +867,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         else if (TREE_CODE(lhs) == INDIRECT_REF)
         {
           actionData = writeKdmPtrReplace(gs);
+        }
+        else if (TREE_CODE(lhs) == ARRAY_REF)
+        {
+          actionData = writeKdmArrayReplace(gs);
         }
         else if (gimpleRhsCode == ARRAY_REF)
         {
@@ -1150,26 +1154,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstru
   if (not lhs)
   {
     lhsData->outputId(writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc));
+    mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
   }
   else
   {
     lhsData = getRhsReferenceId(lhs);
   }
-
-//  if (not lhs != NULL_TREE)
-//  {
-//
-//    lhsData = getRhsReferenceId(lhs);
-//    actionData->startActionId(*lhsData);
-//    writeKdmFlow(lhsData->actionId(), actionData->actionId());
-//    mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->actionId());
-//  }
-//  else
-//  {
-//    long tmpId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)), loc);
-//    mKdmWriter.writeTripleContains(actionData->actionId(), tmpId);
-//    actionData->outputId(tmpId);
-//  }
 
   if (lhsData->hasActionId())
   {
@@ -1178,13 +1168,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstru
     mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->actionId());
     actionData->outputId(lhsData->outputId());
   }
-  else
-  {
-    mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
-  }
-//  long tmpId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)), loc);
-//  mKdmWriter.writeTripleContains(actionData->actionId(), tmpId);
-//  actionData->outputId(tmpId);
 
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Assign());
@@ -1306,10 +1289,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
 {
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
-  return writeKdmArraySelect(lhs, rhs, gimple_location(gs), false);
+  return writeKdmArraySelect(lhs, rhs, gimple_location(gs));
 }
 
-GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeBlockUnit)
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc)
 {
   assert(TREE_CODE(rhs) == ARRAY_REF);
 
@@ -1371,7 +1354,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
     //Multi-dimensional arrays
     while (TREE_CODE(op0) == ARRAY_REF)
     {
-      selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs), false);
+      selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs));
 
       if (!actionData->hasStartAction())
       {
@@ -1617,7 +1600,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
   if (TREE_CODE(op0) == ARRAY_REF)
   {
     //Perform arraySelect
-    ActionDataPtr selectData = writeKdmArraySelect(NULL_TREE, op0, loc, false);
+    ActionDataPtr selectData = writeKdmArraySelect(NULL_TREE, op0, loc);
 
     //Determine lhsid
     lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND (op0, 0))),loc) : getReferenceId(lhs);

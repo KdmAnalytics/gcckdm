@@ -196,7 +196,6 @@ private:
   ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
   ActionDataPtr writeKdmArraySelect(gimple const gs);
   ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc);
-  //ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc, bool writeblockUnit, long & tmpId);
   ActionDataPtr writeKdmArrayReplace(gimple const gs);
 
   /**

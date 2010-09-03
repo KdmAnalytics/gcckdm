@@ -169,6 +169,10 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
   {
     int i = 0;
   }
+  if (TREE_CODE(ast) == ARRAY_REF)
+  {
+    int i = 0;
+  }
 
   //Labels are apparently reused causing different
   //labels to be referenced as the same label which
@@ -859,6 +863,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
         {
           //Example: *a = &b;
           actionData = writeKdmPtrReplace(gs);
+        }
+        else if (TREE_CODE(lhs) == ARRAY_REF)
+        {
+          //Example : a[1] = &b[0];
+          actionData = writeKdmArrayReplace(gs);
         }
         else
         {

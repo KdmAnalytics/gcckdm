@@ -1203,9 +1203,9 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTripleContains(KdmElementId_WorkbenchExtensionFamily, KdmElementId_HiddenStereotype);
 
   // C++ Stereotypes
-  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
-  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "C/C++");
-  writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "C/C++");
+  writeTriple(KdmElementId_CxxExtensionFamily, KdmPredicate::KdmType(), KdmType::ExtensionFamily());
+  writeTriple(KdmElementId_CxxExtensionFamily, KdmPredicate::Name(), "C/C++");
+  writeTriple(KdmElementId_CxxExtensionFamily, KdmPredicate::LinkId(), "C/C++");
   writeTripleContains(KdmElementId_Segment, KdmElementId_CxxExtensionFamily);
 
   writeTriple(KdmElementId_MutableStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());

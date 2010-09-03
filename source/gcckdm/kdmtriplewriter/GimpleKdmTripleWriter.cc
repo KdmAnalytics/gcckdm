@@ -173,6 +173,11 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
   {
     int i = 0;
   }
+  if (TREE_CODE(ast) == TREE_LIST)
+  {
+    int i = 0;
+  }
+
 
   //Labels are apparently reused causing different
   //labels to be referenced as the same label which
@@ -431,8 +436,17 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
         {
           for (unsigned i = 0; i < n; i++)
           {
-            long id = getReferenceId(gimple_asm_output_op (gs, i));
-            writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), id);
+            tree op = gimple_asm_output_op (gs, i);
+            //We are assuming single value in the tree
+            ActionDataPtr valueData = (TREE_CODE(op) == TREE_LIST) ? getRhsReferenceId(TREE_VALUE(op)) : getRhsReferenceId(op);
+
+            //Hook up flows
+            if (valueData->hasActionId())
+            {
+              actionData->startActionId(*valueData);
+              writeKdmFlow(valueData->actionId(), actionData->actionId());
+            }
+            writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), valueData->outputId());
           }
         }
         break;
@@ -444,8 +458,18 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
         {
           for (unsigned i = 0; i < n; i++)
           {
-            long id = getReferenceId(gimple_asm_input_op (gs, i));
-            writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), id);
+            tree op = gimple_asm_input_op (gs, i);
+            //We are assuming single value in the tree
+            ActionDataPtr valueData = (TREE_CODE(op) == TREE_LIST) ? getRhsReferenceId(TREE_VALUE(op)) : getRhsReferenceId(op);
+
+            //Hook up flows
+            if (valueData->hasActionId())
+            {
+              actionData->startActionId(*valueData);
+              writeKdmFlow(valueData->actionId(), actionData->actionId());
+            }
+
+            writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), valueData->outputId());
           }
         }
       }

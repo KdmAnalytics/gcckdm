@@ -498,6 +498,7 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
     {
       //Ignore for the moment.  In tree-pretty-print.c they simply print "<retval>"
       //It's possible that we should do something with this but for now.....
+      //Found in gvariant-serialiser.tkdm - glib-2.24.2
       break;
     }
     case LABEL_DECL:

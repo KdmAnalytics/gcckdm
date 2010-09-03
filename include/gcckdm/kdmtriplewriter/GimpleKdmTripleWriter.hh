@@ -191,6 +191,7 @@ private:
   ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
   ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
   ActionDataPtr writeKdmUnaryConstructor(gimple const gs);
+  ActionDataPtr writeKdmUnaryConstructor(tree const lhs, tree const rhs, location_t const loc);
   ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
   ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
   ActionDataPtr writeKdmArraySelect(gimple const gs);

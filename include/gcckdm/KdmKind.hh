@@ -101,7 +101,8 @@ private:
     // Library Kinds
     KdmKind_Asm, //Not in KdmSpec
     KdmKind_BitAssign, //Not in KdmSpec
-
+    KdmKind_RightRotate, // Not in KdmSpec
+    KdmKind_LeftRotate, // Not in KdmSpec
   };
 
 public:
@@ -175,7 +176,8 @@ public:
   // Library Kinds
   static const KdmKind Asm()                  { return KdmKind(KdmKind_Asm, "Asm");  } //Not in KdmSpec
   static const KdmKind BitAssign()            { return KdmKind(KdmKind_BitAssign, "BitAssign");  } //Not in KdmSpec
-
+  static const KdmKind LeftRotate()           { return KdmKind(KdmKind_LeftRotate, "LeftRotate"); } //Not in KdmSpec
+  static const KdmKind RightRotate()          { return KdmKind(KdmKind_RightRotate, "RightRotate"); } //Not in KdmSpec
 
   int const id() const
   {

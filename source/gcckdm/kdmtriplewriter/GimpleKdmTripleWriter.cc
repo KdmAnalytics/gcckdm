@@ -55,6 +55,8 @@ BinaryOperationKindMap treeCodeToKind =
                               (BIT_XOR_EXPR, gcckdm::KdmKind::BitXor())
                               (BIT_AND_EXPR, gcckdm::KdmKind::BitAnd())
                               (BIT_IOR_EXPR, gcckdm::KdmKind::BitOr())
+                              (LROTATE_EXPR, gcckdm::KdmKind::LeftRotate())
+                              (RROTATE_EXPR, gcckdm::KdmKind::RightRotate())
                               ;
 
 /**
@@ -814,7 +816,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       else if (TREE_CODE_CLASS(gimpleRhsCode) == tcc_reference)
       {
         tree lhs = gimple_assign_lhs(gs);
-        if (gimpleRhsCode == BIT_FIELD_REF)
+        if (gimpleRhsCode == BIT_FIELD_REF) //Not in KdmSpec
         {
           actionData = writeBitAssign(gs);
         }
@@ -955,6 +957,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleBinaryA
           case BIT_XOR_EXPR:
           case BIT_IOR_EXPR:
           case BIT_AND_EXPR:
+          case LROTATE_EXPR:  //Not in KdmSpec
+          case RROTATE_EXPR:  //Not in KdmSpec
           {
             actionData = writeKdmBinaryOperation(treeCodeToKind.find(gimple_assign_rhs_code(gs))->second, gs);
             break;

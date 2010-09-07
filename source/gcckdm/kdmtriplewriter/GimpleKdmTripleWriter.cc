@@ -799,6 +799,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       //Casting a pointer
       if (TREE_CODE(rhsNode) == ADDR_EXPR)
       {
+        mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
         actionData = writeKdmPtr(gs);
         break;
       }

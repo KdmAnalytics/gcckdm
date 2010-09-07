@@ -42,6 +42,8 @@ private:
     KdmPredicate_To,
     KdmPredicate_Path,
     KdmPredicate_LinkId,
+    KdmPredicate_LinkSrc,
+    KdmPredicate_LinkSnk,
     KdmPredicate_SourceRef,
     KdmPredicate_Uid,
     KdmPredicate_LastUid,
@@ -61,7 +63,9 @@ public:
   static const KdmPredicate To()         { return KdmPredicate(KdmPredicate_To, "to"); }
   static const KdmPredicate Path()       { return KdmPredicate(KdmPredicate_Path, "path"); }
   static const KdmPredicate SourceRef()  { return KdmPredicate(KdmPredicate_SourceRef, "SourceRef"); }
-  static const KdmPredicate LinkId()     { return KdmPredicate(KdmPredicate_LinkId, "link::id"); }
+  static const KdmPredicate LinkId()     { return KdmPredicate(KdmPredicate_LinkId, "link:id"); }
+  static const KdmPredicate LinkSrc()    { return KdmPredicate(KdmPredicate_LinkSrc, "link:src"); }
+  static const KdmPredicate LinkSnk()    { return KdmPredicate(KdmPredicate_LinkSnk, "link:snk"); }
   static const KdmPredicate Uid()        { return KdmPredicate(KdmPredicate_Uid, "UID"); }
   static const KdmPredicate LastUid()    { return KdmPredicate(KdmPredicate_LastUid, "lastUID"); }
   static const KdmPredicate Export()     { return KdmPredicate(KdmPredicate_Export, "export"); }

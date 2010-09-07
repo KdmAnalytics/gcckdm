@@ -493,7 +493,7 @@ std::string getAstNodeName(tree node)
       {
         if (TREE_CODE(TREE_TYPE(node)) == POINTER_TYPE)
         {
-          nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % TREE_INT_CST_LOW (node));
+          nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % static_cast<HOST_WIDE_INT>(TREE_INT_CST_LOW (node)));
         }
         else if (!host_integerp(node, 0))
         {
@@ -515,7 +515,7 @@ std::string getAstNodeName(tree node)
         }
         else
         {
-          nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % TREE_INT_CST_LOW (node));
+          nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % static_cast<HOST_WIDE_INT>(TREE_INT_CST_LOW (node)));
         }
         break;
       }

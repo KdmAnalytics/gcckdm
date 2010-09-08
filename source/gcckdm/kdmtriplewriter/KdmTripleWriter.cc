@@ -822,11 +822,13 @@ void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
       if(treeCode == RECORD_TYPE)
       {
         writeKdmMemberUnit(fieldDecl);
-        return;
       }
     }
   }
-  writeKdmItemUnit(fieldDecl);
+  else
+  {
+    writeKdmItemUnit(fieldDecl);
+  }
 }
 
 void KdmTripleWriter::processAstValueNode(tree const val)
@@ -1534,6 +1536,8 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   writeTripleName(itemId, name);
   writeTriple(itemId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(itemId, item);
+  tree context = DECL_CONTEXT(item);
+  writeTripleContains(getReferenceId(context), itemId);
   return itemId;
 }
 
@@ -1856,7 +1860,6 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
             {
               long itemId = getReferenceId(d);
               processAstNode(d);
-              writeTripleContains(structId, itemId);
             }
             break;
           }

@@ -56,6 +56,15 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 
+//class FileSystemNode
+//{
+//public:
+//  long elementId;
+//  std::string name;
+//};
+
+
+
 /**
  * This class traverses the Gcc AST nodes passed to it and writes their KDM
  * representation to and output stream
@@ -289,6 +298,11 @@ public:
    */
   long getUserTypeId(KdmType const & type);
 
+  void markNodeAsProcessed(tree node);
+
+
+  long writeKdmStorableUnit(tree const var, bool writeContains);
+
 private:
 
   typedef std::tr1::unordered_map<tree, long> TreeMap;
@@ -297,6 +311,7 @@ private:
   typedef std::queue<tree> TreeQueue;
   typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
+//  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, FileSystemNode> FileSystemGraph;
   typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
   typedef std::tr1::unordered_map<long, long> ContainmentMap;
 
@@ -465,7 +480,8 @@ private:
   long writeKdmMemberUnit(tree const item);
   long writeKdmItemUnit(tree const item);
   void writeKdmArrayType(tree const array);
-  long writeKdmStorableUnit(tree const var);
+
+
   long writeKdmSignature(tree const function);
   long writeKdmSignatureDeclaration(tree const functionDecl);
 
@@ -486,6 +502,8 @@ private:
   void processNodeQueue();
   void writeReferencedSharedUnits();
   void writeUids();
+
+
 
 
 

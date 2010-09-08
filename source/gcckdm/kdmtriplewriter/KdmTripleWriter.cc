@@ -263,8 +263,7 @@ void KdmTripleWriter::startKdmGimplePass()
     {
       if (!hasReferenceId(pNode->decl))
       {
-        long unitId = writeKdmStorableUnit(pNode->decl);
-        writeTripleContains(getSourceFileReferenceId(pNode->decl), unitId);
+        writeKdmStorableUnit(pNode->decl, true);
       }
     }
   }
@@ -798,7 +797,7 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
 
 void KdmTripleWriter::processAstVariableDeclarationNode(tree const varDeclaration)
 {
-  writeKdmStorableUnit(varDeclaration);
+  writeKdmStorableUnit(varDeclaration, true);
 }
 
 void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl)
@@ -1538,7 +1537,7 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   return itemId;
 }
 
-long KdmTripleWriter::writeKdmStorableUnit(tree const var)
+long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
 {
   long unitId = getReferenceId(var);
   writeTripleKdmType(unitId, KdmType::StorableUnit());
@@ -1547,7 +1546,10 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var)
   long ref = getReferenceId(type);
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
-
+  if (writeContains)
+  {
+    writeTripleContains(getSourceFileReferenceId(var), unitId);
+  }
   return unitId;
 }
 
@@ -1612,6 +1614,7 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
     file = boost::filesystem::complete(file);
   }
 
+
   // the node is not in our translation unit, it must be in a shared unit
   if (mCompilationFile != file)
   {
@@ -1663,6 +1666,11 @@ long KdmTripleWriter::getUserTypeId(KdmType const & type)
     retVal = i->second;
   }
   return retVal;
+}
+
+void KdmTripleWriter::markNodeAsProcessed(tree const ast)
+{
+  mProcessedNodes.insert(ast);
 }
 
 
@@ -1743,6 +1751,7 @@ void KdmTripleWriter::writeKdmPointerType(tree const pointerType)
   processAstNode(t2);
 
   writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
+  writeTripleContains(KdmElementId_LanguageUnit, pointerKdmElementId);
 }
 
 void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
@@ -1786,6 +1795,7 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
     {
       writeTriple(arrayKdmElementId, KdmPredicate::Size(), "<unknown>");
     }
+    writeTripleContains(KdmElementId_LanguageUnit, arrayKdmElementId);
 
 }
 

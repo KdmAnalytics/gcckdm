@@ -390,9 +390,9 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
     }
     else
     {
-      long declId = getReferenceId(var);
-      mKdmWriter.processAstNode(var);
+      long declId = mKdmWriter.writeKdmStorableUnit(var, false);
       mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
+      mKdmWriter.markNodeAsProcessed(var);
     }
   }
   processGimpleSequence(gimple_bind_body(gs));
@@ -656,7 +656,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     mKdmWriter.writeTriple(callId, KdmPredicate::From(), actionId);
     mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
     mKdmWriter.writeTripleContains(actionId, callId);
-    mKdmWriter.writeTriple(callId, KdmPredicate::LinkSrc(), "call/" + gcckdm::getAstNodeName(t));
+    mKdmWriter.writeTriple(callId, KdmPredicate::LinkSrc(), "c.call/" + gcckdm::getAstNodeName(t));
 
   }
 

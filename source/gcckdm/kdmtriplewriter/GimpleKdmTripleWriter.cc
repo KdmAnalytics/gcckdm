@@ -656,6 +656,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     mKdmWriter.writeTriple(callId, KdmPredicate::From(), actionId);
     mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
     mKdmWriter.writeTripleContains(actionId, callId);
+    mKdmWriter.writeTriple(callId, KdmPredicate::LinkSrc(), "call/" + gcckdm::getAstNodeName(t));
+
   }
 
   //Read each parameter

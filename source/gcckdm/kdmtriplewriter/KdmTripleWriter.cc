@@ -940,17 +940,18 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     }
     // C++ uses the mangled name for link:id, if possible
     writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
+    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), "function/" + gcckdm::getLinkId(functionDecl, name));
   }
   else
   {
     writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
-    //    if(DECL_REALLY_EXTERN(functionDecl))
     if (DECL_EXTERNAL(functionDecl))
       writeTripleKind(callableUnitId, KdmKind::External());
     else
       writeTripleKind(callableUnitId, KdmKind::Regular());
     // Standard C does not require mangled names for link:id
     writeTripleLinkId(callableUnitId, name);
+    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), "function/" + name);
   }
 
   writeTripleName(callableUnitId, name);

@@ -947,9 +947,13 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   {
     writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
     if (DECL_EXTERNAL(functionDecl))
+    {
       writeTripleKind(callableUnitId, KdmKind::External());
+    }
     else
+    {
       writeTripleKind(callableUnitId, KdmKind::Regular());
+    }
     // Standard C does not require mangled names for link:id
     writeTripleLinkId(callableUnitId, name);
     writeTriple(callableUnitId, KdmPredicate::LinkSnk(), "function/" + name);
@@ -1858,7 +1862,6 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
           {
             if (!DECL_ARTIFICIAL(d))
             {
-              long itemId = getReferenceId(d);
               processAstNode(d);
             }
             break;

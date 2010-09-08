@@ -86,6 +86,7 @@ private:
     KdmType_EntryFlow,
     KdmType_GuardedFlow,
     KdmType_Calls,
+    KdmType_CompliesTo,
   };
 
 public:
@@ -146,6 +147,7 @@ public:
   static const KdmType EntryFlow()        { return KdmType(KdmType_EntryFlow, "action/EntryFlow");  }
   static const KdmType GuardedFlow()      { return KdmType(KdmType_GuardedFlow, "action/GuardedFlow");}
   static const KdmType Calls()            { return KdmType(KdmType_Calls, "action/Calls");  }
+  static const KdmType CompliesTo()       { return KdmType(KdmType_CompliesTo, "action/CompliesTo");  }
   //static const KdmType () { return KdmType(KdmType_, "action/");}
   //static const KdmType () { return KdmType(KdmType_, "action/");}
 

@@ -652,24 +652,20 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     //regular call
     mKdmWriter.writeTripleKind(actionId, KdmKind::Call());
 
+    long relId = mKdmWriter.getNextElementId();
     if (DECL_EXTERNAL(t))
     {
       mKdmWriter.writeTriple(actionId, KdmPredicate::LinkSrc(), "c.call/" + gcckdm::getAstNodeName(t));
-
-      long compliesId = mKdmWriter.getNextElementId();
-      mKdmWriter.writeTripleKdmType(compliesId, KdmType::CompliesTo());
-      mKdmWriter.writeTriple(compliesId, KdmPredicate::From(), actionId);
-      mKdmWriter.writeTriple(compliesId, KdmPredicate::To(), callableId);
-      mKdmWriter.writeTripleContains(actionId, compliesId);
+      mKdmWriter.writeTripleKdmType(relId, KdmType::CompliesTo());
     }
     else
     {
-      long callId = mKdmWriter.getNextElementId();
-      mKdmWriter.writeTripleKdmType(callId, KdmType::Calls());
-      mKdmWriter.writeTriple(callId, KdmPredicate::From(), actionId);
-      mKdmWriter.writeTriple(callId, KdmPredicate::To(), callableId);
-      mKdmWriter.writeTripleContains(actionId, callId);
+      mKdmWriter.writeTripleKdmType(relId, KdmType::Calls());
     }
+    mKdmWriter.writeTripleKdmType(relId, KdmType::Calls());
+    mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionId);
+    mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
+    mKdmWriter.writeTripleContains(actionId, relId);
 }
 
   //Read each parameter

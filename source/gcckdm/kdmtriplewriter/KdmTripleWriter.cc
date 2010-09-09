@@ -264,6 +264,7 @@ void KdmTripleWriter::startKdmGimplePass()
       if (!hasReferenceId(pNode->decl))
       {
         writeKdmStorableUnit(pNode->decl, true);
+        markNodeAsProcessed(pNode->decl);
       }
     }
   }
@@ -1557,6 +1558,10 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
   if (writeContains)
   {
     writeTripleContains(getSourceFileReferenceId(var), unitId);
+  }
+  if (DECL_EXTERNAL(var))
+  {
+    std::cerr << "EXTERNAL!!!!!!!!!!" << std::endl;
   }
   return unitId;
 }

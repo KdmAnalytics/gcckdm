@@ -689,7 +689,7 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
       }
       case FUNCTION_TYPE:
       {
-        //writeKdmSignature(typeNode);
+        writeKdmSignatureType(typeNode);
         break;
       }
       case METHOD_TYPE:
@@ -1166,8 +1166,17 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
     writeTripleContains(signatureId, refId);
     argType = TREE_CHAIN (argType);
   }
-  writeTripleContains(KdmElementId_CompilationUnit, signatureId);
 
+  tree context = TYPE_CONTEXT(functionType);
+  if (context)
+  {
+    writeTripleContains(getReferenceId(TYPE_CONTEXT(functionType)), signatureId);
+  }
+  else
+  {
+    writeTripleContains(KdmElementId_CompilationUnit, signatureId);
+  }
+  writeTriple(signatureId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
   return signatureId;
 
 }
@@ -1348,10 +1357,19 @@ void KdmTripleWriter::writeTripleName(long const subject, std::string const & na
   writeTriple(subject, KdmPredicate::Name(), name);
 }
 
-void KdmTripleWriter::writeTripleContains(long const parent, long const child)
+void KdmTripleWriter::writeTripleContains(long const parent, long const child, bool uid)
 {
-  //add the node(s) to the uid graph
-  bool result = updateUidGraph(parent, child);
+  bool result;
+  if (uid)
+  {
+    //add the node(s) to the uid graph
+    result = updateUidGraph(parent, child);
+  }
+  else
+  {
+    //User requested no UID generation
+    result = true;
+  }
 
   if (result)
   {
@@ -1481,7 +1499,7 @@ KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path cons
   writeTripleName(mKdmElementId, file.filename());
   writeTriple(mKdmElementId, KdmPredicate::Path(), sourceFile.string());
   writeTripleLinkId(mKdmElementId, sourceFile.string());
-  writeTripleContains(KdmElementId_InventoryModel, mKdmElementId);
+  writeTripleContains(KdmElementId_InventoryModel, mKdmElementId, false);
 
   //Keep track of all files inserted into the inventory model
   std::pair<FileMap::iterator, bool> result = mInventoryMap.insert(std::make_pair(sourceFile, mKdmElementId));
@@ -1493,8 +1511,6 @@ void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
   writeTripleKdmType(++mKdmElementId, KdmType::CompilationUnit());
   writeTripleName(mKdmElementId, file.filename());
   writeTripleLinkId(mKdmElementId, file.string());
-
-  //long fileContains()
 
   writeTripleContains(KdmElementId_CodeAssembly, mKdmElementId);
 }

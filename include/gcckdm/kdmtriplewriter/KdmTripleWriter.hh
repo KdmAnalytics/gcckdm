@@ -197,7 +197,8 @@ public:
    *
    * writes: <subject> <contains> <child>
    */
-  void writeTripleContains(long const parent, long const child);
+  void writeTripleContains(long const parent, long const child, bool uid = true);
+
 
   /**
    * Convenience method to write the common "extends" relationship

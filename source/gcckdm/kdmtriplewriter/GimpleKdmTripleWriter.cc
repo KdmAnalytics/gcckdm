@@ -623,7 +623,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
     mKdmWriter.writeTripleKdmType(trueFlowId, KdmType::TrueFlow());
     mKdmWriter.writeTriple(trueFlowId, KdmPredicate::From(), actionData->actionId());
     mKdmWriter.writeTriple(trueFlowId, KdmPredicate::To(), trueNodeId);
-    mKdmWriter.writeTripleContains(actionData->actionId(), trueFlowId);
+    mKdmWriter.writeTripleContains(actionData->actionId(), trueFlowId, false);
   }
 
   //Write false flow
@@ -635,7 +635,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
     mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
     mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionData->actionId());
     mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
-    mKdmWriter.writeTripleContains(actionData->actionId(), falseFlowId);
+    mKdmWriter.writeTripleContains(actionData->actionId(), falseFlowId, false);
   }
 
   //Contain this action in a block unit
@@ -1104,7 +1104,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
       mKdmWriter.writeTripleKdmType(guardedFlowId, KdmType::GuardedFlow());
       mKdmWriter.writeTriple(guardedFlowId, KdmPredicate::From(), guardedFlowId);
       mKdmWriter.writeTriple(guardedFlowId, KdmPredicate::To(), readsId);
-      mKdmWriter.writeTripleContains(actionId, guardedFlowId);
+      mKdmWriter.writeTripleContains(actionId, guardedFlowId, false);
     }
     else
     {
@@ -1115,7 +1115,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
       mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
       mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionId);
       mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
-      mKdmWriter.writeTripleContains(actionId, falseFlowId);
+      mKdmWriter.writeTripleContains(actionId, falseFlowId, false);
     }
   }
   return actionData;
@@ -1191,7 +1191,7 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
   }
   mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
   mKdmWriter.writeTriple(arId, KdmPredicate::To(), target.id);
-  mKdmWriter.writeTripleContains(fromId, arId);
+  mKdmWriter.writeTripleContains(fromId, arId, false);
 
   return arId;
 }
@@ -1800,7 +1800,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(Re
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrSelect());
   writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), writesTarget);
-  //FIXME: We skip this reads for the momment need to clarification in the KDM Spec
+  //FIXME: We skip this reads for the moment need to clarification in the KDM Spec
   //writeKdmActionRelation(KdmType::Reads(), actionId, readsId);
   writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), addressesTarget);
   actionData->outputId(writesTarget.id);

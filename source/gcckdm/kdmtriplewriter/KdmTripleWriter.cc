@@ -910,27 +910,43 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Constructor());
+      //Identify this as a sink
+      writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
     }
     else if(DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Destructor());
+      //Identify this as a sink
+      writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
     }
     else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Operator());
+      //Identify this as a sink
+      writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
     }
     else if(DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Method());
+      //Identify this as a sink
+      writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
     }
     else
     {
       writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
-      if(DECL_REALLY_EXTERN(functionDecl)) writeTripleKind(callableUnitId, KdmKind::External());
-      else writeTripleKind(callableUnitId, KdmKind::Regular());
+      if(DECL_REALLY_EXTERN(functionDecl))
+      {
+        writeTripleKind(callableUnitId, KdmKind::External());
+      }
+      else
+      {
+        writeTripleKind(callableUnitId, KdmKind::Regular());
+        //Identify this as a sink
+        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
+      }
     }
     // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
     if (DECL_PURE_VIRTUAL_P (functionDecl))
@@ -946,8 +962,6 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     // C++ uses the mangled name for link:id, if possible
     writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
 
-    //Identify this as a sink
-    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
   }
   else
   {
@@ -959,12 +973,12 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     else
     {
       writeTripleKind(callableUnitId, KdmKind::Regular());
+      //Identify this as a sink
+      writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + name);
     }
     // Standard C does not require mangled names for link:id
     writeTripleLinkId(callableUnitId, name);
 
-    //Identify this as a sink
-    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + name);
   }
 
   writeTripleName(callableUnitId, name);
@@ -1479,6 +1493,9 @@ void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
   writeTripleKdmType(++mKdmElementId, KdmType::CompilationUnit());
   writeTripleName(mKdmElementId, file.filename());
   writeTripleLinkId(mKdmElementId, file.string());
+
+  //long fileContains()
+
   writeTripleContains(KdmElementId_CodeAssembly, mKdmElementId);
 }
 
@@ -1563,7 +1580,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
   long ref = getReferenceId(type);
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
-  if (DECL_EXTERNAL(var))
+  if (!DECL_EXTERNAL(var))
   {
     writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
   }

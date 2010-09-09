@@ -311,9 +311,9 @@ private:
   typedef std::queue<tree> TreeQueue;
   typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
-//  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, FileSystemNode> FileSystemGraph;
   typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
   typedef std::tr1::unordered_map<long, long> ContainmentMap;
+
 
   /**
    * Functor for hashing KdmType's.
@@ -544,6 +544,8 @@ private:
 
   ///User configuration settings
   Settings mSettings;
+
+  FileMap mPackageMap;
 };
 
 } // namespace kdmtriplewriter

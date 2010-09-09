@@ -66,6 +66,7 @@ private:
     KdmType_Extends,
     KdmType_CodeRelationship,
     KdmType_EnumeratedType,
+    KdmType_Package,
 
     //Source Group
     KdmType_InventoryModel,
@@ -124,6 +125,7 @@ public:
   static const KdmType Extends()          { return KdmType(KdmType_Extends, "code/Extends");  }
   static const KdmType CodeRelationship() { return KdmType(KdmType_CodeRelationship, "code/CodeRelationship");  }
   static const KdmType EnumeratedType()   { return KdmType(KdmType_EnumeratedType, "code/EnumeratedType"); }
+  static const KdmType Package()          { return KdmType(KdmType_Package, "code/Package"); }
 
   //static const KdmType () { return KdmType(KdmType_, "code/");}
   //static const KdmType () { return KdmType(KdmType_, "code/");}

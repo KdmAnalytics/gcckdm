@@ -49,6 +49,7 @@ std::string const unsupportedPrefix("UNSUPPORTED: ");
 std::string const unnamedNode("<unnamed>");
 
 std::string const linkCallablePrefix("c.function/");
+std::string const linkVariablePrefix("c.variable/");
 
 /**
  * Returns the name of the given node or the value of unnamedNode
@@ -1556,11 +1557,16 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
 {
   long unitId = getReferenceId(var);
   writeTripleKdmType(unitId, KdmType::StorableUnit());
-  writeTripleName(unitId, nodeName(var));
+  std::string name= nodeName(var);
+  writeTripleName(unitId, name);
   tree type(TYPE_MAIN_VARIANT(TREE_TYPE(var)));
   long ref = getReferenceId(type);
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
+  if (DECL_EXTERNAL(var))
+  {
+    writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
+  }
   if (writeContains)
   {
     writeTripleContains(getSourceFileReferenceId(var), unitId);

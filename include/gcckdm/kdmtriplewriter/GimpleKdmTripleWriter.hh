@@ -67,6 +67,16 @@ public:
   void processAstFunctionDeclarationNode(tree functionDecl);
 
 private:
+
+  struct RelationTarget
+  {
+    RelationTarget(tree const targetNode, long nodeRefId) : node(targetNode), id(nodeRefId)
+    {}
+
+    tree node;
+    long id;
+  };
+
   typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<ActionData> ActionDataPtr;
   typedef std::queue<ActionDataPtr> LabelQueue;
@@ -183,10 +193,13 @@ private:
 
   ActionDataPtr writeKdmNopForLabel(tree const label);
   long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
+
+  long writeKdmActionRelation(KdmType const & type, long const fromId, RelationTarget const & target);
+
   long writeKdmFlow(long const fromId, long const toId);
 
-  void writeKdmUnaryRelationships(long const actionId, long lhsId, long rhsId);
-  void writeKdmBinaryRelationships(long const actionId, long lhsId, long rhs1Id, long rhs2Id);
+  void writeKdmUnaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhsTarget);
+  void writeKdmBinaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhs1Target, RelationTarget const & rhs2Target);
 
   ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
   ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
@@ -211,14 +224,16 @@ private:
    * @param loc
    */
   ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc);
-  ActionDataPtr writeKdmMemberSelect(long const writesId, long const readsId, long const addressesId);
+  ActionDataPtr writeKdmMemberSelect(RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
   ActionDataPtr writeKdmMemberReplace(gimple const gs);
   ActionDataPtr writeKdmMemberReplace(tree const lhs, tree const op, tree const rhs, location_t const loc);
-  ActionDataPtr writeKdmMemberReplace(long const writesId, long const readsId, long const addressesId);
+  ActionDataPtr writeKdmMemberReplace(RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
 
   ActionDataPtr writeKdmPtr(gimple const gs);
+
+  ActionDataPtr writeKdmActionElement(KdmKind const & kind, RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
   /**
    *
@@ -235,7 +250,7 @@ private:
    * @param writesId the id of to side of the writes relationship for this Ptr Element
    * @param addressesId the id of the to side of the addresses relationship for this Ptr Element
    */
-  ActionDataPtr writeKdmPtr(long const writesId, long const addressesId);
+  ActionDataPtr writeKdmPtr(RelationTarget const & writesTarget, RelationTarget const & addressesTarget);
 
   ActionDataPtr writeKdmPtrReplace(gimple const gs);
 
@@ -244,7 +259,7 @@ private:
   ActionDataPtr writeKdmPtrSelect(gimple const gs);
   ActionDataPtr writeKdmPtrSelect(tree const lhs, tree const rhs, location_t const loc);
 //  ActionDataPtr writeKdmPtrSelect(long writesId /*, long readsId/*,adtree const rhs, location_t const loc);
-  ActionDataPtr writeKdmPtrSelect(long const writesId, long const addressesId);
+  ActionDataPtr writeKdmPtrSelect(RelationTarget const & writesTarget, RelationTarget const & addressesTarget);
 
   long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
   long writeKdmStorableUnit(long const typeId, location_t loc);

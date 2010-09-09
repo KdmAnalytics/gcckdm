@@ -29,6 +29,14 @@
 namespace
 {
 
+//Linkage constants
+std::string const linkCallPrefix("c.call/");
+std::string const linkAddresssPrefix("c.addresses/");
+std::string const linkReadsPrefix("c.reads/");
+std::string const linkWritesPrefix("c.writes/");
+
+
+
 typedef std::map<tree_code, gcckdm::KdmKind> BinaryOperationKindMap;
 
 //Convienent Map from gcc expressions to their KDM equivalents
@@ -66,6 +74,7 @@ bool isValueNode(tree const node)
 {
   return TREE_CODE(node) == INTEGER_CST || TREE_CODE(node) == REAL_CST || TREE_CODE(node) == STRING_CST;
 }
+
 
 } // namespace
 
@@ -157,26 +166,27 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
-  if (TREE_CODE(ast) == COMPONENT_REF)
-  {
-    int i  = 0;
-  }
-  if (TREE_CODE(ast) == INDIRECT_REF)
-  {
-    int i = 0;
-  }
-  if (TREE_CODE(ast) == ADDR_EXPR)
-  {
-    int i = 0;
-  }
-  if (TREE_CODE(ast) == ARRAY_REF)
-  {
-    int i = 0;
-  }
-  if (TREE_CODE(ast) == TREE_LIST)
-  {
-    int i = 0;
-  }
+// Handy debug hook code
+//  if (TREE_CODE(ast) == COMPONENT_REF)
+//  {
+//    int i  = 0;
+//  }
+//  if (TREE_CODE(ast) == INDIRECT_REF)
+//  {
+//    int i = 0;
+//  }
+//  if (TREE_CODE(ast) == ADDR_EXPR)
+//  {
+//    int i = 0;
+//  }
+//  if (TREE_CODE(ast) == ARRAY_REF)
+//  {
+//    int i = 0;
+//  }
+//  if (TREE_CODE(ast) == TREE_LIST)
+//  {
+//    int i = 0;
+//  }
 
 
   //Labels are apparently reused causing different
@@ -655,7 +665,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     long relId = mKdmWriter.getNextElementId();
     if (DECL_EXTERNAL(t))
     {
-      mKdmWriter.writeTriple(actionId, KdmPredicate::LinkSrc(), "c.call/" + gcckdm::getAstNodeName(t));
+      mKdmWriter.writeTriple(actionId, KdmPredicate::LinkSrc(), linkCallPrefix + gcckdm::getAstNodeName(t));
       mKdmWriter.writeTripleKdmType(relId, KdmType::CompliesTo());
     }
     else

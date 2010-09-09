@@ -48,6 +48,8 @@ std::string const unsupportedPrefix("UNSUPPORTED: ");
 //If a AST node doesn't have a name use this name
 std::string const unnamedNode("<unnamed>");
 
+std::string const linkCallablePrefix("c.function/");
+
 /**
  * Returns the name of the given node or the value of unnamedNode
  *
@@ -942,7 +944,9 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     }
     // C++ uses the mangled name for link:id, if possible
     writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
-    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), "function/" + gcckdm::getLinkId(functionDecl, name));
+
+    //Identify this as a sink
+    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
   }
   else
   {
@@ -957,7 +961,9 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     }
     // Standard C does not require mangled names for link:id
     writeTripleLinkId(callableUnitId, name);
-    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), "function/" + name);
+
+    //Identify this as a sink
+    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + name);
   }
 
   writeTripleName(callableUnitId, name);
@@ -1558,10 +1564,6 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
   if (writeContains)
   {
     writeTripleContains(getSourceFileReferenceId(var), unitId);
-  }
-  if (DECL_EXTERNAL(var))
-  {
-    std::cerr << "EXTERNAL!!!!!!!!!!" << std::endl;
   }
   return unitId;
 }

@@ -277,6 +277,9 @@ public:
    */
   long writeKdmSourceRef(long id, expanded_location const & xloc);
 
+
+  void writeKdmBuiltinStereotype(long const id);
+
   /**
    * Returns true if the given node has already been encountered and
    * can be referenced
@@ -408,6 +411,7 @@ private:
     KdmElementId_PrivateStereotype,
     KdmElementId_ProtectedStereotype,
     KdmElementId_ExplicitStereotype,
+    KdmElementId_BuiltinStereotype,
     KdmElementId_CodeAssembly,
     KdmElementId_LanguageUnit,
     KdmElementId_DerivedSharedUnit,

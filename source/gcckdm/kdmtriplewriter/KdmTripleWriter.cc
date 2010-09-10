@@ -1360,6 +1360,11 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_ExplicitStereotype, KdmPredicate::LinkId(), "explicit");
   writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_ExplicitStereotype);
 
+  writeTriple(KdmElementId_BuiltinStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
+  writeTriple(KdmElementId_BuiltinStereotype, KdmPredicate::Name(), "builtin");
+  writeTriple(KdmElementId_BuiltinStereotype, KdmPredicate::LinkId(), "builtin");
+  writeTripleContains(KdmElementId_CxxExtensionFamily, KdmElementId_BuiltinStereotype);
+
   // Code Model contents
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::KdmType(), KdmType::CodeAssembly());
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
@@ -1397,6 +1402,12 @@ void KdmTripleWriter::writeTripleName(long const subject, std::string const & na
 {
   writeTriple(subject, KdmPredicate::Name(), name);
 }
+
+void KdmTripleWriter::writeKdmBuiltinStereotype(long const subject)
+{
+  writeTriple(subject, KdmPredicate::Stereotype(), KdmElementId_BuiltinStereotype);
+}
+
 
 void KdmTripleWriter::writeTripleContains(long const parent, long const child, bool uid)
 {

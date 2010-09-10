@@ -680,16 +680,28 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     long relId = mKdmWriter.getNextElementId();
     if (DECL_EXTERNAL(t))
     {
+      expanded_location e = expand_location(gcckdm::locationOf(t));
       mKdmWriter.writeTriple(actionId, KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getAstNodeName(t));
-      mKdmWriter.writeTripleKdmType(relId, KdmType::CompliesTo());
+
+      if (DECL_BUILT_IN(t) && std::string(e.file) == "<built-in>")
+      {
+        mKdmWriter.writeKdmBuiltinStereotype(relId);
+      }
+      else
+      {
+        mKdmWriter.writeTripleKdmType(relId, KdmType::CompliesTo());
+        mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionId);
+        mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
+        mKdmWriter.writeTripleContains(actionId, relId);
+      }
     }
     else
     {
       mKdmWriter.writeTripleKdmType(relId, KdmType::Calls());
+      mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionId);
+      mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
+      mKdmWriter.writeTripleContains(actionId, relId);
     }
-    mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionId);
-    mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
-    mKdmWriter.writeTripleContains(actionId, relId);
 }
 
   //Read each parameter

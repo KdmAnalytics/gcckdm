@@ -188,7 +188,6 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 //    int i = 0;
 //  }
 
-
   //Labels are apparently reused causing different
   //labels to be referenced as the same label which
   //causes double containment problems
@@ -209,7 +208,15 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
   }
   else
   {
-    return mKdmWriter.getReferenceId(ast);
+    //IF we are referencing a type ensure that we are using the _real_ type
+    if (TYPE_P(ast))
+    {
+      return mKdmWriter.getReferenceId(TYPE_MAIN_VARIANT(ast));
+    }
+    else
+    {
+      return mKdmWriter.getReferenceId(ast);
+    }
   }
 }
 

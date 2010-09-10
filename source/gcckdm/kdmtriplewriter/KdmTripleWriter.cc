@@ -2123,13 +2123,14 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 
   writeKdmSourceRef(classId, mainRecordType);
   writeTripleContains(compilationUnitId, classId);
-
 }
 
 void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 {
   long id = getSharedUnitReferenceId(file);
   std::string fname = IDENTIFIER_POINTER(file);
+  //Gcc likes to put double slashes at the start of the string... boost::filesystem
+  //doesn't like them very much and messes up iteration... so we remove them
   boost::replace_all(fname, "//", "/");
   writeKdmSharedUnit(Path(fname), id);
 }
@@ -2155,6 +2156,9 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
     return id;
   }
   std::string fname(eloc.file);
+
+  //Gcc likes to put double slashes at the start of the string... boost::filesystem
+  //doesn't like them very much and messes up iteration... so we remove them
   boost::replace_all(fname, "//", "/");
 
   Path sourceFile(fname);

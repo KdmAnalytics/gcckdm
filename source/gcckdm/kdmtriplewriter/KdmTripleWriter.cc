@@ -206,7 +206,9 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 }
 
 
-
+/**
+ * Constructs the triple writing dumping output to the given sink.
+ */
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter::Settings const & settings)
 : mKdmSink(kdmSinkPtr),
   mKdmElementId(KdmElementId_DefaultStart),
@@ -214,9 +216,16 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mUid(0),
   mSettings(settings)
 {
+  //We pass this object to the gimple writer to allow it to use our triple writing powers
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
+
+/**
+ * This constructor will dump it's output to the given filename,
+ * we use the settings output directory to modify the location of the output filename
+ *
+ */
 KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings)
 : mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
@@ -232,15 +241,25 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
     mKdmSink.reset(new boost::filesystem::ofstream(mSettings.outputDir / filename.filename()));
   }
 
+  //We pass this object to the gimple writer to allow it to use our triple writing powers
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
 }
 
 KdmTripleWriter::~KdmTripleWriter()
 {
+  //Write out anything remaining in the stream
   mKdmSink->flush();
 }
 
 
+/**
+ * yay, we are starting!  We are given the file being compiled
+ * the current translation unit.  Since it's easier to always work
+ * with absolute files we ensure the file is absoloute.
+ *
+ * Write out the version of the output, write our standard common
+ * KDM elements
+ */
 void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
   try
@@ -249,7 +268,6 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
     mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
     writeVersionHeader();
     writeDefaultKdmModelElements();
-    writeKdmSourceFile(mCompilationFile);
   }
   catch (KdmTripleWriterException & e)
   {
@@ -261,7 +279,7 @@ void KdmTripleWriter::startKdmGimplePass()
 {
   try
   {
-    //C Support..variables are stored in varpool... C++ we can use global_namespace
+    //C Support..variables are stored in varpool... C++ we can use global_namespace?
     struct varpool_node *pNode;
     for ((pNode) = varpool_nodes_queue; (pNode); (pNode) = (pNode)->next_needed)
     {
@@ -280,23 +298,23 @@ void KdmTripleWriter::startKdmGimplePass()
 
 void KdmTripleWriter::finishKdmGimplePass()
 {
-  processNodeQueue();
+  try
+  {
+    processNodeQueue();
+  }
+  catch (KdmTripleWriterException & e)
+  {
+    std::cerr << boost::diagnostic_information(e);
+  }
 }
 
 
 void KdmTripleWriter::processNodeQueue()
 {
   //Process any nodes that are still left on the queue
-  try
+  for (; !mNodeQueue.empty(); mNodeQueue.pop())
   {
-    for (; !mNodeQueue.empty(); mNodeQueue.pop())
-    {
-      processAstNode(mNodeQueue.front());
-    }
-  }
-  catch (KdmTripleWriterException & e)
-  {
-    std::cerr << boost::diagnostic_information(e);
+    processAstNode(mNodeQueue.front());
   }
 }
 
@@ -374,11 +392,17 @@ void KdmTripleWriter::writeUids()
 
 void KdmTripleWriter::finishTranslationUnit()
 {
-  processNodeQueue();
-  //writeReferencedSharedUnits();
-  if (mSettings.generateUids)
+  try
   {
-    writeUids();
+    processNodeQueue();
+    if (mSettings.generateUids)
+    {
+      writeUids();
+    }
+  }
+  catch (KdmTripleWriterException & e)
+  {
+    std::cerr << boost::diagnostic_information(e);
   }
 }
 
@@ -386,6 +410,7 @@ void KdmTripleWriter::processAstNode(tree const ast)
 {
   try
   {
+
     //Ensure we haven't processed this node node before
     if (mProcessedNodes.find(ast) == mProcessedNodes.end())
     {
@@ -430,7 +455,16 @@ void KdmTripleWriter::processAstNode(tree const ast)
       }
       else if (TYPE_P(ast))
       {
-        processAstTypeNode(ast);
+        // GCC In all it's glory can have different tree nodes represent the same type
+        // The TYPE_MAIN_VARIANT macro returns the primary, cvr-unqualified type from
+        // which all the cvr-qualified and other copies have been created.. whew..
+        // I wish I really knew what that meant.  The gist is that for types we cannot
+        // store the regular ast node in the processedNodes map we have to use the
+        // TYPE_MAIN_VARIANT to get the proper mode
+        if (mProcessedNodes.find(TYPE_MAIN_VARIANT(ast)) == mProcessedNodes.end())
+        {
+          processAstTypeNode(ast);
+        }
       }
       else if (treeCode == INTEGER_CST || treeCode == REAL_CST || treeCode == STRING_CST)
       {
@@ -446,7 +480,16 @@ void KdmTripleWriter::processAstNode(tree const ast)
         std::string msg(str(boost::format("<%3%> AST Node. Name=(%1%) code=(%5%) in %2%:%4%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast) % __LINE__ % treeCode));
         writeUnsupportedComment(msg);
       }
-      mProcessedNodes.insert(ast);
+
+      /// for type we need the _actual_ type not just this tree node;
+      if (TYPE_P(ast))
+      {
+        mProcessedNodes.insert(TYPE_MAIN_VARIANT(ast));
+      }
+      else
+      {
+        mProcessedNodes.insert(ast);
+      }
     }
   }
   catch (KdmTripleWriterException & e)
@@ -677,9 +720,6 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
 void KdmTripleWriter::processAstTypeNode(tree const typeNode)
 {
   assert(TYPE_P(typeNode));
-
-  tree tmp = TYPE_MAIN_VARIANT(typeNode);
-
   int treeCode(TREE_CODE(typeNode));
   switch (treeCode)
   {
@@ -1162,7 +1202,7 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
   tree argType = TYPE_ARG_TYPES (functionType);
   while (argType && (argType != void_list_node))
   {
-    long refId = writeKdmParameterUnit(argType);
+    long refId = writeKdmParameterUnit(argType, true);
     writeTripleContains(signatureId, refId);
     argType = TREE_CHAIN (argType);
   }
@@ -1342,11 +1382,10 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
   writeTripleContains(KdmElementId_Segment,KdmElementId_InventoryModel);
 
+
   writeKdmCompilationUnit(mCompilationFile);
-//  writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
-//  writeTripleName(KdmElementId_CompilationUnit, mCompilationFile.filename());
-//  writeTriple(KdmElementId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
-//  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_CompilationUnit);
+  //include the compilation file in the inventory model
+  writeKdmSourceFile(mCompilationFile);
 }
 
 void KdmTripleWriter::writeTripleKdmType(long const subject, KdmType const & object)
@@ -1579,14 +1618,21 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
   return mKdmElementId;
 }
 
-long KdmTripleWriter::writeKdmParameterUnit(tree const param)
+long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewElementId)
 {
   if (!param)
   {
     BOOST_THROW_EXCEPTION(NullAstNodeException());
   }
 
-  long parameterUnitId = getReferenceId(param);
+  long parameterUnitId;
+
+  // GCC reuses param nodes when outputting function types.. this causes
+  // many double containments... so when outputting parameter units for types
+  // do not look up the refId we create a new one for each parameter which
+  // is safe because they _shouldn't_ be referenced anywhere.
+  parameterUnitId = (forceNewElementId) ? getNextElementId() : getReferenceId(param);
+
   writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
 
   tree type = TREE_TYPE(param) ? TYPE_MAIN_VARIANT(TREE_TYPE(param)) : TREE_VALUE (param);

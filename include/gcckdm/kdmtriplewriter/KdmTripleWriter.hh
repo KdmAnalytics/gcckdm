@@ -486,7 +486,7 @@ private:
   void writeKdmCxxContains(tree const decl);
 
   long writeKdmReturnParameterUnit(tree const param);
-  long writeKdmParameterUnit(tree const param);
+  long writeKdmParameterUnit(tree const param, bool forceNewElementId = false);
   void writeKdmPrimitiveType(tree const type);
   void writeKdmPointerType(tree const type);
   void writeEnumType(tree const enumType);

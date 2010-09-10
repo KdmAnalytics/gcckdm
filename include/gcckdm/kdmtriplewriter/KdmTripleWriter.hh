@@ -504,7 +504,7 @@ private:
   void writeReferencedSharedUnits();
   void writeUids();
 
-
+  long getPackageId(Path const & path);
 
 
 

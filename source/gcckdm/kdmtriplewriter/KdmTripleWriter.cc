@@ -29,6 +29,7 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/current_function.hpp>
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
@@ -1341,10 +1342,12 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
   writeTripleContains(KdmElementId_Segment,KdmElementId_InventoryModel);
-  writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
-  writeTripleName(KdmElementId_CompilationUnit, mCompilationFile.filename());
-  writeTriple(KdmElementId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
-  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_CompilationUnit);
+
+  writeKdmCompilationUnit(mCompilationFile);
+//  writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
+//  writeTripleName(KdmElementId_CompilationUnit, mCompilationFile.filename());
+//  writeTriple(KdmElementId_CompilationUnit, KdmPredicate::LinkId(), mCompilationFile.string());
+//  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_CompilationUnit);
 }
 
 void KdmTripleWriter::writeTripleKdmType(long const subject, KdmType const & object)
@@ -1503,16 +1506,70 @@ KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path cons
 
   //Keep track of all files inserted into the inventory model
   std::pair<FileMap::iterator, bool> result = mInventoryMap.insert(std::make_pair(sourceFile, mKdmElementId));
+
+
   return result.first;
 }
 
 void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
 {
-  writeTripleKdmType(++mKdmElementId, KdmType::CompilationUnit());
-  writeTripleName(mKdmElementId, file.filename());
-  writeTripleLinkId(mKdmElementId, file.string());
+  writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
+  writeTripleName(KdmElementId_CompilationUnit, file.filename());
+  writeTripleLinkId(KdmElementId_CompilationUnit, file.string());
 
-  writeTripleContains(KdmElementId_CodeAssembly, mKdmElementId);
+  //getPackageId(file.parent_path());
+  //writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_CompilationUnit);
+  writeTripleContains(getPackageId(file.parent_path()), KdmElementId_CompilationUnit);
+}
+
+
+long KdmTripleWriter::getPackageId(Path const & packageDir)
+{
+  long invalidId = -1;
+  long parentPackageId = invalidId;
+  long packageId = invalidId;
+  if (boost::filesystem::is_directory(packageDir))
+  {
+    FileMap::iterator i = mPackageMap.find(packageDir);
+    if (i == mPackageMap.end())
+    {
+      Path builtPath;
+      for (Path::iterator pIter = packageDir.begin(); pIter != packageDir.end(); ++pIter)
+      {
+        builtPath = builtPath / *pIter;
+        std::pair<FileMap::iterator, bool> result = mPackageMap.insert(std::make_pair(builtPath, mKdmElementId+1));
+        if (result.second)
+        {
+          packageId = getNextElementId();
+          writeTripleKdmType(packageId, KdmType::Package());
+          writeTripleName(packageId, *pIter);
+          if (parentPackageId == invalidId)
+          {
+            writeTripleContains(KdmElementId_CodeAssembly, packageId);
+          }
+          else
+          {
+            writeTripleContains(parentPackageId, packageId);
+          }
+          parentPackageId = packageId;
+          mPackageMap.insert(std::make_pair(builtPath, packageId));
+        }
+        else
+        {
+          parentPackageId = result.first->second;
+        }
+      }
+    }
+    else
+    {
+      packageId = i->second;
+    }
+  }
+  else
+  {
+    packageId = invalidId;
+  }
+  return packageId;
 }
 
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
@@ -2072,16 +2129,18 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 {
   long id = getSharedUnitReferenceId(file);
-  Path filename(IDENTIFIER_POINTER(file));
-  writeKdmSharedUnit(filename, id);
+  std::string fname = IDENTIFIER_POINTER(file);
+  boost::replace_all(fname, "//", "/");
+  writeKdmSharedUnit(Path(fname), id);
 }
 
 void KdmTripleWriter::writeKdmSharedUnit(Path const & file, const long id)
 {
+  Path compFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
   writeTripleKdmType(id, KdmType::SharedUnit());
-  writeTripleName(id, file.filename());
-  writeTripleLinkId(id, file.string());
-  writeTripleContains(KdmElementId_CodeAssembly, id);
+  writeTripleName(id, compFile.filename());
+  writeTripleLinkId(id, compFile.string());
+  writeTripleContains(getPackageId(compFile.parent_path()), id);
 }
 
 long KdmTripleWriter::writeKdmSourceRef(long id, const tree node)
@@ -2095,7 +2154,10 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
   {
     return id;
   }
-  Path sourceFile(eloc.file);
+  std::string fname(eloc.file);
+  boost::replace_all(fname, "//", "/");
+
+  Path sourceFile(fname);
   if (!sourceFile.is_complete())
   {
     sourceFile = boost::filesystem::complete(sourceFile);

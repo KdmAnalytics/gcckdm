@@ -1279,20 +1279,23 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrReplace(g
 {
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
-  long actionId = mKdmWriter.getNextElementId();
-  ActionDataPtr actionData(new ActionData(actionId));
   tree lhsOp0 = TREE_OPERAND (lhs, 0);
   long lhsId = getReferenceId(lhsOp0);
+  ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
+
   ActionDataPtr rhsData = getRhsReferenceId(rhs);
+
+  //Hook up flows and containment
   if (rhsData->hasActionId())
   {
-    writeKdmFlow(rhsData->actionId(), actionId);
+    writeKdmFlow(rhsData->actionId(), actionData->actionId());
     actionData->startActionId(rhsData->actionId());
+    mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
   }
 
-  mKdmWriter.writeTripleKind(actionId, KdmKind::PtrReplace());
-  writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(rhs, rhsData->outputId()));
-  writeKdmActionRelation(KdmType::Addresses(), actionId, RelationTarget(lhs, lhsId));
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrReplace());
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->outputId()));
+  writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), RelationTarget(lhs, lhsId));
 
   //Have to determine if there is a bug in the spec here or not
   //where does the write relationship go?

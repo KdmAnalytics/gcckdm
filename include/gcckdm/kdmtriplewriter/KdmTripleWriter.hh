@@ -56,15 +56,6 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 
-//class FileSystemNode
-//{
-//public:
-//  long elementId;
-//  std::string name;
-//};
-
-
-
 /**
  * This class traverses the Gcc AST nodes passed to it and writes their KDM
  * representation to and output stream
@@ -196,48 +187,81 @@ public:
    * Convenience method to write the common "contains" triple
    *
    * writes: <subject> <contains> <child>
+   *
+   * @param parent
+   * @param child
+   * @param uid if true adds the given contains relationship to the uid graph
    */
   void writeTripleContains(long const parent, long const child, bool uid = true);
-
-
-  /**
-   * Convenience method to write the common "extends" relationship
-   *
-   * writes: <extendsId> <kdmType> "code/Extends"
-   * writes: <extendsId> <from> <subclass>
-   * writes: <extendsId> <to> <superclass>
-   */
-  long writeTripleExtends(long const subclass, long const superclass);
-
-  /**
-   * Convenience method to write the common "friend" relationship
-   *
-   * writes: <extendsId> <kdmType> "code/CodeRelationship"
-   * writes: <extendsId> <from> <subclass>
-   * writes: <extendsId> <to> <superclass>
-   * writes: <extendsId> <Stereotype> <friendId>
-   */
-  long writeTripleFriend(long const subclass, long const superclass);
 
   /**
    * Convenience method to write the common "LinkId" triple
    *
-   * writes: <subject> <linkId> <child>
+   * writes: <subject> <link:id> <linkId>
+   *
+   * @param subject
+   * @param linkId
    */
-  void writeTripleLinkId(long const subject, std::string const & name);
+  void writeTripleLinkId(long const subject, std::string const & linkId);
 
   /**
    * Convenience method to write the common "kind" triple
    *
    * writes: <subject> <kind> <kind>
+   *
+   * @param subject
+   * @param kind
    */
   void writeTripleKind(long const subject, KdmKind const & kind);
 
   /**
    * Convenience method to write the "export" triple
    *
+   * @param subject the refId of the element to attach the export attribute
+   * @param exportname the export name to attach to the given subject
    */
   void writeTripleExport(long const subject, std::string const & exportName);
+
+
+  /**
+   * Write storable unit and optionally contain the element with
+   * the source file it is found in.
+   *
+   * @param var the variable decl to write as a StorableUnit
+   * @param writeContains if true writes contains triple using the file var is found in as the parent
+   * @return the refId of the StorableUnit
+   */
+  long writeKdmStorableUnit(tree const var, bool writeContains);
+
+
+  /**
+   * Write the common "extends" relationship
+   *
+   * writes: <extendsId> <kdmType> "code/Extends"
+   * writes: <extendsId> <from> <subclass>
+   * writes: <extendsId> <to> <superclass>
+   *
+   * @param subclass refId of the subclass
+   * @param superclass refId of the superclass
+   *
+   * @return refId of the Extends relationship
+   */
+  long writeKdmExtends(long const subclass, long const superclass);
+
+  /**
+   * Write the common "friend" relationship
+   *
+   * writes: <extendsId> <kdmType> "code/CodeRelationship"
+   * writes: <extendsId> <from> <subclass>
+   * writes: <extendsId> <to> <superclass>
+   * writes: <extendsId> <Stereotype> <friendId>
+   *
+   * @param subclass refId of the subclass
+   * @param superclass refid of the superclass
+   * @return refId of the CodeRelationship
+   */
+  long writeKdmFriend(long const subclass, long const superclass);
+
 
   /**
    * Writes a KDM Source ref using the information contained in the expanded_location
@@ -258,6 +282,7 @@ public:
    * can be referenced
    *
    * @param node the node to test for a reference id
+   * @return true if the given node already has a refId
    */
   bool hasReferenceId(tree const node) const;
 
@@ -267,6 +292,8 @@ public:
    * into the referenceNode map and the node is placed in the process queue
    *
    * Note: this method can cause the elementId counter to increase
+   *
+   * @return a refId for the given node
    */
   long getReferenceId(tree const node);
 
@@ -274,6 +301,8 @@ public:
    * Returns the next available element Id.
    *
    * Note: Calling this method causes the element id counter to increase
+   *
+   * @return a refId;
    */
   long getNextElementId();
 
@@ -296,28 +325,29 @@ public:
    * Some types are specifically represented by code for example
    * BooleanType... we insert these types when required and allow
    * them to be referenced.  Used by the gimple part of the writer
+   *
+   * @param type
+   * @return the refId for the given type
    */
   long getUserTypeId(KdmType const & type);
 
+  /**
+   * In certain cases some nodes are processed outside the regular
+   * flow of processAstNode.  In those cases you can mark the node
+   * as processed using this method.  This prevents the given
+   * node from double containment errors and other processing
+   * problems
+   *
+   * @param node the ast node to add to the processed queue
+   */
   void markNodeAsProcessed(tree node);
 
 
-  long writeKdmStorableUnit(tree const var, bool writeContains);
 
 private:
 
-  typedef std::tr1::unordered_map<tree, long> TreeMap;
-  typedef std::tr1::unordered_map<Path, long> FileMap;
-  typedef std::tr1::unordered_set<tree> TreeSet;
-  typedef std::queue<tree> TreeQueue;
-  typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
-  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
-  typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
-  typedef std::tr1::unordered_map<long, long> ContainmentMap;
-
-
   /**
-   * Functor for hashing KdmType's.
+   * Functor for hashing KdmType's in a unordered_map
    *
    * Currently uses the integer that represents the KdmType and
    * the standard hash
@@ -331,6 +361,14 @@ private:
     }
   };
 
+  typedef std::tr1::unordered_map<tree, long> TreeMap;
+  typedef std::tr1::unordered_map<Path, long> FileMap;
+  typedef std::tr1::unordered_set<tree> TreeSet;
+  typedef std::queue<tree> TreeQueue;
+  typedef boost::unique_ptr<GimpleKdmTripleWriter> GimpleWriter;
+  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
+  typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
+  typedef std::tr1::unordered_map<long, long> ContainmentMap;
   typedef std::tr1::unordered_map<KdmType, long, KdmTypeHash> TypeMap;
 
   /**
@@ -348,7 +386,7 @@ private:
   long getSharedUnitReferenceId(tree const identifier);
 
 
-  enum
+  enum ReservedElementId
   {
     KdmElementId_Segment = 0,
     KdmElementId_CodeModel,
@@ -470,7 +508,7 @@ private:
   /**
    * Handles output of friend relationships, which are stereotyped CodeRelationships
    */
-  void writeKdmTripleFriends(long const id, tree const t);
+  void writeKdmFriends(long const id, tree const t);
 
   void writeKdmSharedUnit(tree const file);
   void writeKdmSharedUnit(Path const & filename, long const id);

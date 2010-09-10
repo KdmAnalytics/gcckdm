@@ -678,63 +678,62 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
 {
   assert(TYPE_P(typeNode));
 
-  if (typeNode == TYPE_MAIN_VARIANT(typeNode))
+  tree tmp = TYPE_MAIN_VARIANT(typeNode);
+
+  int treeCode(TREE_CODE(typeNode));
+  switch (treeCode)
   {
-    int treeCode(TREE_CODE(typeNode));
-    switch (treeCode)
+    case ARRAY_TYPE:
     {
-      case ARRAY_TYPE:
-      {
-        writeKdmArrayType(typeNode);
-        break;
-      }
-      case FUNCTION_TYPE:
-      {
-        writeKdmSignatureType(typeNode);
-        break;
-      }
-      case METHOD_TYPE:
-      {
-        //writeKdmSignature(typeNode);
-        break;
-      }
-      case REFERENCE_TYPE:
-        writeComment("NOTE: This is actually a reference type, not a pointer type does that matter for KDM?");
-        //Fall Through
-      case POINTER_TYPE:
-      {
-        writeKdmPointerType(typeNode);
-        break;
-      }
-      case VOID_TYPE:
-        //Fall through
-      case REAL_TYPE:
-        //Fall through
-      case BOOLEAN_TYPE:
-        //Fall through
-      case INTEGER_TYPE:
-      {
-        writeKdmPrimitiveType(typeNode);
-        break;
-      }
-      case ENUMERAL_TYPE:
-      {
-        writeEnumType(typeNode);
-        break;
-      }
-      case UNION_TYPE:
-        //Fall Through
-      case RECORD_TYPE:
-      {
-        processAstRecordTypeNode(typeNode);
-        break;
-      }
-      default:
-      {
-        std::string msg(str(boost::format("AST Type Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-        writeUnsupportedComment(msg);
-        break;
-      }
+      writeKdmArrayType(typeNode);
+      break;
+    }
+    case FUNCTION_TYPE:
+    {
+      writeKdmSignatureType(typeNode);
+      break;
+    }
+    case METHOD_TYPE:
+    {
+      //writeKdmSignature(typeNode);
+      break;
+    }
+    case REFERENCE_TYPE:
+      writeComment("NOTE: This is actually a reference type, not a pointer type does that matter for KDM?");
+      //Fall Through
+    case POINTER_TYPE:
+    {
+      writeKdmPointerType(typeNode);
+      break;
+    }
+    case VOID_TYPE:
+      //Fall through
+    case REAL_TYPE:
+      //Fall through
+    case BOOLEAN_TYPE:
+      //Fall through
+    case INTEGER_TYPE:
+    {
+      writeKdmPrimitiveType(typeNode);
+      break;
+    }
+    case ENUMERAL_TYPE:
+    {
+      writeEnumType(typeNode);
+      break;
+    }
+    case UNION_TYPE:
+      //Fall Through
+    case RECORD_TYPE:
+    {
+      processAstRecordTypeNode(typeNode);
+      break;
+    }
+    default:
+    {
+      std::string msg(str(boost::format("AST Type Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+      writeUnsupportedComment(msg);
+      break;
     }
   }
 }
@@ -1022,7 +1021,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
 
     // Friendship
-    writeKdmTripleFriends(callableUnitId, DECL_BEFRIENDING_CLASSES(functionDecl));
+    writeKdmFriends(callableUnitId, DECL_BEFRIENDING_CLASSES(functionDecl));
 
     // Containment
     writeKdmCxxContains(functionDecl);
@@ -1384,9 +1383,9 @@ void KdmTripleWriter::writeTripleContains(long const parent, long const child, b
 /**
  *
  */
-long KdmTripleWriter::writeTripleExtends(long const subclass, long const superclass)
+long KdmTripleWriter::writeKdmExtends(long const subclass, long const superclass)
 {
-  long extendsId = ++mKdmElementId;
+  long extendsId = getNextElementId();
   writeTripleKdmType(extendsId, KdmType::Extends());
   writeTriple(extendsId, KdmPredicate::From(), subclass);
   writeTriple(extendsId, KdmPredicate::To(), superclass);
@@ -1396,9 +1395,9 @@ long KdmTripleWriter::writeTripleExtends(long const subclass, long const supercl
 /**
  *
  */
-long KdmTripleWriter::writeTripleFriend(long const subclass, long const superclass)
+long KdmTripleWriter::writeKdmFriend(long const subclass, long const superclass)
 {
-  long extendsId = ++mKdmElementId;
+  long extendsId = getNextElementId();
   writeTripleKdmType(extendsId, KdmType::CodeRelationship());
   writeTriple(extendsId, KdmPredicate::From(), subclass);
   writeTriple(extendsId, KdmPredicate::To(), superclass);
@@ -1517,8 +1516,6 @@ void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
   writeTripleName(KdmElementId_CompilationUnit, file.filename());
   writeTripleLinkId(KdmElementId_CompilationUnit, file.string());
 
-  //getPackageId(file.parent_path());
-  //writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_CompilationUnit);
   writeTripleContains(getPackageId(file.parent_path()), KdmElementId_CompilationUnit);
 }
 
@@ -1542,6 +1539,7 @@ long KdmTripleWriter::getPackageId(Path const & packageDir)
         {
           packageId = getNextElementId();
           writeTripleKdmType(packageId, KdmType::Package());
+          writeTripleLinkId(packageId, *pIter);
           writeTripleName(packageId, *pIter);
           if (parentPackageId == invalidId)
           {
@@ -1988,7 +1986,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 /**
  *
  */
-void KdmTripleWriter::writeKdmTripleFriends(long const id, tree const befriending)
+void KdmTripleWriter::writeKdmFriends(long const id, tree const befriending)
 {
   for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd))
   {
@@ -1998,7 +1996,7 @@ void KdmTripleWriter::writeKdmTripleFriends(long const id, tree const befriendin
       {
         tree friendType TREE_VALUE (frnd);
         long friendId = getReferenceId(friendType);
-        long relId = writeTripleFriend(id, friendId);
+        long relId = writeKdmFriend(id, friendId);
         writeTripleContains(id, relId);
       }
     }
@@ -2050,7 +2048,7 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
 
     long superClassId = getReferenceId(b_type);
 
-    long extendsId = writeTripleExtends(classId, superClassId);
+    long extendsId = writeKdmExtends(classId, superClassId);
 
     // Add some Stereotypes to the relationship
     // Virtual subclass?
@@ -2080,7 +2078,7 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
   }
 
   // Friends
-  writeKdmTripleFriends(classId, CLASSTYPE_BEFRIENDING_CLASSES(recordType));
+  writeKdmFriends(classId, CLASSTYPE_BEFRIENDING_CLASSES(recordType));
 
   // Traverse members.
   for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))

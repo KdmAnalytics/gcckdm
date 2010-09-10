@@ -1611,7 +1611,7 @@ long KdmTripleWriter::getPackageId(Path const & packageDir)
 
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
-  long ref = getReferenceId(param);
+  long ref = getReferenceId(TYPE_MAIN_VARIANT(param));
   writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
   writeTripleName(mKdmElementId, "__RESULT__");
   writeTriple(mKdmElementId, KdmPredicate::Type(), ref);
@@ -1635,8 +1635,8 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewEleme
 
   writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
 
-  tree type = TREE_TYPE(param) ? TYPE_MAIN_VARIANT(TREE_TYPE(param)) : TREE_VALUE (param);
-  long ref = getReferenceId(type);
+  tree type = TREE_TYPE(param) ? TREE_TYPE(param) : TREE_VALUE (param);
+  long ref = getReferenceId(TYPE_MAIN_VARIANT(type));
 
   std::string name(nodeName(param));
   writeTripleName(parameterUnitId, name);

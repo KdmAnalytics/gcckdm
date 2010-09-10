@@ -680,7 +680,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     {
       mKdmWriter.writeTripleKdmType(relId, KdmType::Calls());
     }
-    mKdmWriter.writeTripleKdmType(relId, KdmType::Calls());
     mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionId);
     mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
     mKdmWriter.writeTripleContains(actionId, relId);

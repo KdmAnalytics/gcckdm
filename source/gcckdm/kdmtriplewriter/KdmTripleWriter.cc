@@ -1829,6 +1829,7 @@ long KdmTripleWriter::getUserTypeId(KdmType const & type)
 
     writeTripleKdmType(typeId, type);
     writeTripleName(typeId, type.name());
+    writeTripleLinkId(typeId, type.name());
     writeTripleContains(KdmElementId_LanguageUnit, typeId);
     retVal = typeId;
   }
@@ -1934,6 +1935,7 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   tree t2(TYPE_MAIN_VARIANT(treeType));
   long arrayTypeKdmElementId = getReferenceId(t2);
   writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
+  writeTripleLinkId(arrayKdmElementId, "U." + boost::lexical_cast<std::string>(TYPE_UID(arrayType)));
 
   //for (tree tmp = arrayType; TREE_CODE (tmp) == ARRAY_TYPE; tmp = TREE_TYPE (tmp))
 //    dump_array_domain (buffer, TYPE_DOMAIN (tmp), spc, flags);

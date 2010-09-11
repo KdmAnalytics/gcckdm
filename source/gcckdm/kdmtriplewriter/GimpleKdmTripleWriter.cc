@@ -1463,8 +1463,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
 // foo[0] = 1
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace(gimple const gs)
 {
-  long actionId = mKdmWriter.getNextElementId();
-  ActionDataPtr actionData(new ActionData(actionId));
+  ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
 
   tree lhs = gimple_assign_lhs(gs);
   tree rhs = gimple_assign_rhs1(gs);
@@ -1497,7 +1496,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
       {
         writeKdmFlow(lastId ,selectData->actionId());
       }
-      mKdmWriter.writeTripleContains(actionId, selectData->actionId());
+      mKdmWriter.writeTripleContains(actionData->actionId(), selectData->actionId());
       lastId = selectData->actionId();
 
       op1 = TREE_OPERAND (op0, 1);
@@ -1508,6 +1507,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   {
     //D.11082->level[1] = D.11083;
     selectData = writeKdmMemberSelect(NULL_TREE, op0, gimple_location(gs));
+    mKdmWriter.writeTripleContains(actionData->actionId(), selectData->actionId());
   }
   else if (TREE_CODE(op0) == VAR_DECL)
   {
@@ -1523,11 +1523,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   long op0Id = (selectData) ? selectData->outputId() :getReferenceId(op0);
   long op1Id = getReferenceId(op1);
 
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::ArrayReplace());
-  writeKdmActionRelation(KdmType::Addresses(), actionId, RelationTarget(op0, op0Id)); //data element
-  writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(op1, op1Id)); // index
-  writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(rhs, rhsData->outputId())); //new value
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::ArrayReplace());
+  writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), RelationTarget(op0, op0Id)); //data element
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(op1, op1Id)); // index
+  writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->outputId())); //new value
 
   //Have to determine if there is a bug in the spec here or not
   //where does the write relationship go?

@@ -813,7 +813,11 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
 {
   long enumId = getReferenceId(enumType);
   writeTripleKdmType(enumId, KdmType::EnumeratedType());
-  writeTripleName(enumId, nodeName(enumType));
+
+  std::string enumName = nodeName(enumType);
+  std::string linkName = (enumName == unnamedNode) ? "U." + boost::lexical_cast<std::string>(TYPE_UID(enumType)) : enumName;
+  writeTripleName(enumId, enumName);
+  writeTripleLinkId(enumId, linkName);
 
   for (tree tv = TYPE_VALUES (enumType); tv ; tv = TREE_CHAIN (tv))
   {

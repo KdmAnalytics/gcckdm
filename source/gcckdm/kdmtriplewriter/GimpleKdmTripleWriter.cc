@@ -524,6 +524,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
       }
     }
   }
+
+  if (actionData)
+  {
+    long blockId = getBlockReferenceId(gimple_location(gs));
+    mKdmWriter.writeTripleContains(blockId, actionData->actionId());
+  }
+
+
   return actionData;
 }
 

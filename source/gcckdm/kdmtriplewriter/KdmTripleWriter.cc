@@ -1717,6 +1717,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
   }
   if (writeContains)
   {
+    writeTripleLinkId(unitId, name);
     writeTripleContains(getSourceFileReferenceId(var), unitId);
   }
   return unitId;

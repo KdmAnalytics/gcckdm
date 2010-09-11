@@ -822,7 +822,9 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
       long valueId = getReferenceId(tv);
       int value = TREE_INT_CST_LOW (TREE_VALUE (tv));
       writeTripleKdmType(valueId, KdmType::Value());
-      writeTripleName(valueId, boost::lexical_cast<std::string>(value));
+      std::string name = boost::lexical_cast<std::string>(value);
+      writeTripleName(valueId, name);
+      writeTripleLinkId(valueId, name);
       writeTriple(valueId, KdmPredicate::Type(), KdmType::IntegerType());
       writeTriple(valueId, KdmPredicate::EnumName(), nodeName(TREE_PURPOSE(tv)));
       writeTripleContains(enumId, valueId);
@@ -1691,6 +1693,7 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   std::string name(nodeName(item));
 
   writeTripleName(itemId, name);
+  writeTripleLinkId(itemId, name);
   writeTriple(itemId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(itemId, item);
   tree context = DECL_CONTEXT(item);
@@ -1726,7 +1729,9 @@ long KdmTripleWriter::writeKdmValue(tree const val)
   long ref = getReferenceId(type);
 
   writeTripleKdmType(valueId, KdmType::Value());
-  writeTripleName(valueId, nodeName(val));
+  std::string name = nodeName(val);
+  writeTripleName(valueId, name);
+  writeTripleLinkId(valueId, name);
   writeTriple(valueId, KdmPredicate::Type(), ref);
   writeTripleContains(KdmElementId_LanguageUnit, valueId);
   return valueId;
@@ -1902,6 +1907,7 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
 
   writeTripleKdmType(typeKdmElementId, kdmType);
   writeTripleName(typeKdmElementId, name);
+  writeTripleLinkId(typeKdmElementId, name);
   writeTripleContains(KdmElementId_LanguageUnit, typeKdmElementId);
 }
 
@@ -1909,8 +1915,7 @@ void KdmTripleWriter::writeKdmPointerType(tree const pointerType)
 {
   long pointerKdmElementId = getReferenceId(pointerType);
   writeTripleKdmType(pointerKdmElementId, KdmType::PointerType());
-  writeTripleName(pointerKdmElementId, "PointerType");
-
+  writeTripleLinkId(pointerKdmElementId, "U." + boost::lexical_cast<std::string>(TYPE_UID(pointerType)));
   tree treeType(TREE_TYPE(pointerType));
   tree t2(TYPE_MAIN_VARIANT(treeType));
   long pointerTypeKdmElementId = getReferenceId(t2);
@@ -1996,10 +2001,22 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     //struct
     long structId = getReferenceId(mainRecordType);
     writeTripleKdmType(structId, KdmType::RecordType());
-    std::string name;
     //check to see if we are an anonymous struct
-    name = (isAnonymousStruct(mainRecordType)) ? unnamedNode : nodeName(mainRecordType);
+    std::string name;
+    std::string linkId;
+    if (isAnonymousStruct(mainRecordType))
+    {
+      name = unnamedNode;
+      linkId = "U." + boost::lexical_cast<std::string>(TYPE_UID(mainRecordType));
+    }
+    else
+    {
+      name = nodeName(mainRecordType);
+      linkId = name;
+    }
+
     writeTripleName(structId, name);
+    writeTripleLinkId(structId, linkId);
 
     if (COMPLETE_TYPE_P (mainRecordType))
     {

@@ -122,6 +122,12 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
     processGimpleSequence(seq);
     mKdmWriter.writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+
+    if (mLabelFlag)
+    {
+
+    }
+
   }
 }
 
@@ -273,7 +279,20 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
     gimple gs = gsi_stmt(i);
     processGimpleStatement(gs);
   }
-  mKdmWriter.writeComment("================GIMPLE END SEQUENCE " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+
+  //If the last statement of the sequence is a label... we have to contain it somewhere...
+  if (mLabelFlag && !gcckdm::locationIsUnknown(mLastLocation))
+  {
+    long blockId = getBlockReferenceId(mLastLocation);
+    for (; !mLabelQueue.empty(); mLabelQueue.pop())
+    {
+      mKdmWriter.writeTripleContains(blockId, mLabelQueue.front()->actionId());
+      writeKdmFlow(mLabelQueue.front()->actionId(), mLastData->actionId());
+    }
+    mLabelFlag = !mLabelFlag;
+  }
+
+mKdmWriter.writeComment("================GIMPLE END SEQUENCE " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
 }
 
 void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
@@ -358,6 +377,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     if (actionData)
     {
       mLastData = actionData;
+      mLastLocation = gimple_location(gs);
     }
 
     // If the last gimple statement we processed was a label or some goto's

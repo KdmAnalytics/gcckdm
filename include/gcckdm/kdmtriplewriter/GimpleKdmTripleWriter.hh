@@ -306,6 +306,7 @@ private:
   long mRegisterVariableIndex;
 
   ActionDataPtr mLastData;
+  location_t    mLastLocation;
   ActionDataPtr mFunctionEntryData;
 
 };

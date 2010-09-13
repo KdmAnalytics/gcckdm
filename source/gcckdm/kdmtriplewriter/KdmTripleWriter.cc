@@ -1552,15 +1552,15 @@ KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path cons
   {
     sourceFile = boost::filesystem::complete(sourceFile);
   }
-
-  writeTripleKdmType(++mKdmElementId, KdmType::SourceFile());
-  writeTripleName(mKdmElementId, file.filename());
-  writeTriple(mKdmElementId, KdmPredicate::Path(), sourceFile.string());
-  writeTripleLinkId(mKdmElementId, sourceFile.string());
-  writeTripleContains(KdmElementId_InventoryModel, mKdmElementId, false);
+  long id = getNextElementId();
+  writeTripleKdmType(id, KdmType::SourceFile());
+  writeTripleName(id, file.filename());
+  writeTriple(id, KdmPredicate::Path(), sourceFile.string());
+  writeTripleLinkId(id, sourceFile.string());
+  writeTripleContains(getDirectoryId(sourceFile.parent_path()), id, false);
 
   //Keep track of all files inserted into the inventory model
-  std::pair<FileMap::iterator, bool> result = mInventoryMap.insert(std::make_pair(sourceFile, mKdmElementId));
+  std::pair<FileMap::iterator, bool> result = mInventoryMap.insert(std::make_pair(sourceFile, id));
 
 
   return result.first;
@@ -1576,55 +1576,116 @@ void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
 }
 
 
+
+long KdmTripleWriter::getDirectoryId(Path const & directoryDir)
+{
+  return getLocationContextId(directoryDir, mDirectoryMap, KdmType::Directory());
+}
+
 long KdmTripleWriter::getPackageId(Path const & packageDir)
 {
+  return getLocationContextId(packageDir, mPackageMap, KdmType::Package());
+}
+
+long KdmTripleWriter::getLocationContextId(Path const & contextDir, FileMap const & fMap, KdmType const & type)
+{
   long invalidId = -1;
-  long parentPackageId = invalidId;
-  long packageId = invalidId;
-  if (boost::filesystem::is_directory(packageDir))
+  long parentContextId = invalidId;
+  long contextId = invalidId;
+  if (boost::filesystem::is_directory(contextDir))
   {
-    FileMap::iterator i = mPackageMap.find(packageDir);
-    if (i == mPackageMap.end())
+    FileMap::iterator i = fMap.find(contextDir);
+    if (i == fMap.end())
     {
       Path builtPath;
-      for (Path::iterator pIter = packageDir.begin(); pIter != packageDir.end(); ++pIter)
+      for (Path::iterator pIter = contextDir.begin(); pIter != contextDir.end(); ++pIter)
       {
         builtPath = builtPath / *pIter;
-        std::pair<FileMap::iterator, bool> result = mPackageMap.insert(std::make_pair(builtPath, mKdmElementId+1));
+        std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId+1));
         if (result.second)
         {
-          packageId = getNextElementId();
-          writeTripleKdmType(packageId, KdmType::Package());
-          writeTripleLinkId(packageId, *pIter);
-          writeTripleName(packageId, *pIter);
-          if (parentPackageId == invalidId)
+          contextId = getNextElementId();
+          writeTripleKdmType(contextId,type);
+          writeTripleLinkId(contextId, *pIter);
+          writeTripleName(contextId, *pIter);
+          if (parentContextId == invalidId)
           {
-            writeTripleContains(KdmElementId_CodeAssembly, packageId);
+            writeTripleContains(KdmElementId_CodeAssembly, contextId);
           }
           else
           {
-            writeTripleContains(parentPackageId, packageId);
+            writeTripleContains(parentContextId, contextId);
           }
-          parentPackageId = packageId;
-          mPackageMap.insert(std::make_pair(builtPath, packageId));
+          parentContextId = contextId;
+          fMap.insert(std::make_pair(builtPath, contextId));
         }
         else
         {
-          parentPackageId = result.first->second;
+          parentContextId = result.first->second;
         }
       }
     }
     else
     {
-      packageId = i->second;
+      contextId = i->second;
     }
   }
   else
   {
-    packageId = invalidId;
+    contextId = invalidId;
   }
-  return packageId;
+  return contextId;
 }
+
+//long KdmTripleWriter::getPackageId(Path const & packageDir)
+//{
+//  long invalidId = -1;
+//  long parentPackageId = invalidId;
+//  long packageId = invalidId;
+//  if (boost::filesystem::is_directory(packageDir))
+//  {
+//    FileMap::iterator i = mPackageMap.find(packageDir);
+//    if (i == mPackageMap.end())
+//    {
+//      Path builtPath;
+//      for (Path::iterator pIter = packageDir.begin(); pIter != packageDir.end(); ++pIter)
+//      {
+//        builtPath = builtPath / *pIter;
+//        std::pair<FileMap::iterator, bool> result = mPackageMap.insert(std::make_pair(builtPath, mKdmElementId+1));
+//        if (result.second)
+//        {
+//          packageId = getNextElementId();
+//          writeTripleKdmType(packageId, KdmType::Package());
+//          writeTripleLinkId(packageId, *pIter);
+//          writeTripleName(packageId, *pIter);
+//          if (parentPackageId == invalidId)
+//          {
+//            writeTripleContains(KdmElementId_CodeAssembly, packageId);
+//          }
+//          else
+//          {
+//            writeTripleContains(parentPackageId, packageId);
+//          }
+//          parentPackageId = packageId;
+//          mPackageMap.insert(std::make_pair(builtPath, packageId));
+//        }
+//        else
+//        {
+//          parentPackageId = result.first->second;
+//        }
+//      }
+//    }
+//    else
+//    {
+//      packageId = i->second;
+//    }
+//  }
+//  else
+//  {
+//    packageId = invalidId;
+//  }
+//  return packageId;
+//}
 
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {

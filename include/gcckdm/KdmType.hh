@@ -73,6 +73,7 @@ private:
     KdmType_SourceFile,
     KdmType_SourceRef,
     KdmType_SourceRegion,
+    KdmType_Directory,
 
     //Action Group
     KdmType_ActionElement,
@@ -135,6 +136,7 @@ public:
   static const KdmType SourceFile()       { return KdmType(KdmType_SourceFile, "source/SourceFile");  }
   static const KdmType SourceRef()        { return KdmType(KdmType_SourceRef, "source/SourceRef");  }
   static const KdmType SourceRegion()     { return KdmType(KdmType_SourceRegion, "source/SourceRegion");  }
+  static const KdmType Directory()        { return KdmType(KdmType_SourceRegion, "source/Directory");  }
 
   //Action Group
   static const KdmType ActionElement()    { return KdmType(KdmType_ActionElement, "action/ActionElement");  }

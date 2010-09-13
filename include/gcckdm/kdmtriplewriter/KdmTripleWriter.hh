@@ -547,7 +547,8 @@ private:
   void writeUids();
 
   long getPackageId(Path const & path);
-
+  long getDirectoryId(Path const & path);
+  long getLocationContextId(Path const & path, FileMap const & fMap, KdmType const & type);
 
 
   /**
@@ -589,6 +590,7 @@ private:
   Settings mSettings;
 
   FileMap mPackageMap;
+  FileMap mDirectoryMap;
 };
 
 } // namespace kdmtriplewriter

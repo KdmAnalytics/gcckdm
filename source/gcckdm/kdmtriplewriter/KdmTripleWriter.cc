@@ -158,7 +158,14 @@ public:
   {
     //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
     //std::cerr << "Start:" << g[v].elementId << std::endl;
-    mGraph[v].startUid = mWriter.mUid++;
+    if (mGraph[v].incrementFlag)
+    {
+      mGraph[v].startUid = mWriter.mUid++;
+    }
+    else
+    {
+      mGraph[v].startUid = mWriter.mUid;
+    }
     mLastVertex = v;
   }
 
@@ -214,7 +221,8 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
   mUid(0),
-  mSettings(settings)
+  mSettings(settings),
+  mLockUid(false)
 {
   //We pass this object to the gimple writer to allow it to use our triple writing powers
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
@@ -230,7 +238,8 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
 : mKdmElementId(KdmElementId_DefaultStart),
   mUidGraph(),
   mUid(0),
-  mSettings(settings)
+  mSettings(settings),
+  mLockUid(false)
 {
   if (settings.outputDir.filename().empty())
   {
@@ -1092,8 +1101,21 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   if (mSettings.functionBodies)
   {
+    lockUid(true);
     mGimpleWriter->processAstFunctionDeclarationNode(functionDecl);
+    lockUid(false);
   }
+}
+
+
+void KdmTripleWriter::lockUid(bool val)
+{
+  mLockUid = val;
+}
+
+bool KdmTripleWriter::lockUid() const
+{
+  return mLockUid;
 }
 
 /**
@@ -1431,7 +1453,7 @@ void KdmTripleWriter::writeTripleContains(long const parent, long const child, b
 
   if (result)
   {
-    //write contains relationship to file
+    //write contains relationship to sink
     writeTriple(parent, KdmPredicate::Contains(), child);
   }
 }
@@ -1498,6 +1520,7 @@ bool KdmTripleWriter::updateUidGraph(long const parent, long const child)
   {
     parentVertex = boost::add_vertex(mUidGraph);
     mUidGraph[parentVertex].elementId = parent;
+    mUidGraph[parentVertex].incrementFlag = !lockUid();
   }
 
   if (not foundChildFlag)
@@ -1505,6 +1528,7 @@ bool KdmTripleWriter::updateUidGraph(long const parent, long const child)
     //Create our child vertex
     childVertex = boost::add_vertex(mUidGraph);
     mUidGraph[childVertex].elementId = child;
+    mUidGraph[childVertex].incrementFlag = !lockUid();
   }
 
   bool retVal = true;

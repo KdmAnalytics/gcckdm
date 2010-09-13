@@ -550,6 +550,10 @@ private:
   long getDirectoryId(Path const & path);
   long getLocationContextId(Path const & path, FileMap & fMap, KdmType const & type);
 
+  void lockUid(bool val);
+  bool lockUid() const;
+
+
 
   /**
    * Adds nodes for the given id's if they don't already exist
@@ -591,6 +595,8 @@ private:
 
   FileMap mPackageMap;
   FileMap mDirectoryMap;
+
+  bool mLockUid;
 };
 
 } // namespace kdmtriplewriter

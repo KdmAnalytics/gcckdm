@@ -1587,7 +1587,7 @@ long KdmTripleWriter::getPackageId(Path const & packageDir)
   return getLocationContextId(packageDir, mPackageMap, KdmType::Package());
 }
 
-long KdmTripleWriter::getLocationContextId(Path const & contextDir, FileMap const & fMap, KdmType const & type)
+long KdmTripleWriter::getLocationContextId(Path const & contextDir, FileMap & fMap, KdmType const & type)
 {
   long invalidId = -1;
   long parentContextId = invalidId;

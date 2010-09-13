@@ -548,7 +548,7 @@ private:
 
   long getPackageId(Path const & path);
   long getDirectoryId(Path const & path);
-  long getLocationContextId(Path const & path, FileMap const & fMap, KdmType const & type);
+  long getLocationContextId(Path const & path, FileMap & fMap, KdmType const & type);
 
 
   /**

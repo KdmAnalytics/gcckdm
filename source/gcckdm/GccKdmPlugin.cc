@@ -25,6 +25,7 @@
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/utilities/null_deleter.hpp"
 #include "boost/filesystem/operations.hpp"
+#include "gcckdm/GccKdmVersion.hh"
 
 /**
  * Have to define this to ensure that GCC is able to play nice with our plugin
@@ -198,6 +199,27 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
         fs::create_directory(outputDir);
       }
       settings.outputDir = outputDir;
+    }
+    else if (key == "help")
+    {
+      std::cout << "GccKdm Version " << gcckdm::GccKdmVersion
+                << "\nOptions: \n"
+                << "\n  output                 Type of output: stderr, stdout, file (default: file)"
+                << "\n  output-dir             Place all generated file in this directory"
+                << "\n  bodies                 Generate MicroKDM for function bodies (default: true)"
+                << "\n  uids                   Generate UID's for Kdm Elements (default: true)"
+                << "\n  uid-graph              Generate UID graph in dot format (default: false)"
+                << "\n  debug-contains-check   Enable double containment checking (default: false)"
+                << "\n  help                   Prints this message"
+                << "\n  version                Prints the GccKdm version"
+                << std::endl;
+
+      exit(1);
+    }
+    else if (key == "version")
+    {
+      std::cout << "GccKdm Version: " << gcckdm::GccKdmVersion << std::endl;
+      exit(1);
     }
     else
     {

@@ -1222,6 +1222,7 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
   long signatureId = getReferenceId(functionType);
   writeTripleKdmType(signatureId, KdmType::Signature());
   writeTripleName(signatureId, name);
+  writeTripleLinkId(signatureId, name);
 
   //Determine return type
   long paramId = writeKdmReturnParameterUnit(TREE_TYPE(functionType));
@@ -1407,10 +1408,15 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Name(), ":derived");
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::LinkId(), ":derived");
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_DerivedSharedUnit);
-  writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
-  writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Name(), ":class");
-  writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::LinkId(), ":class");
-  writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_ClassSharedUnit);
+
+  if (isFrontendCxx())
+  {
+    writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
+    writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::Name(), ":class");
+    writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::LinkId(), ":class");
+    writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_ClassSharedUnit);
+  }
+
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::KdmType(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
@@ -1824,7 +1830,8 @@ long KdmTripleWriter::writeKdmValue(tree const val)
   writeTripleName(valueId, name);
   writeTripleLinkId(valueId, name);
   writeTriple(valueId, KdmPredicate::Type(), ref);
-  writeTripleContains(KdmElementId_LanguageUnit, valueId);
+
+  writeLanguageUnitContains(valueId);
   return valueId;
 }
 
@@ -1921,7 +1928,8 @@ long KdmTripleWriter::getUserTypeId(KdmType const & type)
     writeTripleKdmType(typeId, type);
     writeTripleName(typeId, type.name());
     writeTripleLinkId(typeId, type.name());
-    writeTripleContains(KdmElementId_LanguageUnit, typeId);
+
+    writeLanguageUnitContains(typeId);
     retVal = typeId;
   }
   else
@@ -2000,7 +2008,7 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   writeTripleKdmType(typeKdmElementId, kdmType);
   writeTripleName(typeKdmElementId, name);
   writeTripleLinkId(typeKdmElementId, name);
-  writeTripleContains(KdmElementId_LanguageUnit, typeKdmElementId);
+  writeLanguageUnitContains(typeKdmElementId);
 }
 
 void KdmTripleWriter::writeKdmPointerType(tree const pointerType)
@@ -2014,7 +2022,7 @@ void KdmTripleWriter::writeKdmPointerType(tree const pointerType)
   processAstNode(t2);
 
   writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
-  writeTripleContains(KdmElementId_LanguageUnit, pointerKdmElementId);
+  writeLanguageUnitContains(pointerKdmElementId);
 }
 
 void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
@@ -2059,7 +2067,7 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
     {
       writeTriple(arrayKdmElementId, KdmPredicate::Size(), "<unknown>");
     }
-    writeTripleContains(KdmElementId_LanguageUnit, arrayKdmElementId);
+    writeLanguageUnitContains(arrayKdmElementId);
 
 }
 
@@ -2343,7 +2351,18 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
   return id;
 }
 
+
+void KdmTripleWriter::writeLanguageUnitContains(long const child, bool uid)
+{
+  //Additions to the language unit are always unlocked.  Additions to the
+  //language unit can come from gimple or elsewhere... so we have to
+  //ensure that they get proper UID's
+  bool val = lockUid();
+  lockUid(false);
+  writeTripleContains(KdmElementId_LanguageUnit, child, uid);
+  lockUid(val);
+}
+
 } // namespace kdmtriplewriter
 
-}
-// namespace gcckdm
+} // namespace gcckdm

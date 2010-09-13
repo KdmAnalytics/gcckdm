@@ -110,8 +110,12 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
       //Set out listener pointer
       gccAstListener.reset(pWriter.release());
 
-      //Disable assembly output
-      //asm_file_name = HOST_BIT_BUCKET;
+      if (!settings.assemberOutput)
+      {
+        //Disable assembly output
+        asm_file_name = HOST_BIT_BUCKET;
+      }
+
 
       // Register callbacks.
       //
@@ -188,6 +192,10 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
         settings.containmentCheck = true;
       }
     }
+    else if (key == "assembler-output")
+    {
+      settings.assemberOutput = true;
+    }
     else if (key == "output-dir")
     {
       namespace fs = boost::filesystem;
@@ -209,6 +217,7 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
                 << "\n  bodies                 Generate MicroKDM for function bodies (default: true)"
                 << "\n  uids                   Generate UID's for Kdm Elements (default: true)"
                 << "\n  uid-graph              Generate UID graph in dot format (default: false)"
+                << "\n  assembler-output       Generate assembler output (default: false)"
                 << "\n  debug-contains-check   Enable double containment checking (default: false)"
                 << "\n  help                   Prints this message"
                 << "\n  version                Prints the GccKdm version"

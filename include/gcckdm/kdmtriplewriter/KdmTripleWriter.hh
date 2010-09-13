@@ -78,6 +78,7 @@ public:
         generateUids(true),
         generateUidGraph(false),
         containmentCheck(true),
+        assemberOutput(false),
         outputDir("")
     {}
 
@@ -89,6 +90,8 @@ public:
     bool generateUidGraph;
     /// If true the write will issue a warning when a child is contained in two parents
     bool containmentCheck;
+    /// If true generate assembler output, useful for integrating normal compilation
+    bool assemberOutput;
     ///Output directory all output is placed here, if it's empty the output is place right beside the input file
     KdmTripleWriter::Path outputDir;
   };
@@ -213,6 +216,7 @@ public:
    * @param kind
    */
   void writeTripleKind(long const subject, KdmKind const & kind);
+
 
   /**
    * Convenience method to write the "export" triple
@@ -452,6 +456,9 @@ private:
   void writeVersionHeader();
 
   void writeDefaultKdmModelElements();
+
+
+  void writeLanguageUnitContains(long const child, bool uid = true);
 
   /**
    * Write a SourceFile kdm element to the KdmSink stream using the given file

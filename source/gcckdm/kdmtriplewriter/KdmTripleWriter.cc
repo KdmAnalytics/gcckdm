@@ -1096,15 +1096,16 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     writeTripleContains(unitId, callableUnitId);
   }
 
+  lockUid(true);
+
   long signatureId = writeKdmSignature(functionDecl);
   writeTripleContains(callableUnitId, signatureId);
 
   if (mSettings.functionBodies)
   {
-    lockUid(true);
     mGimpleWriter->processAstFunctionDeclarationNode(functionDecl);
-    lockUid(false);
   }
+  lockUid(false);
 }
 
 

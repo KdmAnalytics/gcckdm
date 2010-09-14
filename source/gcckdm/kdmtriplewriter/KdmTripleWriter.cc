@@ -1610,15 +1610,15 @@ void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
 
 long KdmTripleWriter::getDirectoryId(Path const & directoryDir)
 {
-  return getLocationContextId(directoryDir, mDirectoryMap, KdmType::Directory());
+  return getLocationContextId(directoryDir, KdmElementId_InventoryModel, mDirectoryMap, KdmType::Directory());
 }
 
 long KdmTripleWriter::getPackageId(Path const & packageDir)
 {
-  return getLocationContextId(packageDir, mPackageMap, KdmType::Package());
+  return getLocationContextId(packageDir, KdmElementId_CodeAssembly, mPackageMap, KdmType::Package());
 }
 
-long KdmTripleWriter::getLocationContextId(Path const & contextDir, FileMap & fMap, KdmType const & type)
+long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const rootId, FileMap & fMap, KdmType const & type)
 {
   long invalidId = -1;
   long parentContextId = invalidId;
@@ -1641,7 +1641,7 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, FileMap & fM
           writeTripleName(contextId, *pIter);
           if (parentContextId == invalidId)
           {
-            writeTripleContains(KdmElementId_CodeAssembly, contextId);
+            writeTripleContains(rootId, contextId);
           }
           else
           {

@@ -79,6 +79,8 @@ public:
         generateUidGraph(false),
         containmentCheck(true),
         assemberOutput(false),
+        outputExtension(".tkdm"),
+        outputFile(""),
         outputDir("")
     {}
 
@@ -92,6 +94,10 @@ public:
     bool containmentCheck;
     /// If true generate assembler output, useful for integrating normal compilation
     bool assemberOutput;
+    /// The extension on the generated output file
+    std::string outputExtension;
+    /// The name of the output file
+    std::string outputFile;
     ///Output directory all output is placed here, if it's empty the output is place right beside the input file
     KdmTripleWriter::Path outputDir;
   };
@@ -555,7 +561,7 @@ private:
 
   long getPackageId(Path const & path);
   long getDirectoryId(Path const & path);
-  long getLocationContextId(Path const & path, FileMap & fMap, KdmType const & type);
+  long getLocationContextId(Path const & path, long const rootId, FileMap & fMap, KdmType const & type);
 
   void lockUid(bool val);
   bool lockUid() const;

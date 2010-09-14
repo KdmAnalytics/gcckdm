@@ -1144,9 +1144,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
     {
       tree labelNode = CASE_LABEL(caseLabel);
       long labelNodeId = getReferenceId(labelNode);
-      //      tree caseNode = CASE_LABEL (caseLabel);
-//      long caseNodeId = getReferenceId(caseNode);
-//      writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(caseNode,caseNodeId));
 
       //Create an action element with a single reads to the constant value
       long caseActionId = mKdmWriter.getNextElementId();

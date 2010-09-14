@@ -1155,7 +1155,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
       tree caseNode = CASE_LOW(caseLabel);
       long caseNodeId = getReferenceId(caseNode);
       writeKdmActionRelation(KdmType::Reads(), caseActionId, RelationTarget(caseNode,caseNodeId));
-      mKdmWriter.writeTripleContains(actionId, caseActionId, false);
+      mKdmWriter.writeTripleContains(actionId, caseActionId);
 
       long guardedFlowId(mKdmWriter.getNextElementId());
       mKdmWriter.writeTripleKdmType(guardedFlowId, KdmType::GuardedFlow());

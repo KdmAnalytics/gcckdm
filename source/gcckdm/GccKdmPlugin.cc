@@ -102,8 +102,16 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
       // default output is file
       else
       {
-        boost::filesystem::path filename(main_input_filename);
-        filename.replace_extension(".tkdm");
+        boost::filesystem::path filename;
+        if (settings.outputFile.empty())
+        {
+          filename = main_input_filename;
+          filename.replace_extension(settings.outputExtension);
+        }
+        else
+        {
+          filename = settings.outputFile;
+        }
         pWriter.reset(new gcckdm::kdmtriplewriter::KdmTripleWriter(filename, settings));
       }
 
@@ -167,6 +175,11 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
       {
         settings.functionBodies = false;
       }
+      else if (value.empty())
+      {
+        warning(0, G_("plugin %qs: unrecognized value for %qs ignored"), plugin_info->base_name, key.c_str());
+        continue;
+      }
     }
     else if (key == "uids")
     {
@@ -195,6 +208,32 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
     else if (key == "assembler-output")
     {
       settings.assemberOutput = true;
+    }
+    else if (key == "output-extension")
+    {
+      std::string value = argv[i].value;
+      if (value.empty())
+      {
+        warning(0, G_("plugin %qs: unrecognized value for %qs ignored"), plugin_info->base_name, key.c_str());
+        continue;
+      }
+      else
+      {
+        settings.outputExtension = value;
+      }
+    }
+    else if (key == "output-file")
+    {
+      std::string value = argv[i].value;
+      if (value.empty())
+      {
+        warning(0, G_("plugin %qs: unrecognized value for %qs ignored"), plugin_info->base_name, key.c_str());
+        continue;
+      }
+      else
+      {
+        settings.outputFile = value;
+      }
     }
     else if (key == "output-dir")
     {

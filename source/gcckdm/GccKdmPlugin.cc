@@ -349,8 +349,11 @@ void registerCallbacks(char const * pluginName)
  */
 extern "C" void executeStartUnit(void *event_data, void *data)
 {
-  boost::filesystem::path filename(main_input_filename);
-  gccAstListener->startTranslationUnit(boost::filesystem::complete(filename));
+  if (!errorcount)
+  {
+    boost::filesystem::path filename(main_input_filename);
+    gccAstListener->startTranslationUnit(boost::filesystem::complete(filename));
+  }
 }
 
 

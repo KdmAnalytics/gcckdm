@@ -103,6 +103,7 @@ private:
     KdmKind_BitAssign, //Not in KdmSpec
     KdmKind_RightRotate, // Not in KdmSpec
     KdmKind_LeftRotate, // Not in KdmSpec
+    KdmKind_Case, // Not in KdmSpec
   };
 
 public:
@@ -178,6 +179,7 @@ public:
   static const KdmKind BitAssign()            { return KdmKind(KdmKind_BitAssign, "BitAssign");  } //Not in KdmSpec
   static const KdmKind LeftRotate()           { return KdmKind(KdmKind_LeftRotate, "LeftRotate"); } //Not in KdmSpec
   static const KdmKind RightRotate()          { return KdmKind(KdmKind_RightRotate, "RightRotate"); } //Not in KdmSpec
+  static const KdmKind Case()                 { return KdmKind(KdmKind_Case, "Case"); }
 
   int const id() const
   {

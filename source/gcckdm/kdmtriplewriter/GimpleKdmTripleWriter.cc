@@ -1129,7 +1129,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
 
   for (unsigned i = 0; i < gimple_switch_num_labels (gs); ++i)
   {
-    tree caseLabel(gimple_switch_label (gs, i));
+    tree caseLabel = gimple_switch_label (gs, i);
     if (caseLabel == NULL_TREE)
     {
       continue;
@@ -1142,15 +1142,29 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
     }
     else if (CASE_LOW(caseLabel))
     {
-      tree caseNode(CASE_LABEL (caseLabel));
-      long caseNodeId(getReferenceId(caseNode));
-      long readsId = writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(caseNode,caseNodeId));
+      tree labelNode = CASE_LABEL(caseLabel);
+      long labelNodeId = getReferenceId(labelNode);
+      //      tree caseNode = CASE_LABEL (caseLabel);
+//      long caseNodeId = getReferenceId(caseNode);
+//      writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(caseNode,caseNodeId));
+
+      //Create an action element with a single reads to the constant value
+      long caseActionId = mKdmWriter.getNextElementId();
+      mKdmWriter.writeTripleKdmType(caseActionId, KdmType::ActionElement());
+      mKdmWriter.writeTripleKind(caseActionId, KdmKind::Case());
+      tree caseNode = CASE_LOW(caseLabel);
+      long caseNodeId = getReferenceId(caseNode);
+      writeKdmActionRelation(KdmType::Reads(), caseActionId, RelationTarget(caseNode,caseNodeId));
+      mKdmWriter.writeTripleContains(actionId, caseActionId, false);
 
       long guardedFlowId(mKdmWriter.getNextElementId());
       mKdmWriter.writeTripleKdmType(guardedFlowId, KdmType::GuardedFlow());
-      mKdmWriter.writeTriple(guardedFlowId, KdmPredicate::From(), guardedFlowId);
-      mKdmWriter.writeTriple(guardedFlowId, KdmPredicate::To(), readsId);
+      mKdmWriter.writeTriple(guardedFlowId, KdmPredicate::From(), actionId);
+      mKdmWriter.writeTriple(guardedFlowId, KdmPredicate::To(), caseActionId);
       mKdmWriter.writeTripleContains(actionId, guardedFlowId, false);
+
+      //Hook up the flows
+      writeKdmFlow(caseActionId, labelNodeId);
     }
     else
     {

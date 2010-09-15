@@ -84,6 +84,21 @@ private:
   std::string mWhat;
 };
 
+/**
+ * Throw this unable to locate parent context
+ */
+class InvalidPathContextException : public KdmTripleWriterException
+{
+public:
+  InvalidPathContextException(std::string const & msg) : mWhat(msg) {}
+  virtual ~InvalidPathContextException() throw() {};
+  virtual char const * what() const throw()  {    return mWhat.c_str();  }
+private:
+  std::string mWhat;
+};
+
+
+
 }  // namespace kdmtriplewriter
 
 }  // namespace gcckdm

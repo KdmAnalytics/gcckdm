@@ -26,13 +26,14 @@
 #include "gcckdm/utilities/null_deleter.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "gcckdm/GccKdmVersion.hh"
+#include <boost/algorithm/string.hpp>
 
 /**
  * Have to define this to ensure that GCC is able to play nice with our plugin
  */
 int plugin_is_GPL_compatible = 1;
 namespace ktw = gcckdm::kdmtriplewriter;
-
+namespace fs = boost::filesystem;
 namespace
 {
 
@@ -102,7 +103,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
       // default output is file
       else
       {
-        boost::filesystem::path filename;
+        fs::path filename;
         if (settings.outputFile.empty())
         {
           filename = main_input_filename;
@@ -237,8 +238,6 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
     }
     else if (key == "output-dir")
     {
-      namespace fs = boost::filesystem;
-
       std::string value(argv[i].value);
       fs::path outputDir(value);
       if (!fs::exists(outputDir))
@@ -351,8 +350,12 @@ extern "C" void executeStartUnit(void *event_data, void *data)
 {
   if (!errorcount)
   {
-    boost::filesystem::path filename(main_input_filename);
-    gccAstListener->startTranslationUnit(boost::filesystem::complete(filename));
+    std::string filename(main_input_filename);
+    boost::replace_all(filename, "\\","/");
+    //We leave the path to the main_input_file unmodified... ie we don't
+    //make it an absolute path to help support the case when compiled code
+    //is preprocessed
+    gccAstListener->startTranslationUnit(fs::path(filename));
   }
 }
 

@@ -38,6 +38,9 @@
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/graphviz.hpp>
 #include <fstream>
+
+
+
 namespace
 {
 /// Prefix for all KDM triple format comments
@@ -91,6 +94,17 @@ bool isAnonymousStruct(tree const t)
   return !name || ANON_AGGRNAME_P (name);
 }
 
+void fixPathString(std::string & pathStr)
+{
+  //Gcc likes to put double slashes at the start of the string... boost::filesystem
+  //doesn't like them very much and messes up iteration... so we remove them
+  boost::replace_all(pathStr, "//", "/");
+
+  //Correct windows paths so boost::filesystem doesn't bork
+  boost::replace_all(pathStr, "\\", "/");
+}
+
+
 } // namespace
 
 namespace gcckdm
@@ -98,6 +112,10 @@ namespace gcckdm
 
 namespace kdmtriplewriter
 {
+
+  namespace bfs = boost::filesystem;
+
+
 
 /**
  * Functor to write a comment to the kdm sink
@@ -243,11 +261,11 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
 {
   if (settings.outputDir.filename().empty())
   {
-    mKdmSink.reset(new boost::filesystem::ofstream(filename));
+    mKdmSink.reset(new bfs::ofstream(filename));
   }
   else
   {
-    mKdmSink.reset(new boost::filesystem::ofstream(mSettings.outputDir / filename.filename()));
+    mKdmSink.reset(new bfs::ofstream(mSettings.outputDir / filename.filename()));
   }
 
   //We pass this object to the gimple writer to allow it to use our triple writing powers
@@ -273,8 +291,10 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
   try
   {
-    //Ensure we hav the complete path
-    mCompilationFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
+//    //Ensure we have the complete path
+//    mCompilationFile = (!file.is_complete()) ? bfs::complete(file) : file;
+
+    mCompilationFile = file;
     writeVersionHeader();
     writeDefaultKdmModelElements();
   }
@@ -1088,7 +1108,7 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
     //    Path file(loc.file);
     //    if (!file.is_complete())
     //    {
-    //      file = boost::filesystem::complete(file);
+    //      file = bfs::complete(file);
     //    }
     //    std::cerr << "HERE: " << " " << DECL_EXTERNAL(functionDecl) << " " << TREE_PUBLIC(functionDecl)<< " " << gcckdm::getAstNodeName(functionDecl) << ": " << file.string() << std::endl;
 
@@ -1148,10 +1168,10 @@ void KdmTripleWriter::writeKdmCxxContains(tree const decl)
 
   // Otherwise the file is the parent
   Path sourceFile(DECL_SOURCE_FILE(decl));
-  if (!sourceFile.is_complete())
-  {
-    sourceFile = boost::filesystem::complete(sourceFile);
-  }
+//  if (!sourceFile.is_complete())
+//  {
+//    sourceFile = bfs::complete(sourceFile);
+//  }
   long unitId(sourceFile == mCompilationFile ? KdmElementId_CompilationUnit : KdmElementId_ClassSharedUnit);
   writeTripleContains(unitId, id);
 }
@@ -1579,10 +1599,10 @@ void KdmTripleWriter::writeTripleExport(long const subject, std::string const & 
 KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path const & file)
 {
   Path sourceFile(file);
-  if (!sourceFile.is_complete())
-  {
-    sourceFile = boost::filesystem::complete(sourceFile);
-  }
+//  if (!sourceFile.is_complete())
+//  {
+//    sourceFile = bfs::complete(sourceFile);
+//  }
   long id = getNextElementId();
   writeTripleKdmType(id, KdmType::SourceFile());
   writeTripleName(id, file.filename());
@@ -1623,13 +1643,15 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
   long invalidId = -1;
   long parentContextId = invalidId;
   long contextId = invalidId;
-  if (boost::filesystem::is_directory(contextDir))
-  {
-    FileMap::iterator i = fMap.find(contextDir);
+  Path normalizedContextDir = contextDir;
+  normalizedContextDir.normalize();
+//  if (bfs::is_directory(contextDir))
+//  {
+    FileMap::iterator i = fMap.find(normalizedContextDir);
     if (i == fMap.end())
     {
       Path builtPath;
-      for (Path::iterator pIter = contextDir.begin(); pIter != contextDir.end(); ++pIter)
+      for (Path::iterator pIter = normalizedContextDir.begin(); pIter != normalizedContextDir.end(); ++pIter)
       {
         builtPath = builtPath / *pIter;
         std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId+1));
@@ -1660,11 +1682,24 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
     {
       contextId = i->second;
     }
-  }
-  else
-  {
-    contextId = invalidId;
-  }
+//  }
+//  else
+//  {
+//    if (contextDir.empty())
+//    {
+//      contextId = rootId;
+//    }
+//    else
+//    {
+//      contextId = invalidId;
+//    }
+//  }
+//
+//  if (contextId == invalidId)
+//  {
+//    BOOST_THROW_EXCEPTION(InvalidPathContextException("Unable to locate parent path context for " + contextDir.string()));
+//  }
+
   return contextId;
 }
 
@@ -1673,7 +1708,7 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
 //  long invalidId = -1;
 //  long parentPackageId = invalidId;
 //  long packageId = invalidId;
-//  if (boost::filesystem::is_directory(packageDir))
+//  if (bfs::is_directory(packageDir))
 //  {
 //    FileMap::iterator i = mPackageMap.find(packageDir);
 //    if (i == mPackageMap.end())
@@ -1878,10 +1913,10 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
   //Find the file the given node is located in ensure that is is complete
   expanded_location loc(expand_location(locationOf(node)));
   Path file(loc.file);
-  if (!file.is_complete())
-  {
-    file = boost::filesystem::complete(file);
-  }
+//  if (!file.is_complete())
+//  {
+//    file = bfs::complete(file);
+//  }
 
 
   // the node is not in our translation unit, it must be in a shared unit
@@ -2169,7 +2204,7 @@ void KdmTripleWriter::writeKdmFriends(long const id, tree const befriending)
     {
       if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
       {
-        tree friendType TREE_VALUE (frnd);
+        tree friendType = TREE_VALUE (frnd);
         long friendId = getReferenceId(friendType);
         long relId = writeKdmFriend(id, friendId);
         writeTripleContains(id, relId);
@@ -2302,15 +2337,14 @@ void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 {
   long id = getSharedUnitReferenceId(file);
   std::string fname = IDENTIFIER_POINTER(file);
-  //Gcc likes to put double slashes at the start of the string... boost::filesystem
-  //doesn't like them very much and messes up iteration... so we remove them
-  boost::replace_all(fname, "//", "/");
+  fixPathString(fname);
   writeKdmSharedUnit(Path(fname), id);
 }
 
 void KdmTripleWriter::writeKdmSharedUnit(Path const & file, const long id)
 {
-  Path compFile = (!file.is_complete()) ? boost::filesystem::complete(file) : file;
+//  Path compFile = (!file.is_complete()) ? bfs::complete(file) : file;
+  Path compFile = file;
   writeTripleKdmType(id, KdmType::SharedUnit());
   writeTripleName(id, compFile.filename());
   writeTripleLinkId(id, compFile.string());
@@ -2330,15 +2364,13 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
   }
   std::string fname(eloc.file);
 
-  //Gcc likes to put double slashes at the start of the string... boost::filesystem
-  //doesn't like them very much and messes up iteration... so we remove them
-  boost::replace_all(fname, "//", "/");
+  fixPathString(fname);
 
   Path sourceFile(fname);
-  if (!sourceFile.is_complete())
-  {
-    sourceFile = boost::filesystem::complete(sourceFile);
-  }
+//  if (!sourceFile.is_complete())
+//  {
+//    sourceFile = bfs::complete(sourceFile);
+//  }
 
   FileMap::iterator i = mInventoryMap.find(sourceFile);
   if (i == mInventoryMap.end())

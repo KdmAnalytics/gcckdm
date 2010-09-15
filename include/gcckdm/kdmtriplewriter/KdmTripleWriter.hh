@@ -81,7 +81,8 @@ public:
         assemberOutput(false),
         outputExtension(".tkdm"),
         outputFile(""),
-        outputDir("")
+        outputDir(""),
+        preprocessed(false)
     {}
 
     /// If true function body information written to output
@@ -100,6 +101,8 @@ public:
     std::string outputFile;
     ///Output directory all output is placed here, if it's empty the output is place right beside the input file
     KdmTripleWriter::Path outputDir;
+    // If true source being compiled it assumed to be preprocessed
+    bool preprocessed;
   };
 
   /**

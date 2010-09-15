@@ -244,7 +244,7 @@ public:
    * @param writeContains if true writes contains triple using the file var is found in as the parent
    * @return the refId of the StorableUnit
    */
-  long writeKdmStorableUnit(tree const var, bool writeContains);
+  long writeKdmStorableUnit(tree const var, bool writeContains, bool local = false);
 
 
   /**

@@ -427,7 +427,8 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
     }
     else
     {
-      long declId = mKdmWriter.writeKdmStorableUnit(var, false);
+      long declId = mKdmWriter.writeKdmStorableUnit(var, false, true);
+      mKdmWriter.writeTripleKind(declId, KdmKind::Local());
       mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
       mKdmWriter.markNodeAsProcessed(var);
     }

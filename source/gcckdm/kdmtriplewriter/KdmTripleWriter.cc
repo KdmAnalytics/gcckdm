@@ -1832,7 +1832,7 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   return itemId;
 }
 
-long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
+long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains, bool local)
 {
   long unitId = getReferenceId(var);
   writeTripleKdmType(unitId, KdmType::StorableUnit());
@@ -1842,7 +1842,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains)
   long ref = getReferenceId(type);
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
-  if (!DECL_EXTERNAL(var))
+  if (!DECL_EXTERNAL(var) && !local)
   {
     writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
   }

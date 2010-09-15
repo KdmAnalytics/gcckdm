@@ -1,0 +1,6 @@
+Release_Linux_x86/source
+Release_Linux_x86/*.so
+Debug_Linux_x86/source
+Debug_Linux_x86/*.so
+test/projects/nginx-0.8.49/Makefile
+test/projects/nginx-0.8.49/objs/

@@ -104,7 +104,7 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   }
 
   //inline functions haven't been gimplified yet so we do it to simplify processing
-  if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL(functionDeclNode))
+  if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL())
   {
     gimplify_function_tree (functionDeclNode);
   }
@@ -129,10 +129,6 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
     processGimpleSequence(seq);
     mKdmWriter.writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
 
-    if (mLabelFlag)
-    {
-
-    }
 
   }
 }

@@ -1104,14 +1104,6 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
   // In straight C, it is always contained in the source file
   else
   {
-    //    expanded_location loc(expand_location(locationOf(functionDecl)));
-    //    Path file(loc.file);
-    //    if (!file.is_complete())
-    //    {
-    //      file = bfs::complete(file);
-    //    }
-    //    std::cerr << "HERE: " << " " << DECL_EXTERNAL(functionDecl) << " " << TREE_PUBLIC(functionDecl)<< " " << gcckdm::getAstNodeName(functionDecl) << ": " << file.string() << std::endl;
-
     long unitId = getSourceFileReferenceId(functionDecl);
     writeTripleContains(unitId, callableUnitId);
   }
@@ -1539,8 +1531,6 @@ bool KdmTripleWriter::updateUidGraph(long const parent, long const child)
     }
   }
 
-
-
   //If we don't have the parent in graph already create a new vertex otherwise
   //use the one we found
   if (not foundParentFlag)
@@ -1599,10 +1589,6 @@ void KdmTripleWriter::writeTripleExport(long const subject, std::string const & 
 KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path const & file)
 {
   Path sourceFile(file);
-//  if (!sourceFile.is_complete())
-//  {
-//    sourceFile = bfs::complete(sourceFile);
-//  }
   long id = getNextElementId();
   writeTripleKdmType(id, KdmType::SourceFile());
   writeTripleName(id, file.filename());
@@ -1612,7 +1598,6 @@ KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path cons
 
   //Keep track of all files inserted into the inventory model
   std::pair<FileMap::iterator, bool> result = mInventoryMap.insert(std::make_pair(sourceFile, id));
-
 
   return result.first;
 }
@@ -1645,113 +1630,43 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
   long contextId = invalidId;
   Path normalizedContextDir = contextDir;
   normalizedContextDir.normalize();
-//  if (bfs::is_directory(contextDir))
-//  {
-    FileMap::iterator i = fMap.find(normalizedContextDir);
-    if (i == fMap.end())
+  FileMap::iterator i = fMap.find(normalizedContextDir);
+  if (i == fMap.end())
+  {
+    Path builtPath;
+    for (Path::iterator pIter = normalizedContextDir.begin(); pIter != normalizedContextDir.end(); ++pIter)
     {
-      Path builtPath;
-      for (Path::iterator pIter = normalizedContextDir.begin(); pIter != normalizedContextDir.end(); ++pIter)
+      builtPath = builtPath / *pIter;
+      std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId+1));
+      if (result.second)
       {
-        builtPath = builtPath / *pIter;
-        std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId+1));
-        if (result.second)
+        contextId = getNextElementId();
+        writeTripleKdmType(contextId,type);
+        writeTripleLinkId(contextId, *pIter);
+        writeTripleName(contextId, *pIter);
+        if (parentContextId == invalidId)
         {
-          contextId = getNextElementId();
-          writeTripleKdmType(contextId,type);
-          writeTripleLinkId(contextId, *pIter);
-          writeTripleName(contextId, *pIter);
-          if (parentContextId == invalidId)
-          {
-            writeTripleContains(rootId, contextId);
-          }
-          else
-          {
-            writeTripleContains(parentContextId, contextId);
-          }
-          parentContextId = contextId;
-          fMap.insert(std::make_pair(builtPath, contextId));
+          writeTripleContains(rootId, contextId);
         }
         else
         {
-          parentContextId = result.first->second;
+          writeTripleContains(parentContextId, contextId);
         }
+        parentContextId = contextId;
+        fMap.insert(std::make_pair(builtPath, contextId));
+      }
+      else
+      {
+        parentContextId = result.first->second;
       }
     }
-    else
-    {
-      contextId = i->second;
-    }
-//  }
-//  else
-//  {
-//    if (contextDir.empty())
-//    {
-//      contextId = rootId;
-//    }
-//    else
-//    {
-//      contextId = invalidId;
-//    }
-//  }
-//
-//  if (contextId == invalidId)
-//  {
-//    BOOST_THROW_EXCEPTION(InvalidPathContextException("Unable to locate parent path context for " + contextDir.string()));
-//  }
-
+  }
+  else
+  {
+    contextId = i->second;
+  }
   return contextId;
 }
-
-//long KdmTripleWriter::getPackageId(Path const & packageDir)
-//{
-//  long invalidId = -1;
-//  long parentPackageId = invalidId;
-//  long packageId = invalidId;
-//  if (bfs::is_directory(packageDir))
-//  {
-//    FileMap::iterator i = mPackageMap.find(packageDir);
-//    if (i == mPackageMap.end())
-//    {
-//      Path builtPath;
-//      for (Path::iterator pIter = packageDir.begin(); pIter != packageDir.end(); ++pIter)
-//      {
-//        builtPath = builtPath / *pIter;
-//        std::pair<FileMap::iterator, bool> result = mPackageMap.insert(std::make_pair(builtPath, mKdmElementId+1));
-//        if (result.second)
-//        {
-//          packageId = getNextElementId();
-//          writeTripleKdmType(packageId, KdmType::Package());
-//          writeTripleLinkId(packageId, *pIter);
-//          writeTripleName(packageId, *pIter);
-//          if (parentPackageId == invalidId)
-//          {
-//            writeTripleContains(KdmElementId_CodeAssembly, packageId);
-//          }
-//          else
-//          {
-//            writeTripleContains(parentPackageId, packageId);
-//          }
-//          parentPackageId = packageId;
-//          mPackageMap.insert(std::make_pair(builtPath, packageId));
-//        }
-//        else
-//        {
-//          parentPackageId = result.first->second;
-//        }
-//      }
-//    }
-//    else
-//    {
-//      packageId = i->second;
-//    }
-//  }
-//  else
-//  {
-//    packageId = invalidId;
-//  }
-//  return packageId;
-//}
 
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
@@ -1914,11 +1829,6 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
   //Find the file the given node is located in ensure that is is complete
   expanded_location loc(expand_location(locationOf(node)));
   Path file(loc.file);
-//  if (!file.is_complete())
-//  {
-//    file = bfs::complete(file);
-//  }
-
 
   // the node is not in our translation unit, it must be in a shared unit
   if (mCompilationFile != file)
@@ -2072,39 +1982,36 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
   writeTripleLinkId(arrayKdmElementId, "U." + boost::lexical_cast<std::string>(TYPE_UID(arrayType)));
 
-  //for (tree tmp = arrayType; TREE_CODE (tmp) == ARRAY_TYPE; tmp = TREE_TYPE (tmp))
-//    dump_array_domain (buffer, TYPE_DOMAIN (tmp), spc, flags);
-    tree domain = TYPE_DOMAIN(arrayType);
-    if (domain)
+  tree domain = TYPE_DOMAIN(arrayType);
+  if (domain)
+  {
+    tree min = TYPE_MIN_VALUE (domain);
+    tree max = TYPE_MAX_VALUE (domain);
+    if (min && max && integer_zerop (min) && host_integerp (max, 0))
     {
-      tree min = TYPE_MIN_VALUE (domain);
-      tree max = TYPE_MAX_VALUE (domain);
-      if (min && max && integer_zerop (min) && host_integerp (max, 0))
-      {
-        std::string nameStr = boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % (TREE_INT_CST_LOW (max) + 1));
-        writeTriple(arrayKdmElementId, KdmPredicate::Size(), nameStr);
-      }
-      else
-      {
-        if (min)
-        {
-          writeTriple(arrayKdmElementId, KdmPredicate::Size(), nodeName(min));
-        }
-        if (max)
-        {
-          //dump the node?
-          processAstNode(max);
-          std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
-          writeUnsupportedComment(msg);
-        }
-      }
+      std::string nameStr = boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % (TREE_INT_CST_LOW (max) + 1));
+      writeTriple(arrayKdmElementId, KdmPredicate::Size(), nameStr);
     }
     else
     {
-      writeTriple(arrayKdmElementId, KdmPredicate::Size(), "<unknown>");
+      if (min)
+      {
+        writeTriple(arrayKdmElementId, KdmPredicate::Size(), nodeName(min));
+      }
+      if (max)
+      {
+        //dump the node?
+        processAstNode(max);
+        std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
+        writeUnsupportedComment(msg);
+      }
     }
-    writeLanguageUnitContains(arrayKdmElementId);
-
+  }
+  else
+  {
+    writeTriple(arrayKdmElementId, KdmPredicate::Size(), "<unknown>");
+  }
+  writeLanguageUnitContains(arrayKdmElementId);
 }
 
 /**
@@ -2191,7 +2098,6 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     writeKdmSourceRef(structId, mainRecordType);
     writeTripleContains(compilationUnitId, structId);
   }
-  //    std::cerr << "======================= End of Record Type\n";
 }
 
 /**
@@ -2344,7 +2250,6 @@ void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 
 void KdmTripleWriter::writeKdmSharedUnit(Path const & file, const long id)
 {
-//  Path compFile = (!file.is_complete()) ? bfs::complete(file) : file;
   Path compFile = file;
   writeTripleKdmType(id, KdmType::SharedUnit());
   writeTripleName(id, compFile.filename());
@@ -2364,14 +2269,8 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
     return id;
   }
   std::string fname(eloc.file);
-
   fixPathString(fname);
-
   Path sourceFile(fname);
-//  if (!sourceFile.is_complete())
-//  {
-//    sourceFile = bfs::complete(sourceFile);
-//  }
 
   FileMap::iterator i = mInventoryMap.find(sourceFile);
   if (i == mInventoryMap.end())

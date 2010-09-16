@@ -103,6 +103,12 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
     BOOST_THROW_EXCEPTION(InvalidParameterException("'functionDeclNode' was not of type FUNCTION_DECL"));
   }
 
+  //inline functions haven't been gimplified yet so we do it to simplify processing
+  if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL(functionDeclNode))
+  {
+    gimplify_function_tree (functionDeclNode);
+  }
+
   if (gimple_has_body_p(functionDeclNode))
   {
     // Clear the block map to ensure we do not reuse blocks in situations where line numbers

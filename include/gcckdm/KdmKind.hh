@@ -122,6 +122,7 @@ public:
   static const KdmKind PtrSelect()            { return KdmKind(KdmKind_PtrSelect, "PtrSelect");  }
   static const KdmKind PtrCall()              { return KdmKind(KdmKind_PtrCall, "PtrCall");  }
   static const KdmKind Local()                { return KdmKind(KdmKind_Local, "local");  }
+  static const KdmKind Global()               { return KdmKind(KdmKind_Local, "global");  }
   static const KdmKind Condition()            { return KdmKind(KdmKind_Local, "Condition"); }
   static const KdmKind Nop()                  { return KdmKind(KdmKind_Nop, "Nop"); }
   static const KdmKind Goto()                 { return KdmKind(KdmKind_Goto, "Goto"); }

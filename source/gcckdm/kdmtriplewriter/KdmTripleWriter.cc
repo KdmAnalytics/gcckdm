@@ -1845,6 +1845,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains, b
   if (!DECL_EXTERNAL(var) && !local)
   {
     writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
+    writeTripleKind(unitId, KdmKind::Global());
   }
   if (writeContains)
   {

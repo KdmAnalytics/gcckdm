@@ -21,10 +21,12 @@
 #include <boost/format.hpp>
 #include <boost/current_function.hpp>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
+#include <boost/algorithm/string.hpp>
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/KdmKind.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
+
 
 namespace
 {
@@ -104,7 +106,7 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   }
 
   //inline functions haven't been gimplified yet so we do it to simplify processing
-  if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL())
+  if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL(functionDeclNode))
   {
     gimplify_function_tree (functionDeclNode);
   }
@@ -430,7 +432,17 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
     else
     {
       long declId = mKdmWriter.writeKdmStorableUnit(var, false, true);
-      mKdmWriter.writeTripleKind(declId, KdmKind::Local());
+      std::string name = gcckdm::getAstNodeName(var);
+      //local register variable...
+      if (boost::starts_with(name, "D."))
+      {
+        mKdmWriter.writeTripleKind(declId, KdmKind::Register());
+      }
+      //user define local variable
+      else
+      {
+        mKdmWriter.writeTripleKind(declId, KdmKind::Local());
+      }
       mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
       mKdmWriter.markNodeAsProcessed(var);
     }

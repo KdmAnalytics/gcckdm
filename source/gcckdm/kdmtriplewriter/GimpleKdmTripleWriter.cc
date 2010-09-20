@@ -126,10 +126,10 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
     //we get double containment if the user used the same label in to functions
     mLabelMap.clear();
 
-    mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+//    mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
     processGimpleSequence(seq);
-    mKdmWriter.writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+//    mKdmWriter.writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
 
 
   }
@@ -277,7 +277,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
 
 void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
 {
-  mKdmWriter.writeComment("================GIMPLE START SEQUENCE " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+  //mKdmWriter.writeComment("================GIMPLE START SEQUENCE " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
   for (gimple_stmt_iterator i = gsi_start(seq); !gsi_end_p(i); gsi_next(&i))
   {
     gimple gs = gsi_stmt(i);
@@ -296,7 +296,7 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
     mLabelFlag = !mLabelFlag;
   }
 
-mKdmWriter.writeComment("================GIMPLE END SEQUENCE " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+//mKdmWriter.writeComment("================GIMPLE END SEQUENCE " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
 }
 
 void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
@@ -406,7 +406,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
 
 void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
 {
-  mKdmWriter.writeComment("================GIMPLE START BIND STATEMENT " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+//  mKdmWriter.writeComment("================GIMPLE START BIND STATEMENT " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
   tree var;
   for (var = gimple_bind_vars(gs); var; var = TREE_CHAIN(var))
   {
@@ -448,7 +448,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
     }
   }
   processGimpleSequence(gimple_bind_body(gs));
-  mKdmWriter.writeComment("================GIMPLE END BIND STATEMENT " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
+//  mKdmWriter.writeComment("================GIMPLE END BIND STATEMENT " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
 }
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStatement(gimple const gs)

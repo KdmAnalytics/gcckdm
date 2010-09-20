@@ -250,15 +250,16 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
     {
       std::cout << "GccKdm Version " << gcckdm::GccKdmVersion
                 << "\nOptions: \n"
-                << "\n  output                 Type of output: stderr, stdout, file (default: file)"
-                << "\n  output-dir             Place all generated file in this directory"
-                << "\n  bodies                 Generate MicroKDM for function bodies (default: true)"
-                << "\n  uids                   Generate UID's for Kdm Elements (default: true)"
-                << "\n  uid-graph              Generate UID graph in dot format (default: false)"
-                << "\n  assembler-output       Generate assembler output (default: false)"
-                << "\n  debug-contains-check   Enable double containment checking (default: false)"
-                << "\n  help                   Prints this message"
-                << "\n  version                Prints the GccKdm version"
+                << "\n  --output=[LOC]                        Type of output: stderr, stdout, file (default: file)"
+                << "\n  --output-dir=[DIR]                    Place all generated file in this directory"
+                << "\n  --output-extension=[EXT]              Add the given suffix to generated output (default: .tkdm)"
+                << "\n  --bodies=[true|false]                 Generate MicroKDM for function bodies (default: true)"
+                << "\n  --uids=[true|fasle]                   Generate UID's for Kdm Elements (default: true)"
+                << "\n  --uid-graph=[true|false]              Generate UID graph in dot format (default: false)"
+                << "\n  --assembler-output=[true|false]       Generate assembler output (default: false)"
+                << "\n  --debug-contains-check=[true|false]   Enable double containment checking (default: false)"
+                << "\n  --help                                Prints this message"
+                << "\n  --version                             Prints the GccKdm version"
                 << std::endl;
 
       exit(1);

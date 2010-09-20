@@ -223,6 +223,22 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
         settings.outputExtension = value;
       }
     }
+    else if (key == "output-gimple")
+    {
+      std::string value = argv[i].value;
+      if (value == "true" )
+      {
+        settings.outputGimple = true;
+      }
+      else if (value == "false")
+      {
+        settings.outputGimple = false;
+      }
+      else
+      {
+        warning(0, G_("plugin %qs: unrecognized value for %qs ignored"), plugin_info->base_name, key.c_str());
+      }
+    }
     else if (key == "output-file")
     {
       std::string value = argv[i].value;
@@ -253,6 +269,7 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
                 << "\n  --output=[LOC]                        Type of output: stderr, stdout, file (default: file)"
                 << "\n  --output-dir=[DIR]                    Place all generated file in this directory"
                 << "\n  --output-extension=[EXT]              Add the given suffix to generated output (default: .tkdm)"
+                << "\n  --output-gimple=[true|false]          Include gimple in generated KDM (default: false)"
                 << "\n  --bodies=[true|false]                 Generate MicroKDM for function bodies (default: true)"
                 << "\n  --uids=[true|fasle]                   Generate UID's for Kdm Elements (default: true)"
                 << "\n  --uid-graph=[true|false]              Generate UID graph in dot format (default: false)"

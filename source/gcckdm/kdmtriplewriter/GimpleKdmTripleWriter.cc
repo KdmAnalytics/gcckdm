@@ -86,10 +86,11 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 
-GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter) :
+GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter, KdmTripleWriter::Settings const & settings) :
       mKdmWriter(tripleWriter),
       mLabelFlag(false),
-      mRegisterVariableIndex(0)
+      mRegisterVariableIndex(0),
+      mSettings(settings)
 {
 }
 
@@ -176,7 +177,7 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
-// Handy debug hook code
+  //Handy debug hook code
 //  if (TREE_CODE(ast) == COMPONENT_REF)
 //  {
 //    int i  = 0;
@@ -301,6 +302,21 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
 
 void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
 {
+  if (mSettings.outputGimple)
+  {
+    //Write the gimple being represented by the KDM
+    char *buf;
+    FILE *stream;
+    size_t len;
+    stream = open_memstream (&buf, &len);
+    print_gimple_stmt(stream, gs, 0, 0);
+    std::string gimpleString = buf;
+    boost::trim(gimpleString);
+    mKdmWriter.writeComment(gimpleString);
+    fclose(stream);
+    free(buf);
+  }
+
   ActionDataPtr actionData;
   if (gs)
   {
@@ -1541,6 +1557,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   {
     //D.11082->level[1] = D.11083;
     selectData = writeKdmMemberSelect(NULL_TREE, op0, gimple_location(gs));
+    mKdmWriter.writeTripleContains(actionData->actionId(), selectData->actionId());
+  }
+  //(*D.20312)[0] = D.20316;
+  else if (TREE_CODE(op0) == INDIRECT_REF)
+  {
+    selectData = writeKdmPtr(NULL_TREE, op0, gimple_location(gs));
     mKdmWriter.writeTripleContains(actionData->actionId(), selectData->actionId());
   }
   else if (TREE_CODE(op0) == VAR_DECL)

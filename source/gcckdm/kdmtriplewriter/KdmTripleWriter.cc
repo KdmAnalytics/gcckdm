@@ -243,7 +243,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mLockUid(false)
 {
   //We pass this object to the gimple writer to allow it to use our triple writing powers
-  mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
+  mGimpleWriter.reset(new GimpleKdmTripleWriter(*this, settings));
 }
 
 
@@ -269,7 +269,7 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
   }
 
   //We pass this object to the gimple writer to allow it to use our triple writing powers
-  mGimpleWriter.reset(new GimpleKdmTripleWriter(*this));
+  mGimpleWriter.reset(new GimpleKdmTripleWriter(*this, settings));
 }
 
 KdmTripleWriter::~KdmTripleWriter()

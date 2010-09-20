@@ -82,6 +82,7 @@ public:
         outputExtension(".tkdm"),
         outputFile(""),
         outputDir(""),
+        outputGimple(false),
         preprocessed(false)
     {}
 
@@ -101,6 +102,8 @@ public:
     std::string outputFile;
     ///Output directory all output is placed here, if it's empty the output is place right beside the input file
     KdmTripleWriter::Path outputDir;
+    // If true include gimple in generated kdm as a comment
+    bool outputGimple;
     // If true source being compiled it assumed to be preprocessed
     bool preprocessed;
   };

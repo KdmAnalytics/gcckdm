@@ -28,6 +28,7 @@
 #include "gcckdm/GccKdmUtilities.hh"
 
 #include "gcckdm/kdmtriplewriter/KdmTripleWriterFwd.hh"
+#include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/ExpandedLocationFunctors.hh"
 #include "gcckdm/kdmtriplewriter/ActionData.hh"
 
@@ -50,7 +51,7 @@ public:
    *
    * @param kdmTripleWriter the triple writer to use to write KDM
    */
-  GimpleKdmTripleWriter(KdmTripleWriter & kdmTripleWriter);
+  GimpleKdmTripleWriter(KdmTripleWriter & kdmTripleWriter, KdmTripleWriter::Settings const & settings);
 
   /**
    * Destructor
@@ -309,6 +310,7 @@ private:
   location_t    mLastLocation;
   ActionDataPtr mFunctionEntryData;
 
+  KdmTripleWriter::Settings mSettings;
 };
 
 } // namespace kdmtriplewriter

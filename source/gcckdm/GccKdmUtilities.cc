@@ -203,7 +203,40 @@ void prettyPrintStringCst(std::string & nameStr, const char * str)
 }
 
 
+std::string getDomainString(tree domain)
+{
+  std::string domainStr = "[";
+  if (domain)
+  {
+    tree min = TYPE_MIN_VALUE (domain);
+    tree max = TYPE_MAX_VALUE (domain);
+    if (min && max && integer_zerop (min) && host_integerp (max, 0))
+    {
+      domainStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % static_cast<HOST_WIDE_INT>(TREE_INT_CST_LOW (max) + 1));
+    }
+    else
+    {
+      if (min)
+      {
+        domainStr += gcckdm::getAstNodeName(min);
+      }
+      domainStr += ":";
+      if (max)
+      {
+        domainStr += gcckdm::getAstNodeName(max);
+      }
+    }
+  }
+  else
+  {
+    domainStr += "<unknown>";
+  }
+  domainStr += "]";
+  return domainStr;
 }
+
+
+} // namespace
 
 namespace gcckdm
 {
@@ -478,6 +511,23 @@ std::string getAstNodeName(tree node)
               node)) + ">";
         }
         nameStr += getAstFunctionDeclarationName(node);
+        break;
+      }
+      case ARRAY_TYPE:
+      {
+        tree tmp;
+        //Retrieve the innermost component type
+        for (tmp = TREE_TYPE(node); TREE_CODE(tmp) == ARRAY_TYPE; tmp = TREE_TYPE(tmp))
+        {
+          //empty on purpose
+        }
+        nameStr += getAstNodeName(tmp);
+
+        //Print dimensions
+        for (tmp = node; TREE_CODE (tmp) == ARRAY_TYPE; tmp = TREE_TYPE (tmp))
+        {
+          nameStr += getDomainString(TYPE_DOMAIN (tmp));
+        }
         break;
       }
       case RECORD_TYPE:

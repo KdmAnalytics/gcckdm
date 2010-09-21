@@ -1994,17 +1994,16 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
     }
     else
     {
+      std::string domainStr;
       if (min)
       {
-        writeTriple(arrayKdmElementId, KdmPredicate::Size(), nodeName(min));
+        domainStr += nodeName(min);
       }
       if (max)
       {
-        //dump the node?
-        processAstNode(max);
-        std::string msg(str(boost::format("writeKdmArrayType unsupported size: %1%:%2%") % BOOST_CURRENT_FUNCTION % __LINE__ ));
-        writeUnsupportedComment(msg);
+        domainStr += ":" + nodeName(max);
       }
+      writeTriple(arrayKdmElementId, KdmPredicate::Size(), domainStr);
     }
   }
   else

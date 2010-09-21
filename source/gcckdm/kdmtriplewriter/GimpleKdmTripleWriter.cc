@@ -302,6 +302,8 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
 
 void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
 {
+
+#ifndef _WIN32
   if (mSettings.outputGimple)
   {
     //Write the gimple being represented by the KDM
@@ -316,6 +318,8 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     fclose(stream);
     free(buf);
   }
+#endif
+
 
   ActionDataPtr actionData;
   if (gs)

@@ -19,14 +19,17 @@
 // along with libGccKdm.  If not, see <http://www.gnu.org/licenses/>.
 //
 
+#include <stdio.h>
 #include <iostream>
+#include <boost/algorithm/string.hpp>
 #include "gcckdm/utilities/null_ptr.hpp"
 #include "gcckdm/utilities/unique_ptr.hpp"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/utilities/null_deleter.hpp"
 #include "boost/filesystem/operations.hpp"
 #include "gcckdm/GccKdmVersion.hh"
-#include <boost/algorithm/string.hpp>
+
+
 
 /**
  * Have to define this to ensure that GCC is able to play nice with our plugin
@@ -125,7 +128,6 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
         asm_file_name = HOST_BIT_BUCKET;
       }
 
-
       // Register callbacks.
       //
       registerCallbacks(plugin_info->base_name);
@@ -139,10 +141,30 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   return retValue;
 }
 
+
+void printHelpMessage(std::ostream & os)
+{
+  os  << "GccKdm Version " << gcckdm::GccKdmVersion
+      << "\nOptions: \n"
+      << "\n  --output=[LOC]                        Type of output: stderr, stdout, file (default: file)"
+      << "\n  --output-dir=[DIR]                    Place all generated file in this directory"
+      << "\n  --output-extension=[EXT]              Add the given suffix to generated output (default: .tkdm)"
+      << "\n  --output-gimple=[true|false]          Include gimple in generated KDM (default: false)"
+      << "\n  --bodies=[true|false]                 Generate MicroKDM for function bodies (default: true)"
+      << "\n  --uids=[true|fasle]                   Generate UID's for Kdm Elements (default: true)"
+      << "\n  --uid-graph=[true|false]              Generate UID graph in dot format (default: false)"
+      << "\n  --assembler-output=[true|false]       Generate assembler output (default: false)"
+      << "\n  --debug-contains-check=[true|false]   Enable double containment checking (default: false)"
+      << "\n  --help                                Prints this message"
+      << "\n  --version                             Prints the GccKdm version"
+      << std::endl;
+}
+
 void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTripleWriter::KdmSinkPtr & kdmSink, ktw::KdmTripleWriter::Settings & settings)
 {
   // Process any plugin arguments
   int argc = plugin_info->argc;
+
   struct plugin_argument *argv = plugin_info->argv;
 
   for (int i = 0; i < argc; ++i)
@@ -264,21 +286,7 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
     }
     else if (key == "help")
     {
-      std::cout << "GccKdm Version " << gcckdm::GccKdmVersion
-                << "\nOptions: \n"
-                << "\n  --output=[LOC]                        Type of output: stderr, stdout, file (default: file)"
-                << "\n  --output-dir=[DIR]                    Place all generated file in this directory"
-                << "\n  --output-extension=[EXT]              Add the given suffix to generated output (default: .tkdm)"
-                << "\n  --output-gimple=[true|false]          Include gimple in generated KDM (default: false)"
-                << "\n  --bodies=[true|false]                 Generate MicroKDM for function bodies (default: true)"
-                << "\n  --uids=[true|fasle]                   Generate UID's for Kdm Elements (default: true)"
-                << "\n  --uid-graph=[true|false]              Generate UID graph in dot format (default: false)"
-                << "\n  --assembler-output=[true|false]       Generate assembler output (default: false)"
-                << "\n  --debug-contains-check=[true|false]   Enable double containment checking (default: false)"
-                << "\n  --help                                Prints this message"
-                << "\n  --version                             Prints the GccKdm version"
-                << std::endl;
-
+      printHelpMessage(std::cout);
       exit(1);
     }
     else if (key == "version")

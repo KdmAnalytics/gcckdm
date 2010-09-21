@@ -827,11 +827,17 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 
   //optional write
   // a = foo(b);
+  // *lp = foo(b);
   tree lhs = gimple_call_lhs(gs);
   if (lhs)
   {
-    long lhsId(getReferenceId(lhs));
-    writeKdmActionRelation(KdmType::Writes(), actionId, RelationTarget(lhs, lhsId));
+    ActionDataPtr lhsData = getRhsReferenceId(lhs);
+    if (lhsData->hasActionId())
+    {
+      mKdmWriter.writeTripleContains(actionId, lhsData->actionId());
+      writeKdmFlow(actionId, lhsData->actionId());
+    }
+    writeKdmActionRelation(KdmType::Writes(), actionId, RelationTarget(lhs, lhsData->outputId()));
   }
 
   //Contain this Call within a block unit

@@ -1631,34 +1631,49 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
   Path normalizedContextDir = contextDir;
   normalizedContextDir.normalize();
   FileMap::iterator i = fMap.find(normalizedContextDir);
+  //If we haven't encountered this path before...
   if (i == fMap.end())
   {
-    Path builtPath;
-    for (Path::iterator pIter = normalizedContextDir.begin(); pIter != normalizedContextDir.end(); ++pIter)
+    //if we don't have a path to iterate through... the context is the root
+    if (!normalizedContextDir.empty())
     {
-      builtPath = builtPath / *pIter;
-      std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId+1));
-      if (result.second)
+      // Iterate through the path from left to right building the path to the contextDir on piece at a
+      // time.  Each piece is checked to see if it has already been encountered if it hasn't it is
+      // written out to file and added to the appropriate parent then added to the cached paths.
+      Path builtPath;
+      for (Path::iterator pIter = normalizedContextDir.begin(); pIter != normalizedContextDir.end(); ++pIter)
       {
-        contextId = getNextElementId();
-        writeTripleKdmType(contextId,type);
-        writeTripleLinkId(contextId, *pIter);
-        writeTripleName(contextId, *pIter);
-        if (parentContextId == invalidId)
+        builtPath = builtPath / *pIter;
+        std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId+1));
+        if (result.second)
         {
-          writeTripleContains(rootId, contextId);
+          contextId = getNextElementId();
+          writeTripleKdmType(contextId,type);
+          writeTripleLinkId(contextId, *pIter);
+          writeTripleName(contextId, *pIter);
+          //We have encountered a completely new path....add to the root
+          if (parentContextId == invalidId)
+          {
+            writeTripleContains(rootId, contextId);
+          }
+          //Add to the found parent
+          else
+          {
+            writeTripleContains(parentContextId, contextId);
+          }
+          parentContextId = contextId;
+          fMap.insert(std::make_pair(builtPath, contextId));
         }
         else
         {
-          writeTripleContains(parentContextId, contextId);
+          parentContextId = result.first->second;
         }
-        parentContextId = contextId;
-        fMap.insert(std::make_pair(builtPath, contextId));
       }
-      else
-      {
-        parentContextId = result.first->second;
-      }
+    }
+    //We don't have a root path
+    else
+    {
+      contextId = rootId;
     }
   }
   else

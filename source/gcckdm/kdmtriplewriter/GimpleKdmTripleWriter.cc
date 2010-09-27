@@ -1391,6 +1391,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrReplace(g
     mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
   }
 
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrReplace());
   writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->outputId()));
   writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), RelationTarget(lhs, lhsId));

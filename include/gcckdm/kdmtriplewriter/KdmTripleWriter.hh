@@ -83,7 +83,8 @@ public:
         outputFile(""),
         outputDir(""),
         outputGimple(false),
-        preprocessed(false)
+        preprocessed(false),
+        outputCompletePath(false)
     {}
 
     /// If true function body information written to output
@@ -106,6 +107,9 @@ public:
     bool outputGimple;
     // If true source being compiled it assumed to be preprocessed
     bool preprocessed;
+    // If true attempts to use complete path when dealing with file locations
+    bool outputCompletePath;
+
   };
 
   /**

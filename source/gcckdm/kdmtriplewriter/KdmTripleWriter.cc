@@ -43,6 +43,8 @@
 
 namespace
 {
+  namespace ktw = gcckdm::kdmtriplewriter;
+
 /// Prefix for all KDM triple format comments
 std::string const commentPrefix("# ");
 
@@ -102,6 +104,17 @@ void fixPathString(std::string & pathStr)
 
   //Correct windows paths so boost::filesystem doesn't bork
   boost::replace_all(pathStr, "\\", "/");
+}
+
+ktw::KdmTripleWriter::Path checkPathType(ktw::KdmTripleWriter::Settings const & settings, ktw::KdmTripleWriter::Path const & p)
+{
+  ktw::KdmTripleWriter::Path tmp = p;
+  if (settings.outputCompletePath)
+  {
+    tmp = boost::filesystem::complete(p);
+    tmp.normalize();
+  }
+  return boost::filesystem::exists(tmp) ? tmp : p;
 }
 
 
@@ -1588,12 +1601,14 @@ void KdmTripleWriter::writeTripleExport(long const subject, std::string const & 
 
 KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path const & file)
 {
-  Path sourceFile(file);
+  Path sourceFile = checkPathType(mSettings, file);
   long id = getNextElementId();
   writeTripleKdmType(id, KdmType::SourceFile());
-  writeTripleName(id, file.filename());
+  writeTripleName(id, sourceFile.filename());
   writeTriple(id, KdmPredicate::Path(), sourceFile.string());
   writeTripleLinkId(id, sourceFile.string());
+
+
   writeTripleContains(getDirectoryId(sourceFile.parent_path()), id, false);
 
   //Keep track of all files inserted into the inventory model
@@ -1604,13 +1619,12 @@ KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path cons
 
 void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
 {
+  Path tmp = checkPathType(mSettings, file);
   writeTripleKdmType(KdmElementId_CompilationUnit, KdmType::CompilationUnit());
-  writeTripleName(KdmElementId_CompilationUnit, file.filename());
-  writeTripleLinkId(KdmElementId_CompilationUnit, file.string());
-
-  writeTripleContains(getPackageId(file.parent_path()), KdmElementId_CompilationUnit);
+  writeTripleName(KdmElementId_CompilationUnit, tmp.filename());
+  writeTripleLinkId(KdmElementId_CompilationUnit, tmp.string());
+  writeTripleContains(getPackageId(tmp.parent_path()), KdmElementId_CompilationUnit);
 }
-
 
 
 long KdmTripleWriter::getDirectoryId(Path const & directoryDir)
@@ -2264,7 +2278,7 @@ void KdmTripleWriter::writeKdmSharedUnit(tree const file)
 
 void KdmTripleWriter::writeKdmSharedUnit(Path const & file, const long id)
 {
-  Path compFile = file;
+  Path compFile = checkPathType(mSettings, file);
   writeTripleKdmType(id, KdmType::SharedUnit());
   writeTripleName(id, compFile.filename());
   writeTripleLinkId(id, compFile.string());
@@ -2285,6 +2299,8 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
   std::string fname(eloc.file);
   fixPathString(fname);
   Path sourceFile(fname);
+
+  sourceFile = checkPathType(mSettings, sourceFile);
 
   FileMap::iterator i = mInventoryMap.find(sourceFile);
   if (i == mInventoryMap.end())

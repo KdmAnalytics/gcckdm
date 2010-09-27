@@ -149,6 +149,7 @@ void printHelpMessage(std::ostream & os)
       << "\n  --output-dir=[DIR]                    Place all generated file in this directory"
       << "\n  --output-extension=[EXT]              Add the given suffix to generated output (default: .tkdm)"
       << "\n  --output-gimple=[true|false]          Include gimple in generated KDM (default: false)"
+      << "\n  --output-complete-path=[true|false]   Attempt to complete all paths to source files"
       << "\n  --bodies=[true|false]                 Generate MicroKDM for function bodies (default: true)"
       << "\n  --uids=[true|fasle]                   Generate UID's for Kdm Elements (default: true)"
       << "\n  --uid-graph=[true|false]              Generate UID graph in dot format (default: false)"
@@ -282,6 +283,23 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
         fs::create_directory(outputDir);
       }
       settings.outputDir = outputDir;
+    }
+    else if (key == "output-complete-path")
+    {
+      std::string value(argv[i].value);
+      if (value == "true")
+      {
+        settings.outputCompletePath = true;
+      }
+      else if (value == "false")
+      {
+        settings.outputCompletePath = false;
+      }
+      else
+      {
+        warning(0, G_("plugin %qs: unrecognized value for %qs ignored"), plugin_info->base_name, key.c_str());
+        continue;
+      }
     }
     else if (key == "help")
     {

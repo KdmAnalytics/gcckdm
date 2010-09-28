@@ -740,7 +740,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     //regular call
     mKdmWriter.writeTripleKind(actionId, KdmKind::Call());
 
-    long relId = mKdmWriter.getNextElementId();
+    long relId = -1;
     if (DECL_EXTERNAL(t))
     {
       expanded_location e = expand_location(gcckdm::locationOf(t));
@@ -748,10 +748,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 
       if (DECL_BUILT_IN(t) && std::string(e.file) == "<built-in>")
       {
-        mKdmWriter.writeKdmBuiltinStereotype(relId);
+        mKdmWriter.writeKdmBuiltinStereotype(actionId);
       }
       else
       {
+        relId = mKdmWriter.getNextElementId();
         mKdmWriter.writeTripleKdmType(relId, KdmType::CompliesTo());
         mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionId);
         mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
@@ -760,6 +761,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     }
     else
     {
+      relId = mKdmWriter.getNextElementId();
       mKdmWriter.writeTripleKdmType(relId, KdmType::Calls());
       mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionId);
       mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);

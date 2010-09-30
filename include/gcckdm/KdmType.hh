@@ -89,6 +89,9 @@ private:
     KdmType_GuardedFlow,
     KdmType_Calls,
     KdmType_CompliesTo,
+    KdmType_TryUnit,
+    KdmType_CatchUnit,
+    KdmType_FinallyUnit,
   };
 
 public:
@@ -152,6 +155,9 @@ public:
   static const KdmType GuardedFlow()      { return KdmType(KdmType_GuardedFlow, "action/GuardedFlow");}
   static const KdmType Calls()            { return KdmType(KdmType_Calls, "action/Calls");  }
   static const KdmType CompliesTo()       { return KdmType(KdmType_CompliesTo, "action/CompliesTo");  }
+  static const KdmType TryUnit()          { return KdmType(KdmType_TryUnit, "action/TryUnit"); }
+  static const KdmType CatchUnit()        { return KdmType(KdmType_CatchUnit, "action/CatchUnit"); }
+  static const KdmType FinallyUnit()      { return KdmType(KdmType_FinallyUnit, "action/FinallyUnit"); }
   //static const KdmType () { return KdmType(KdmType_, "action/");}
   //static const KdmType () { return KdmType(KdmType_, "action/");}
 

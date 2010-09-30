@@ -185,6 +185,7 @@ private:
   ActionDataPtr processGimpleCallStatement(gimple const gs);
   ActionDataPtr processGimpleGotoStatement(gimple const gs);
   ActionDataPtr processGimpleSwitchStatement(gimple const gs);
+  ActionDataPtr processGimpleTryStatement(gimple const gs);
 
   ActionDataPtr processGimpleUnaryAssignStatement(gimple const gs);
   ActionDataPtr processGimpleBinaryAssignStatement(gimple const gs);
@@ -273,6 +274,7 @@ private:
   long getReferenceId(tree const ast);
   ActionDataPtr getRhsReferenceId(tree const rhs);
   tree resolveCall(tree const tree);
+//  tree resolveCall(tree const tree);
 
   ActionDataPtr updateFlow(ActionDataPtr mainFlow, ActionDataPtr update);
   ActionDataPtr updateActionFlow(ActionDataPtr actionFlow,long const actionId);
@@ -311,6 +313,8 @@ private:
   ActionDataPtr mFunctionEntryData;
 
   KdmTripleWriter::Settings mSettings;
+
+  long mBlockContextId;
 };
 
 } // namespace kdmtriplewriter

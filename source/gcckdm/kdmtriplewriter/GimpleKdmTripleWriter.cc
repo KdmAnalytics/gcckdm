@@ -30,6 +30,7 @@
 
 namespace
 {
+long const invalidId = -1;
 
 //Linkage constants
 std::string const linkCallsPrefix("c.calls/");
@@ -87,16 +88,24 @@ namespace kdmtriplewriter
 {
 
 GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter, KdmTripleWriter::Settings const & settings) :
+      mCurrentFunctionDeclarationNode(NULL_TREE),
+      mCurrentCallableUnitId(ActionData::InvalidId),
       mKdmWriter(tripleWriter),
       mLabelFlag(false),
+      mLabelQueue(),
+      mLabelMap(),
       mRegisterVariableIndex(0),
-      mSettings(settings)
+      mLastData(),
+      mLastLocation(UNKNOWN_LOCATION),
+      mFunctionEntryData(),
+      mSettings(settings),
+      mBlockContextId(ActionData::InvalidId)
 {
 }
 
 GimpleKdmTripleWriter::~GimpleKdmTripleWriter()
 {
-
+  //Nothing to see here
 }
 
 void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDeclNode)
@@ -120,6 +129,7 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
 
     mCurrentFunctionDeclarationNode = functionDeclNode;
     mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
+    mBlockContextId = mCurrentCallableUnitId;
     //
     mFunctionEntryData.reset();
     mLastData.reset();
@@ -136,43 +146,60 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   }
 }
 
-
-
+/**
+ * Attempt to resolve the call... most of the time it's a
+ * functionDecl and we do nothing, if it's a address expression
+ * we dereference till we find a var_decl, parm_decl or function_decl
+ *
+ * @param node the return value from call to gimple_fn_call
+ * @return a VAR_DECL, PARM_DECL or FUNCTION_DECL
+ */
 tree GimpleKdmTripleWriter::resolveCall(tree const node)
 {
   tree op0 = node;
-  tree_code code = TREE_CODE (op0);
-  switch (code)
+
+  if (TREE_CODE(op0) == NON_LVALUE_EXPR)
   {
-    case VAR_DECL:
-      //Fall Through
-    case PARM_DECL:
-      //Fall Through
-    case FUNCTION_DECL:
+    op0 = TREE_OPERAND(op0, 0);
+  }
+
+  bool flag = true;
+  while (flag)
+  {
+    switch (TREE_CODE(op0))
     {
-      //Do nothing
-      break;
+      case VAR_DECL:
+        //Fall Through
+      case PARM_DECL:
+        //Fall Through
+      case FUNCTION_DECL:
+      {
+        if (TREE_CODE (node) == NOP_EXPR)
+        {
+          op0 = TREE_OPERAND (op0, 0);
+        }
+        flag = false;
+        break;
+      }
+      case INDIRECT_REF:
+        //Fall Through
+      case NOP_EXPR:
+        //Fall Through
+      case ADDR_EXPR:
+      {
+        op0 = TREE_OPERAND(op0, 0);
+        break;
+      }
+      default:
+      {
+        std::string msg(boost::str(boost::format("GIMPLE call statement (%1%) in %2%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION));
+        mKdmWriter.writeUnsupportedComment(msg);
+      }
     }
-    case INDIRECT_REF:
-      //Fall Through
-    case NOP_EXPR:
-      //Fall Through
-    case ADDR_EXPR:
-    {
-      //Recursively call ourselves
-      op0 = TREE_OPERAND(op0, 0);
-      resolveCall(op0);
-      break;
-    }
-    default:
-    {
-      std::string msg(boost::str(boost::format("GIMPLE call statement (%1%) in %2%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION));
-      mKdmWriter.writeUnsupportedComment(msg);
-    }
-    break;
   }
   return op0;
 }
+
 
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
@@ -292,7 +319,8 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
     for (; !mLabelQueue.empty(); mLabelQueue.pop())
     {
       mKdmWriter.writeTripleContains(blockId, mLabelQueue.front()->actionId());
-      writeKdmFlow(mLabelQueue.front()->actionId(), mLastData->actionId());
+      mLastData = mLabelQueue.front();
+      //writeKdmFlow(mLabelQueue.front()->actionId(), mLastData->actionId());
     }
     mLabelFlag = !mLabelFlag;
   }
@@ -376,6 +404,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         //This statement doesn't appear to have any relevance to KDM
         break;
       }
+      case GIMPLE_TRY:
+      {
+        processGimpleTryStatement(gs);
+        break;
+      }
       default:
       {
         std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))] % BOOST_CURRENT_FUNCTION));
@@ -387,7 +420,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     //If this is the first Action element in the callable unit write an EntryFlow
     if (actionData and not mFunctionEntryData)
     {
-      writeKdmActionRelation(KdmType::EntryFlow(), mCurrentCallableUnitId, actionData->startActionId());
+      writeKdmActionRelation(KdmType::EntryFlow(), mBlockContextId, actionData->startActionId());
       mFunctionEntryData = actionData;
     }
 
@@ -721,15 +754,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   ActionDataPtr actionData(new ActionData(actionId));
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
 
-  tree op0 = gimple_call_fn(gs);
-  if (TREE_CODE (op0) == NON_LVALUE_EXPR)
-  {
-    op0 = TREE_OPERAND (op0, 0);
-  }
-  tree t(resolveCall(op0));
-  long callableId(getReferenceId(t));
+  //op0 can be a VAR_DECL, PARM_DECL or FUNCTION_DECL
+  tree op0 = resolveCall(gimple_call_fn(gs));
+  long callableId(getReferenceId(op0));
 
-  if (TREE_CODE(TREE_TYPE(t)) == POINTER_TYPE)
+  if (TREE_CODE(TREE_TYPE(op0)) == POINTER_TYPE)
   {
     //it's a function pointer call
     mKdmWriter.writeTripleKind(actionId, KdmKind::PtrCall());
@@ -741,12 +770,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     mKdmWriter.writeTripleKind(actionId, KdmKind::Call());
 
     long relId = -1;
-    if (DECL_EXTERNAL(t))
+    if (DECL_EXTERNAL(op0))
     {
-      expanded_location e = expand_location(gcckdm::locationOf(t));
-      mKdmWriter.writeTriple(actionId, KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getAstNodeName(t));
+      expanded_location e = expand_location(gcckdm::locationOf(op0));
+      mKdmWriter.writeTriple(actionId, KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getAstNodeName(op0));
 
-      if (DECL_BUILT_IN(t) && std::string(e.file) == "<built-in>")
+      if (DECL_BUILT_IN(op0) && std::string(e.file) == "<built-in>")
       {
         mKdmWriter.writeKdmBuiltinStereotype(actionId);
       }
@@ -767,7 +796,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
       mKdmWriter.writeTripleContains(actionId, relId);
     }
-}
+  }
 
   //Read each parameter
   if (gimple_call_num_args(gs) > 0)
@@ -846,9 +875,16 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     writeKdmActionRelation(KdmType::Writes(), actionId, RelationTarget(lhs, lhsData->outputId()));
   }
 
-  //Contain this Call within a block unit
-  long blockId = getBlockReferenceId(gimple_location(gs));
-  mKdmWriter.writeTripleContains(blockId, actionId);
+  if (TREE_CODE(op0) == FUNCTION_DECL && DECL_BUILT_IN(op0) && gimple_location(gs) == UNKNOWN_LOCATION)
+  {
+    mKdmWriter.writeTripleContains(mCurrentCallableUnitId, actionId);
+  }
+  else
+  {
+    //Contain this Call within a block unit
+    long blockId = getBlockReferenceId(gimple_location(gs));
+    mKdmWriter.writeTripleContains(blockId, actionId);
+  }
 
   return actionData;
 }
@@ -1152,6 +1188,69 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleTernary
   return ActionDataPtr();
 }
 
+/**
+ * KDM supports Try/Catch/Finally with containment rather than flows so we have to do
+ * facy settings of state variables to ensure proper handling.
+ */
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
+{
+  ActionDataPtr tryData(new ActionData(mKdmWriter.getNextElementId()));
+
+  //If there are statements before the "TryUnit" we have to hook up the flow
+  // and reset the context by clearing the mLastData
+  if (mLastData)
+  {
+    writeKdmFlow(mLastData->actionId(),tryData->actionId());
+  }
+  mLastData = tryData;
+
+  mKdmWriter.writeTripleKdmType(tryData->actionId(), KdmType::TryUnit());
+
+  //Block units have to be contained within the Try so we have set the context to the Try.  When the
+  //try is finished we have to reset the context to its old value so we remember it here while
+  //processing the TryUnit
+  long oldContextId = mBlockContextId;
+  mBlockContextId = tryData->actionId();
+
+  //Ensure that an EntryFlow is written from the TryUnit to the first action element by clearing entry data
+  //mFunctionEntryData.reset();
+
+  // process try - gimple_try_eval (gs)
+  processGimpleSequence(gimple_try_eval (gs));
+
+  //We contain the tryUnit in the oldContext ... most of the time this is just the callableUnitId but
+  //just in case GCC throws us a nested try we use oldContextId.  We would contain TryUnits in a block
+  //unit but the gimple doesn't seem to give us a location for try statements so we dump them in the
+  //oldContext
+  mKdmWriter.writeTripleContains(oldContextId, tryData->actionId());
+
+
+  ActionDataPtr finallyData(new ActionData(mKdmWriter.getNextElementId()));
+  mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::FinallyUnit());
+
+  //We flow from the last ActionElement in the tryUnit to the FinallyUnit
+  writeKdmFlow(mLastData->actionId(), finallyData->actionId());
+
+  //Set out context to the FinallyUnit
+  mBlockContextId = finallyData->actionId();
+
+  //Ensure that an EntryFlow is written from the TryUnit to the first action element by clearing entry data
+  //mFunctionEntryData.reset();
+
+  mLastData = finallyData;
+
+  //Process finally - gimple_try_cleanup (gs)
+  processGimpleSequence(gimple_try_cleanup (gs));
+
+  //We contain the tryUnit in the oldContext ... most of the time this is just the callableUnitId but
+  //just in case GCC throws us a nested try we use oldContextId
+  mKdmWriter.writeTripleContains(oldContextId, finallyData->actionId());
+
+  //Restore old context
+  mBlockContextId = oldContextId;
+
+  return finallyData;
+}
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchStatement(gimple const gs)
 {
@@ -1237,7 +1336,7 @@ long GimpleKdmTripleWriter::getBlockReferenceId(location_t const loc)
     mBlockUnitMap.insert(std::make_pair(xloc, blockId));
     mKdmWriter.writeTripleKdmType(blockId, KdmType::BlockUnit());
     mKdmWriter.writeKdmSourceRef(blockId, xloc);
-    mKdmWriter.writeTripleContains(mCurrentCallableUnitId, blockId);
+    mKdmWriter.writeTripleContains(mBlockContextId, blockId);
   }
   else
   {
@@ -1540,6 +1639,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   if (rhsData->hasActionId())
   {
     actionData->startActionId(rhsData->actionId());
+    mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
   }
   lastId = rhsData->outputId();
 

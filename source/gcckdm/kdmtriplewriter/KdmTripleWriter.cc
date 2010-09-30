@@ -452,7 +452,6 @@ void KdmTripleWriter::processAstNode(tree const ast)
 {
   try
   {
-
     //Ensure we haven't processed this node node before
     if (mProcessedNodes.find(ast) == mProcessedNodes.end())
     {

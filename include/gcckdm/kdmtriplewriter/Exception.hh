@@ -31,7 +31,7 @@ namespace kdmtriplewriter {
 /**
  * Generic Base KdmTripleWriter Exception
  */
-class KdmTripleWriterException : public boost::exception, public std::exception
+class KdmTripleWriterException : public virtual boost::exception, public virtual std::exception
 {
 public:
   KdmTripleWriterException() : mWhat("KdmTripleWriter has thrown an exception") {}
@@ -46,7 +46,7 @@ private:
  * Throw this when a null location in encountered and you cannot
  * use an invalid return value
  */
-class NullLocationException : public KdmTripleWriterException
+class NullLocationException : public virtual KdmTripleWriterException
 {
 public:
   NullLocationException() : mWhat("Location was null") {}
@@ -60,7 +60,7 @@ private:
  * Throw this when a null tree node was encountered and you cannot
  * use an invalid return value
  */
-class NullAstNodeException : public KdmTripleWriterException
+class NullAstNodeException : public virtual KdmTripleWriterException
 {
 public:
   NullAstNodeException() : mWhat("AST Node was null") {}
@@ -74,7 +74,7 @@ private:
 /**
  * Throw this when a function is passed an invalid parameter
  */
-class InvalidParameterException : public KdmTripleWriterException
+class InvalidParameterException : public virtual KdmTripleWriterException
 {
 public:
   InvalidParameterException(std::string const & msg) : mWhat(msg) {}
@@ -87,7 +87,7 @@ private:
 /**
  * Throw this unable to locate parent context
  */
-class InvalidPathContextException : public KdmTripleWriterException
+class InvalidPathContextException : public virtual KdmTripleWriterException
 {
 public:
   InvalidPathContextException(std::string const & msg) : mWhat(msg) {}

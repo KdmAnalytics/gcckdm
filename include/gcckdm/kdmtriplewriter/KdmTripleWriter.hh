@@ -298,6 +298,11 @@ public:
   long writeKdmSourceRef(long id, expanded_location const & xloc);
 
 
+  /**
+   * Add the built-in stereotype to the given subject id
+   *
+   * @param the id of an element to assign the "built-in" stereotype
+   */
   void writeKdmBuiltinStereotype(long const id);
 
   /**
@@ -409,6 +414,9 @@ private:
   long getSharedUnitReferenceId(tree const identifier);
 
 
+  /**
+   * Enum of all constant subject id's
+   */
   enum ReservedElementId
   {
     KdmElementId_Segment = 0,
@@ -445,20 +453,58 @@ private:
    * Process the AST Constructor node
    */
   void processAstDeclarationNode(tree const decl);
-  void processAstFunctionDeclarationNode(tree const functionDecl);
-  void processAstFieldDeclarationNode(tree const fieldDecl);
+
   /**
-   * Process the namespace
+   * Convert the given FUNCTION_DECL node to the equivalent KDM
+   * CallableUnit.  Equvalent to calling writeKdmCallableUnit
+   *
+   * @see writeKdmCallableUnit
+   * @param functionDecl a FUNCTION_DECL to convert to CallableUnit
    */
-  void processAstNamespaceNode(tree const val);
-
-  void processAstTypeNode(tree const decl);
-
-
-  void processAstRecordTypeNode(tree const typeNode);
+  void processAstFunctionDeclarationNode(tree const functionDecl);
 
   /**
-   * Process a template declaration. Dump all specializations and instantiations.
+   * Convert a FIELD_DECL into an KDM ItemUnit and write the result
+   * to the configured kdmSink.  If the source being compiled is
+   * C++ the FIELD_DECL can also be converted to a Kdm MemberUnit
+   *
+   * @param fieldDecl ast node to output as to ItemUnit or MemberUnit
+   */
+  void processAstFieldDeclarationNode(tree const fieldDecl);
+
+  /**
+   * Iterates through all nodes contained within the namespace and
+   * processes them by passing them to processAstNode
+   *
+   * @see processAstNode
+   * @param namespaceNode a namespace AST node
+   */
+  void processAstNamespaceNode(tree const namespaceNode);
+
+  /**
+   * Determines the actual type of the given typeNode and writes the
+   * KDM representation of the type to the configured kdmSink using
+   * one the writeAst*TypeNode methods
+   *
+   * @param typeNode the AST type node to convert to KDM
+   */
+  void processAstTypeNode(tree const typeNode);
+
+
+  /**
+   * Determines if the given recordTypeNode is suitable for KDM representation
+   * Some recordTypeNodes are not required to be represented in KDM
+   *
+   * @param recordTypeNode
+   */
+  void processAstRecordTypeNode(tree const recordTypeNode);
+
+  /**
+   * Iterates through all template specializations and instantiations
+   * and processes all the AST node using processAstNode
+   *
+   * @see processAstNode
+   * @param templateDecl the template declaration
    */
   void processAstTemplateDecl(tree const templateDecl);
 
@@ -573,10 +619,18 @@ private:
   long getDirectoryId(Path const & path);
   long getLocationContextId(Path const & path, long const rootId, FileMap & fMap, KdmType const & type);
 
+  /**
+   * Allow or prevent the increase in the UID when a contains relationship is called.
+   * Used to set everything below the CallableUnit to have the same UIDs
+   */
   void lockUid(bool val);
+
+  /**
+   * Returns true if the the current value of the UID is locked otherwise it returns true
+   *
+   * @return state of the UID lock
+   */
   bool lockUid() const;
-
-
 
   /**
    * Adds nodes for the given id's if they don't already exist
@@ -588,7 +642,7 @@ private:
 
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
   long mKdmElementId; /// The current element id, incremented for each new element
-  GimpleWriter mGimpleWriter;
+  GimpleWriter mGimpleWriter; /// The gimple writer
   TreeMap mReferencedNodes;
   TreeMap mReferencedSharedUnits;
 

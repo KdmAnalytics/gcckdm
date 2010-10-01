@@ -1202,6 +1202,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleTryStat
   {
     writeKdmFlow(mLastData->actionId(),tryData->actionId());
   }
+
+  //Simulate tryUnit being the last element we have processed
   mLastData = tryData;
 
   mKdmWriter.writeTripleKdmType(tryData->actionId(), KdmType::TryUnit());
@@ -1211,9 +1213,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleTryStat
   //processing the TryUnit
   long oldContextId = mBlockContextId;
   mBlockContextId = tryData->actionId();
-
-  //Ensure that an EntryFlow is written from the TryUnit to the first action element by clearing entry data
-  //mFunctionEntryData.reset();
 
   // process try - gimple_try_eval (gs)
   processGimpleSequence(gimple_try_eval (gs));
@@ -1234,9 +1233,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleTryStat
   //Set out context to the FinallyUnit
   mBlockContextId = finallyData->actionId();
 
-  //Ensure that an EntryFlow is written from the TryUnit to the first action element by clearing entry data
-  //mFunctionEntryData.reset();
-
+  //Simulate finalUnit being the last unit we processed
   mLastData = finallyData;
 
   //Process finally - gimple_try_cleanup (gs)

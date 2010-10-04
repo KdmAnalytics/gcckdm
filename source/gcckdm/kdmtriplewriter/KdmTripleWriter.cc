@@ -112,8 +112,8 @@ ktw::KdmTripleWriter::Path checkPathType(ktw::KdmTripleWriter::Settings const & 
   if (settings.outputCompletePath)
   {
     tmp = boost::filesystem::complete(p);
-    tmp.normalize();
   }
+  tmp.normalize();
   return boost::filesystem::exists(tmp) ? tmp : p;
 }
 

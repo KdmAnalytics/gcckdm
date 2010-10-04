@@ -179,13 +179,13 @@ private:
   ActionDataPtr processGimpleAssignStatement(gimple const gs);
 
 
-  ActionDataPtr processGimpleReturnStatement(gimple const gs);
+  void processGimpleReturnStatement(gimple const gs);
   ActionDataPtr processGimpleConditionalStatement(gimple const gs);
-  ActionDataPtr processGimpleLabelStatement(gimple const gs);
+  void processGimpleLabelStatement(gimple const gs);
   ActionDataPtr processGimpleCallStatement(gimple const gs);
-  ActionDataPtr processGimpleGotoStatement(gimple const gs);
+  void processGimpleGotoStatement(gimple const gs);
   ActionDataPtr processGimpleSwitchStatement(gimple const gs);
-  ActionDataPtr processGimpleTryStatement(gimple const gs);
+  void processGimpleTryStatement(gimple const gs);
 
   ActionDataPtr processGimpleUnaryAssignStatement(gimple const gs);
   ActionDataPtr processGimpleBinaryAssignStatement(gimple const gs);
@@ -281,7 +281,9 @@ private:
 
   void configureDataAndFlow(ActionDataPtr actionData, ActionDataPtr op0Data, ActionDataPtr op1Data);
 
+  void writeEntryFlow(ActionDataPtr actionData);
 
+  void writeLabelQueue(ActionDataPtr actionData, location_t const loc);
 
 
   /// The current AST node containing the gimple statements being processed
@@ -310,6 +312,7 @@ private:
 
   ActionDataPtr mLastData;
   location_t    mLastLocation;
+  enum gimple_code mLastGimpleCode;
   ActionDataPtr mFunctionEntryData;
 
   KdmTripleWriter::Settings mSettings;

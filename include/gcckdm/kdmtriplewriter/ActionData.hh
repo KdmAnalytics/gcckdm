@@ -28,13 +28,23 @@ class ActionData
 public:
   static const long InvalidId = -1;
 
-  ActionData() : mActionId(InvalidId), mStartActionId(InvalidId), mOutputId(InvalidId){}
+  ActionData() :
+    mActionId(InvalidId),
+    mStartActionId(InvalidId),
+    mOutputId(InvalidId),
+    mGotoAction(false)
+  {}
 
   ActionData(long actId) : mActionId(actId), mStartActionId(actId), mOutputId(InvalidId){}
 
   long actionId() const { return mActionId; }
   void actionId(long id) { mActionId = id; }
 
+  bool gotoAction() const { return mGotoAction; }
+  void gotoAction(bool gotoAction)
+  {
+    mGotoAction = gotoAction;
+  }
   /**
    * Returns the start action id if explicity set otherwise returns the actionid
    */
@@ -69,6 +79,7 @@ private:
   long mActionId;
   long mStartActionId;
   long mOutputId;
+  bool mGotoAction;
 };
 
 #endif /* GCCKDM_KDMTRIPLEWRITER_ACTIONDATA_HH_ */

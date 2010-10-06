@@ -435,7 +435,8 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
       case GIMPLE_SWITCH:
       {
-        actionData = processGimpleSwitchStatement(gs);
+//        actionData = processGimpleSwitchStatement(gs);
+        processGimpleSwitchStatement(gs);
         break;
       }
       case GIMPLE_PREDICT:
@@ -1286,6 +1287,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
 {
   long actionId = mKdmWriter.getNextElementId();
   ActionDataPtr actionData(new ActionData(actionId));
+
+  writeEntryFlow(actionData);
+  mLastData.reset();
+  writeLabelQueue(actionData, gimple_location(gs));
+
 
   mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
   //switch variable

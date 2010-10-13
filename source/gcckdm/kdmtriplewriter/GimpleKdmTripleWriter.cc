@@ -196,6 +196,7 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
         //Fall Through
       case OBJ_TYPE_REF:
       {
+        flag = false;
         break;
       }
       default:

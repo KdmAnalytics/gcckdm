@@ -312,7 +312,6 @@ private:
 
   ActionDataPtr mLastData;
   location_t    mLastLocation;
-  enum gimple_code mLastGimpleCode;
   ActionDataPtr mFunctionEntryData;
 
   KdmTripleWriter::Settings mSettings;

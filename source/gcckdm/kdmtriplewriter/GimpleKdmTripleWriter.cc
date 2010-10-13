@@ -32,7 +32,7 @@ namespace
 {
 long const invalidId = -1;
 
-//Linkage constants
+//Linkage string constants
 std::string const linkCallsPrefix("c.calls/");
 std::string const linkAddresssPrefix("c.addresses/");
 std::string const linkReadsPrefix("c.reads/");
@@ -412,8 +412,6 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
       case GIMPLE_COND:
       {
-//        actionData = processGimpleConditionalStatement(gs);
-
         processGimpleConditionalStatement(gs);
         break;
       }
@@ -429,13 +427,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       }
       case GIMPLE_RETURN:
       {
-//        actionData = processGimpleReturnStatement(gs);
         processGimpleReturnStatement(gs);
         break;
       }
       case GIMPLE_SWITCH:
       {
-//        actionData = processGimpleSwitchStatement(gs);
         processGimpleSwitchStatement(gs);
         break;
       }
@@ -460,19 +456,6 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
     if (actionData)
     {
       writeEntryFlow(actionData);
-//
-//      //If this is the first Action element in the callable unit write an EntryFlow
-//      if (not mFunctionEntryData)
-//      {
-//        writeKdmActionRelation(KdmType::EntryFlow(), mBlockContextId, actionData->startActionId());
-//        mFunctionEntryData = actionData;
-//      }
-//
-//      //After the first action element we need to hook up the flows unless we have a return element
-////     if (mLastData and gimple_code(gs) != GIMPLE_COND/*and mLastGimpleCode != GIMPLE_RETURN*/)
-//      if (mLastData) {
-//        writeKdmFlow(mLastData->actionId(), actionData->startActionId());
-//      }
 
       // If the last gimple statement we processed was a label or some goto's
       // we have to do a little magic here to get the flows
@@ -485,14 +468,9 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         writeLabelQueue(actionData, gimple_location(gs));
       }
 
-      //the gimple we just processed returned an action remember it
-//      if (gimple_code(gs) != GIMPLE_RETURN)
-//      {
         mLastData = actionData;
         mLastLocation = gimple_location(gs);
-//      }
     }
-    mLastGimpleCode = gimple_code(gs);
   }
 }
 

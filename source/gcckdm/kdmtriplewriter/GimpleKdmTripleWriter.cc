@@ -190,6 +190,14 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
         op0 = TREE_OPERAND(op0, 0);
         break;
       }
+      case COMPONENT_REF:
+        //Fall Through
+      case SSA_NAME:
+        //Fall Through
+      case OBJ_TYPE_REF:
+      {
+        break;
+      }
       default:
       {
         std::string msg(boost::str(boost::format("GIMPLE call statement (%1%) in %2%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION));

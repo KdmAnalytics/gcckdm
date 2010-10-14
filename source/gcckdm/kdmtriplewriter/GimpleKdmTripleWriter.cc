@@ -449,6 +449,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         //This statement doesn't appear to have any relevance to KDM
         break;
       }
+      case GIMPLE_NOP:
+      {
+        //This statement doesn't appear to have any relevance to KDM
+        break;
+      }
       case GIMPLE_TRY:
       {
         processGimpleTryStatement(gs);

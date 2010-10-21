@@ -2066,6 +2066,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(Re
   writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), writesTarget);
   //FIXME: We skip this reads for the moment need to clarification in the KDM Spec
   //writeKdmActionRelation(KdmType::Reads(), actionId, readsId);
+  mKdmWriter.writeComment("FIXME: KDM spec states there should be a reads relationship here..");
+
   writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), addressesTarget);
   actionData->outputId(writesTarget.id);
   return actionData;

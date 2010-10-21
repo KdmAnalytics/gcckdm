@@ -217,7 +217,7 @@ public:
     mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::Uid(), boost::lexical_cast<std::string>(mGraph[v].startUid));
 
     //Don't write lastUid if the uid's are the same
-    if (mGraph[v].elementId != mGraph[v].endUid)
+    if (mGraph[v].startUid != mGraph[v].endUid)
     {
       mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::LastUid(), boost::lexical_cast<std::string>(mGraph[v].endUid));
     }

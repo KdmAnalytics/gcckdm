@@ -639,7 +639,7 @@ std::string getAstNodeName(tree node)
       }
       default:
       {
-        std::cerr << "UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;
+        std::cerr << "# UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;
       }
 
     }

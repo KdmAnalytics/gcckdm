@@ -2106,6 +2106,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 
     if (COMPLETE_TYPE_P (mainRecordType))
     {
+      //Output all non-method declarations in the class
       for (tree d(TYPE_FIELDS(mainRecordType)); d; d = TREE_CHAIN(d))
       {
         switch (TREE_CODE(d))
@@ -2114,8 +2115,9 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
           {
             if (!DECL_SELF_REFERENCE_P(d))
             {
-              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
-              writeUnsupportedComment(msg);
+              processAstNode(d);
+//              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
+//              writeUnsupportedComment(msg);
             }
             break;
           }
@@ -2125,6 +2127,11 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
             {
               processAstNode(d);
             }
+            break;
+          }
+          case VAR_DECL:
+          {
+            processAstNode(d);
             break;
           }
           default:

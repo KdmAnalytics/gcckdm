@@ -191,7 +191,7 @@ public:
     //std::cerr << "Start:" << g[v].elementId << std::endl;
     if (mGraph[v].incrementFlag)
     {
-      mGraph[v].startUid = mWriter.mUid++;
+      mGraph[v].startUid = ++mWriter.mUid;
     }
     else
     {

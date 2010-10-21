@@ -1882,24 +1882,30 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
   }
   else
   {
-    //the node is located in the translation unit; return the id for the translation unit
-    //unless it's external in which case we don't know where it is
-    //in which case we put it in the derivedSharedUnit by default
-    if (DECL_P(node))
+//    the node is located in the translation unit; return the id for the translation unit
+//    unless it's external in which case we don't know where it is
+//    in which case we put it in the derivedSharedUnit by default
+//    if (DECL_P(node))
+//    {
+//      if (!DECL_EXTERNAL(node))
+//      {
+//        unitId = KdmElementId_CompilationUnit;
+//      }
+//      else
+//      {
+//        unitId = KdmElementId_DerivedSharedUnit;
+//      }
+//    }
+//    else
+//    {
+//      unitId = KdmElementId_CompilationUnit;
+//    }
+
+    if (DECL_P(node) && DECL_EXTERNAL(node))
     {
-      if (!DECL_EXTERNAL(node))
-      {
-        unitId = KdmElementId_CompilationUnit;
-      }
-      else
-      {
-        unitId = KdmElementId_DerivedSharedUnit;
-      }
+      writeComment("WARNING: External element '" + nodeName(node) + "' found within CompilationUnit '" + mCompilationFile.string());
     }
-    else
-    {
-      unitId = KdmElementId_CompilationUnit;
-    }
+    unitId = KdmElementId_CompilationUnit;
   }
   return unitId;
 }

@@ -250,9 +250,19 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter::Settings const & settings)
 : mKdmSink(kdmSinkPtr),
   mKdmElementId(KdmElementId_DefaultStart),
+  mReferencedNodes(),
+  mReferencedSharedUnits(),
+  mCompilationFile(),
+  mInventoryMap(),
+  mProcessedNodes(),
+  mNodeQueue(),
   mUidGraph(),
   mUid(0),
+  mUserTypes(),
+  mContainment(),
   mSettings(settings),
+  mPackageMap(),
+  mDirectoryMap(),
   mLockUid(false)
 {
   //We pass this object to the gimple writer to allow it to use our triple writing powers
@@ -267,9 +277,19 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
  */
 KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings)
 : mKdmElementId(KdmElementId_DefaultStart),
+  mReferencedNodes(),
+  mReferencedSharedUnits(),
+  mCompilationFile(),
+  mInventoryMap(),
+  mProcessedNodes(),
+  mNodeQueue(),
   mUidGraph(),
   mUid(0),
+  mUserTypes(),
+  mContainment(),
   mSettings(settings),
+  mPackageMap(),
+  mDirectoryMap(),
   mLockUid(false)
 {
   if (settings.outputDir.filename().empty())

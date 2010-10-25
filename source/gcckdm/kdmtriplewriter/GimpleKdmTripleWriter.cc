@@ -91,6 +91,7 @@ GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter, Kdm
       mCurrentFunctionDeclarationNode(NULL_TREE),
       mCurrentCallableUnitId(ActionData::InvalidId),
       mKdmWriter(tripleWriter),
+      mBlockUnitMap(),
       mLabelFlag(false),
       mLabelQueue(),
       mLabelMap(),
@@ -236,13 +237,39 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
 void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t const loc)
 {
   long blockId = getBlockReferenceId(loc);
-  for (; !mLabelQueue.empty(); mLabelQueue.pop())
+
+  if (!mLabelQueue.empty())
   {
-    ActionDataPtr data = mLabelQueue.front();
-    mKdmWriter.writeTripleContains(blockId, data->actionId());
-    if (!data->gotoAction())
+    //Could be a label or a goto
+    ActionDataPtr lastData = mLabelQueue.front();
+    mLabelQueue.pop();
+    mKdmWriter.writeTripleContains(blockId, lastData->actionId());
+
+    for (; !mLabelQueue.empty(); mLabelQueue.pop())
     {
-      writeKdmFlow(data->actionId(), actionData->startActionId());
+      ActionDataPtr data = mLabelQueue.front();
+      mKdmWriter.writeTripleContains(blockId, data->actionId());
+
+      if (!lastData->gotoAction())
+      {
+        writeKdmFlow(lastData->actionId(), data->startActionId());
+      }
+
+      if (!(data->gotoAction()))
+      {
+        lastData = data;
+      }
+      else
+      {
+        mLabelQueue.pop();
+        lastData=mLabelQueue.front();
+      }
+    }
+
+    if (!lastData->gotoAction())
+    {
+      //hook up flow from last element to the given action element
+      writeKdmFlow(lastData->actionId(), actionData->startActionId());
     }
   }
   mLabelFlag = !mLabelFlag;
@@ -482,8 +509,8 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         writeLabelQueue(actionData, gimple_location(gs));
       }
 
-        mLastData = actionData;
-        mLastLocation = gimple_location(gs);
+      mLastData = actionData;
+      mLastLocation = gimple_location(gs);
     }
   }
 }
@@ -922,12 +949,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 void GimpleKdmTripleWriter::processGimpleGotoStatement(gimple const gs)
 {
   ActionDataPtr actionData = ActionDataPtr(new ActionData(mKdmWriter.getNextElementId()));
+  tree label = gimple_goto_dest (gs);
+  long destId = getReferenceId(label);
 
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Goto());
 
-  tree label(gimple_goto_dest (gs));
-  long destId(getReferenceId(label));
   writeKdmFlow(actionData->actionId(), destId);
 
   writeEntryFlow(actionData);
@@ -939,17 +966,14 @@ void GimpleKdmTripleWriter::processGimpleGotoStatement(gimple const gs)
   {
     //this goto doesn't have a location.... use the destination location?
     mKdmWriter.writeComment("FIXME: This GOTO doesn't have a location... what should we use instead");
-    //mLastLabelData = actionData;
     actionData->gotoAction(true);
     mLabelQueue.push(actionData);
     mLabelFlag = true;
   }
   else
   {
-
     long blockId = getBlockReferenceId(gimple_location(gs));
     mKdmWriter.writeTripleContains(blockId, actionData->actionId());
-
     writeLabelQueue(actionData, gimple_location(gs));
   }
 }
@@ -1869,21 +1893,21 @@ void GimpleKdmTripleWriter::configureDataAndFlow(ActionDataPtr actionData, Actio
 {
   if (op0Data->hasActionId() && op1Data->hasActionId())
   {
-    actionData->startActionId(op0Data->actionId());
-    writeKdmFlow(op0Data->actionId(), op1Data->actionId());
+    actionData->startActionId(op0Data->startActionId());
+    writeKdmFlow(op0Data->actionId(), op1Data->startActionId());
     writeKdmFlow(op1Data->actionId(), actionData->actionId());
     mKdmWriter.writeTripleContains(actionData->actionId(), op0Data->actionId());
     mKdmWriter.writeTripleContains(actionData->actionId(), op1Data->actionId());
   }
   else if (op0Data->hasActionId())
   {
-    actionData->startActionId(op0Data->actionId());
+    actionData->startActionId(op0Data->startActionId());
     writeKdmFlow(op0Data->actionId(), actionData->actionId());
     mKdmWriter.writeTripleContains(actionData->actionId(), op0Data->actionId());
   }
   else if (op1Data->hasActionId())
   {
-    actionData->startActionId(op1Data->actionId());
+    actionData->startActionId(op1Data->startActionId());
     writeKdmFlow(op1Data->actionId(), actionData->actionId());
     mKdmWriter.writeTripleContains(actionData->actionId(), op1Data->actionId());
   }

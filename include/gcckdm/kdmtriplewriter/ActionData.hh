@@ -35,7 +35,12 @@ public:
     mGotoAction(false)
   {}
 
-  ActionData(long actId) : mActionId(actId), mStartActionId(actId), mOutputId(InvalidId){}
+  ActionData(long actId) :
+    mActionId(actId),
+    mStartActionId(actId),
+    mOutputId(InvalidId),
+    mGotoAction(false)
+  {}
 
   long actionId() const { return mActionId; }
   void actionId(long id) { mActionId = id; }

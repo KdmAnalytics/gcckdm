@@ -83,6 +83,10 @@ private:
     KdmKind_Decr,
     KdmKind_Switch,
     KdmKind_Compound,
+    KdmKind_Sizeof,
+    KdmKind_InstanceOf,
+    KdmKind_DynCast,
+    KdmKind_TypeCast,
 
     // CallableKinds
     KdmKind_External,
@@ -161,6 +165,10 @@ public:
   static const KdmKind Decr()                 { return KdmKind(KdmKind_Decr, "Decr"); }
   static const KdmKind Switch()               { return KdmKind(KdmKind_Switch, "Switch"); }
   static const KdmKind Compound()             { return KdmKind(KdmKind_Compound, "Compound"); }
+  static const KdmKind Sizeof()               { return KdmKind(KdmKind_Sizeof, "Sizeof"); }
+  static const KdmKind InstanceOf()           { return KdmKind(KdmKind_InstanceOf, "InstanceOf"); }
+  static const KdmKind DynCast()              { return KdmKind(KdmKind_DynCast, "DynCast"); }
+  static const KdmKind TypeCast()             { return KdmKind(KdmKind_TypeCast, "TypeCast"); }
 
   // CallableKind
   static const KdmKind External()             { return KdmKind(KdmKind_External, "external"); }

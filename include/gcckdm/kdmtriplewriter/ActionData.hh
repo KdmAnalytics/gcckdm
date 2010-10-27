@@ -35,7 +35,12 @@ public:
     mGotoAction(false)
   {}
 
-  ActionData(long actId) : mActionId(actId), mStartActionId(actId), mOutputId(InvalidId){}
+  ActionData(long actId) :
+    mActionId(actId),
+    mStartActionId(actId),
+    mOutputId(InvalidId),
+    mGotoAction(false)
+  {}
 
   long actionId() const { return mActionId; }
   void actionId(long id) { mActionId = id; }
@@ -54,6 +59,7 @@ public:
   }
 
   void startActionId(long id ) { mStartActionId = id; }
+
   void startActionId(ActionData const & data)
   {
     if (data.hasActionId())
@@ -65,6 +71,17 @@ public:
   bool hasStartAction() const
   {
     return mStartActionId != InvalidId;
+  }
+
+  /**
+   * Returns true if the startActionId is different from the actionId
+   * and actionId and mStartActionId are both not equal to InvalidId
+   *
+   * @return true or false
+   */
+  bool hasFlow() const
+  {
+    return (mActionId != InvalidId) && (mStartActionId != InvalidId) && mActionId != mStartActionId;
   }
 
 

@@ -191,7 +191,7 @@ public:
     //std::cerr << "Start:" << g[v].elementId << std::endl;
     if (mGraph[v].incrementFlag)
     {
-      mGraph[v].startUid = mWriter.mUid++;
+      mGraph[v].startUid = ++mWriter.mUid;
     }
     else
     {
@@ -217,7 +217,7 @@ public:
     mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::Uid(), boost::lexical_cast<std::string>(mGraph[v].startUid));
 
     //Don't write lastUid if the uid's are the same
-    if (mGraph[v].elementId != mGraph[v].endUid)
+    if (mGraph[v].startUid != mGraph[v].endUid)
     {
       mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::LastUid(), boost::lexical_cast<std::string>(mGraph[v].endUid));
     }
@@ -250,9 +250,19 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
 KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter::Settings const & settings)
 : mKdmSink(kdmSinkPtr),
   mKdmElementId(KdmElementId_DefaultStart),
+  mReferencedNodes(),
+  mReferencedSharedUnits(),
+  mCompilationFile(),
+  mInventoryMap(),
+  mProcessedNodes(),
+  mNodeQueue(),
   mUidGraph(),
   mUid(0),
+  mUserTypes(),
+  mContainment(),
   mSettings(settings),
+  mPackageMap(),
+  mDirectoryMap(),
   mLockUid(false)
 {
   //We pass this object to the gimple writer to allow it to use our triple writing powers
@@ -267,9 +277,19 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
  */
 KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings)
 : mKdmElementId(KdmElementId_DefaultStart),
+  mReferencedNodes(),
+  mReferencedSharedUnits(),
+  mCompilationFile(),
+  mInventoryMap(),
+  mProcessedNodes(),
+  mNodeQueue(),
   mUidGraph(),
   mUid(0),
+  mUserTypes(),
+  mContainment(),
   mSettings(settings),
+  mPackageMap(),
+  mDirectoryMap(),
   mLockUid(false)
 {
   if (settings.outputDir.filename().empty())
@@ -1882,24 +1902,30 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
   }
   else
   {
-    //the node is located in the translation unit; return the id for the translation unit
-    //unless it's external in which case we don't know where it is
-    //in which case we put it in the derivedSharedUnit by default
-    if (DECL_P(node))
+//    the node is located in the translation unit; return the id for the translation unit
+//    unless it's external in which case we don't know where it is
+//    in which case we put it in the derivedSharedUnit by default
+//    if (DECL_P(node))
+//    {
+//      if (!DECL_EXTERNAL(node))
+//      {
+//        unitId = KdmElementId_CompilationUnit;
+//      }
+//      else
+//      {
+//        unitId = KdmElementId_DerivedSharedUnit;
+//      }
+//    }
+//    else
+//    {
+//      unitId = KdmElementId_CompilationUnit;
+//    }
+
+    if (DECL_P(node) && DECL_EXTERNAL(node))
     {
-      if (!DECL_EXTERNAL(node))
-      {
-        unitId = KdmElementId_CompilationUnit;
-      }
-      else
-      {
-        unitId = KdmElementId_DerivedSharedUnit;
-      }
+      writeComment("WARNING: External element '" + nodeName(node) + "' found within CompilationUnit '" + mCompilationFile.string());
     }
-    else
-    {
-      unitId = KdmElementId_CompilationUnit;
-    }
+    unitId = KdmElementId_CompilationUnit;
   }
   return unitId;
 }
@@ -2106,6 +2132,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 
     if (COMPLETE_TYPE_P (mainRecordType))
     {
+      //Output all non-method declarations in the class
       for (tree d(TYPE_FIELDS(mainRecordType)); d; d = TREE_CHAIN(d))
       {
         switch (TREE_CODE(d))
@@ -2114,8 +2141,9 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
           {
             if (!DECL_SELF_REFERENCE_P(d))
             {
-              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
-              writeUnsupportedComment(msg);
+              processAstNode(d);
+//              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
+//              writeUnsupportedComment(msg);
             }
             break;
           }
@@ -2125,6 +2153,11 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
             {
               processAstNode(d);
             }
+            break;
+          }
+          case VAR_DECL:
+          {
+            processAstNode(d);
             break;
           }
           default:

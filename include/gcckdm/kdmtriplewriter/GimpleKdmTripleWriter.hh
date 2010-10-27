@@ -78,7 +78,7 @@ private:
     long id;
   };
 
-  typedef std::tr1::unordered_map<expanded_location, long, ExpanedLocationHash, ExpandedLocationEqual> LocationMap;
+  typedef std::tr1::unordered_map<expanded_location, long, ExpandedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef boost::shared_ptr<ActionData> ActionDataPtr;
   typedef std::queue<ActionDataPtr> LabelQueue;
   typedef std::tr1::unordered_map<std::string, long> LabelMap;
@@ -279,10 +279,36 @@ private:
   ActionDataPtr updateFlow(ActionDataPtr mainFlow, ActionDataPtr update);
   ActionDataPtr updateActionFlow(ActionDataPtr actionFlow,long const actionId);
 
+  /**
+   * Convenience method to hook up flows when a gimple statement can have complex
+   * LHS and RHS.  Writes the flows depending on if the op0 or op1 data are complex
+   * action elements.  If op0Data and op1Data both are complex elements flows are
+   * from op0 to op1 to actionData, if either op0 or op1 are complex the flows are
+   * from the complex element to actionData.
+   *
+   * @param actionData
+   * @param op0Data
+   * @param op1Data
+   */
   void configureDataAndFlow(ActionDataPtr actionData, ActionDataPtr op0Data, ActionDataPtr op1Data);
 
+  /**
+   *  Convenience method to either write a entry flow if the given element is the
+   *  first in the callable unit otherwise writes a regular flow from the last
+   *  element to the given element
+   *
+   *  @param actionData element to use when determining flow
+   */
   void writeEntryFlow(ActionDataPtr actionData);
 
+  /**
+   * Writes the flows and containment for all actiondata in the label queue
+   * using the given actionData and loc.  The actionData is the final endpoint
+   * of the flow and the loc is used to given each label/goto element a location
+   *
+   * @param actionData final element at the end of the flow of labels
+   * @param loc the location to give the labels and goto in the queue
+   */
   void writeLabelQueue(ActionDataPtr actionData, location_t const loc);
 
 
@@ -302,12 +328,13 @@ private:
    */
   LocationMap mBlockUnitMap;
 
-
+  /**
+   * When true the label queue should contain action data and could be processed
+   */
   bool mLabelFlag;
 
   LabelQueue mLabelQueue;
   LabelMap   mLabelMap;
-  //ActionDataPtr mLastLabelData;
   long mRegisterVariableIndex;
 
   ActionDataPtr mLastData;

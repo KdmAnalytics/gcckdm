@@ -31,7 +31,7 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 
-struct ExpanedLocationHash
+struct ExpandedLocationHash
 {
   size_t operator()(expanded_location const & v) const
   {

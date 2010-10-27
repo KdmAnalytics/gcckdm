@@ -59,6 +59,7 @@ public:
   }
 
   void startActionId(long id ) { mStartActionId = id; }
+
   void startActionId(ActionData const & data)
   {
     if (data.hasActionId())
@@ -70,6 +71,17 @@ public:
   bool hasStartAction() const
   {
     return mStartActionId != InvalidId;
+  }
+
+  /**
+   * Returns true if the startActionId is different from the actionId
+   * and actionId and mStartActionId are both not equal to InvalidId
+   *
+   * @return true or false
+   */
+  bool hasFlow() const
+  {
+    return (mActionId != InvalidId) && (mStartActionId != InvalidId) && mActionId != mStartActionId;
   }
 
 

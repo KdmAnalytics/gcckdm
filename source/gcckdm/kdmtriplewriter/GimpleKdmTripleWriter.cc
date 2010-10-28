@@ -219,7 +219,7 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
     writeKdmActionRelation(KdmType::EntryFlow(), mBlockContextId, actionData->startActionId());
     mFunctionEntryData = actionData;
   }
-  else if (mLastData)
+  else if (mLastData && !mLastData->isReturnAction())
   {
     //We aren't the first actionElement
     writeKdmFlow(mLastData->actionId(),actionData->startActionId());
@@ -406,7 +406,7 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
       ActionDataPtr currentData = mLabelQueue.front();
       mKdmWriter.writeTripleContains(blockId, currentData->actionId());
 
-      if (!previousData->isGotoAction())
+      if (!previousData->isGotoAction() && !previousData->isReturnAction())
       {
         writeKdmFlow(previousData->actionId(), currentData->actionId());
       }
@@ -712,11 +712,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAssignS
 
 void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
 {
-  long actionId = mKdmWriter.getNextElementId();
-  ActionDataPtr actionData(new ActionData(actionId));
+  ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
 
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Return());
   tree t = gimple_return_retval(gs);
 
   //If this statement is returning a value then we process it
@@ -725,18 +724,21 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
   {
     long id = getReferenceId(t);
     mKdmWriter.processAstNode(t);
-    writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(t, id));
+    writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(t, id));
   }
 
   //figure out what blockunit this statement belongs
   long blockId = getBlockReferenceId(gimple_location(gs));
-  mKdmWriter.writeTripleContains(blockId, actionId);
+  mKdmWriter.writeTripleContains(blockId, actionData->actionId());
 
   writeEntryFlow(actionData);
 
   writeLabelQueue(actionData, gimple_location(gs));
 
-  mLastData.reset();
+  //We don't want any flows from a returns statement therefore we
+  //flag the action as a return action
+  actionData->returnAction(true);
+  mLastData = actionData;
 }
 
 

@@ -84,7 +84,8 @@ public:
     mActionId(actId),
     mStartActionId(actId),
     mOutputId(InvalidId),
-    mGotoAction(false)
+    mGotoAction(false),
+    mReturnAction(false)
   {}
 
   /**
@@ -117,6 +118,17 @@ public:
   void gotoAction(bool gotoAction)
   {
     mGotoAction = gotoAction;
+  }
+
+
+  bool isReturnAction() const
+  {
+    return mReturnAction;
+  }
+
+  void returnAction(bool flag)
+  {
+    mReturnAction = flag;
   }
 
   /**
@@ -196,6 +208,7 @@ private:
   long mStartActionId;
   long mOutputId;
   bool mGotoAction;
+  bool mReturnAction;
 };
 
 #endif /* GCCKDM_KDMTRIPLEWRITER_ACTIONDATA_HH_ */

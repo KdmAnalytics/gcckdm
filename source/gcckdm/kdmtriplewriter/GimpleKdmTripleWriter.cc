@@ -245,12 +245,12 @@ void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t
       ActionDataPtr data = mLabelQueue.front();
       mKdmWriter.writeTripleContains(blockId, data->actionId());
 
-      if (!lastData->gotoAction())
+      if (!lastData->isGotoAction())
       {
         writeKdmFlow(lastData->actionId(), data->startActionId());
       }
 
-      if (!(data->gotoAction()))
+      if (!(data->isGotoAction()))
       {
         lastData = data;
       }
@@ -261,7 +261,7 @@ void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t
       }
     }
 
-    if (!lastData->gotoAction())
+    if (!lastData->isGotoAction())
     {
       //hook up flow from last element to the given action element
       writeKdmFlow(lastData->actionId(), actionData->startActionId());
@@ -406,7 +406,7 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
       ActionDataPtr currentData = mLabelQueue.front();
       mKdmWriter.writeTripleContains(blockId, currentData->actionId());
 
-      if (!previousData->gotoAction())
+      if (!previousData->isGotoAction())
       {
         writeKdmFlow(previousData->actionId(), currentData->actionId());
       }

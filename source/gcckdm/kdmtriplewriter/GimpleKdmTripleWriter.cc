@@ -586,7 +586,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
   ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Asm());
-  mKdmWriter.writeTripleName(actionData->actionId(), gimple_asm_string (gs));
+  std::string name;
+  replaceSpecialCharsCopy(gimple_asm_string (gs), name);
+  mKdmWriter.writeTripleName(actionData->actionId(), name);
 
   unsigned int fields = 0;
 

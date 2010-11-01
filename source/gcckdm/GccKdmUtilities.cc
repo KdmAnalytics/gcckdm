@@ -107,100 +107,99 @@ std::string getAstFunctionDeclarationName(tree node)
   return declStr;
 }
 
-
-/**
- * Replace /n with //n and /t with //t etc. etc. etc
- *
- * @param nameStr the string to append the transformed str
- * @param str the c-string to transform
- */
-void prettyPrintStringCst(std::string & nameStr, const char * str)
-{
-  if (str == 0)
-  {
-    return;
-  }
-
-  while (*str)
-  {
-    while (*str)
-    {
-      switch (str[0])
-      {
-        case '\b':
-          nameStr += "\\b";
-          break;
-
-        case '\f':
-          nameStr += "\\f";
-          break;
-
-        case '\n':
-          nameStr += "\\n";
-          break;
-
-        case '\r':
-          nameStr += "\\r";
-          break;
-
-        case '\t':
-          nameStr += "\\t";
-          break;
-
-        case '\v':
-          nameStr += "\\v";
-          break;
-
-        case '\\':
-          nameStr += "\\\\";
-          break;
-
-        case '\"':
-          nameStr += "\\\"";
-          break;
-
-        case '\'':
-          nameStr += "\\'";
-          break;
-
-          /* No need to handle \0; the loop terminates on \0.  */
-
-        case '\1':
-          nameStr += "\\1";
-          break;
-
-        case '\2':
-          nameStr += "\\2";
-          break;
-
-        case '\3':
-          nameStr += "\\3";
-          break;
-
-        case '\4':
-          nameStr += "\\4";
-          break;
-
-        case '\5':
-          nameStr += "\\5";
-          break;
-
-        case '\6':
-          nameStr += "\\6";
-          break;
-
-        case '\7':
-          nameStr += "\\7";
-          break;
-
-        default:
-          nameStr += str[0];
-          break;
-      }
-      str++;
-    }
-  }
-}
+///**
+// * Replace /n with //n and /t with //t etc. etc. etc
+// *
+// * @param nameStr the string to append the transformed str
+// * @param str the c-string to transform
+// */
+//void prettyPrintStringCst(std::string & nameStr, const char * str)
+//{
+//  if (str == 0)
+//  {
+//    return;
+//  }
+//
+//  while (*str)
+//  {
+//    while (*str)
+//    {
+//      switch (str[0])
+//      {
+//        case '\b':
+//          nameStr += "\\b";
+//          break;
+//
+//        case '\f':
+//          nameStr += "\\f";
+//          break;
+//
+//        case '\n':
+//          nameStr += "\\n";
+//          break;
+//
+//        case '\r':
+//          nameStr += "\\r";
+//          break;
+//
+//        case '\t':
+//          nameStr += "\\t";
+//          break;
+//
+//        case '\v':
+//          nameStr += "\\v";
+//          break;
+//
+//        case '\\':
+//          nameStr += "\\\\";
+//          break;
+//
+//        case '\"':
+//          nameStr += "\\\"";
+//          break;
+//
+//        case '\'':
+//          nameStr += "\\'";
+//          break;
+//
+//          /* No need to handle \0; the loop terminates on \0.  */
+//
+//        case '\1':
+//          nameStr += "\\1";
+//          break;
+//
+//        case '\2':
+//          nameStr += "\\2";
+//          break;
+//
+//        case '\3':
+//          nameStr += "\\3";
+//          break;
+//
+//        case '\4':
+//          nameStr += "\\4";
+//          break;
+//
+//        case '\5':
+//          nameStr += "\\5";
+//          break;
+//
+//        case '\6':
+//          nameStr += "\\6";
+//          break;
+//
+//        case '\7':
+//          nameStr += "\\7";
+//          break;
+//
+//        default:
+//          nameStr += str[0];
+//          break;
+//      }
+//      str++;
+//    }
+//  }
+//}
 
 
 std::string getDomainString(tree domain)
@@ -595,8 +594,7 @@ std::string getAstNodeName(tree node)
       }
       case STRING_CST:
       {
-        const char *str = TREE_STRING_POINTER (node);
-        prettyPrintStringCst(nameStr, str);
+        replaceSpecialCharsCopy(TREE_STRING_POINTER (node), nameStr);
         break;
       }
       case ARRAY_REF:
@@ -644,16 +642,25 @@ std::string getAstNodeName(tree node)
 
     }
   }
+
+
+  boost::replace_all(nameStr, "\n" ,"\\n");
+
   return nameStr;
 }
 
-
+/**
+ * Uses the  lang_hooks to determine if we are in using the c++ or c frontend
+ */
 bool isFrontendCxx()
 {
   std::string langName(lang_hooks.name);
   return langName == "GNU C++";
 }
 
+/**
+ * Uses the  lang_hooks to determine if we are in using the c++ or c frontend
+ */
 bool isFrontendC()
 {
   std::string langName(lang_hooks.name);

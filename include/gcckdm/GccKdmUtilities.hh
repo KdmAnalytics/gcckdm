@@ -23,6 +23,8 @@
 #define GCCKDM_GCCKDMUTILITIES_HH_
 
 #include <string>
+#include <boost/range.hpp>
+#include <boost/algorithm/string.hpp>
 
 namespace gcckdm
 {
@@ -60,11 +62,15 @@ std::string const locationString(location_t loc);
 
 /**
  * Returns true if the front end being used is C++
+ *
+ * @return
  */
 bool isFrontendCxx();
 
 /**
  * Returns true if the front end being used is C
+ *
+ * @return
  */
 bool isFrontendC();
 
@@ -81,6 +87,92 @@ int getTypeQualifiers(tree const type);
  * special code to build an ID
  */
 std::string getLinkId(tree const typeName, std::string const name);
+
+
+
+template <typename Range>
+void
+replaceSpecialCharsCopy(Range const & c, std::string & outputString)
+{
+  typename boost::range_iterator< const Range>::type b = boost::begin(boost::as_literal(c));
+
+  while (b != boost::end(boost::as_literal(c)))
+  {
+    switch(*b)
+    {
+        case '\b':
+          outputString += "\\b";
+          break;
+
+        case '\f':
+          outputString += "\\f";
+          break;
+
+        case '\n':
+          outputString += "\\n";
+          break;
+
+        case '\r':
+          outputString += "\\r";
+          break;
+
+        case '\t':
+          outputString += "\\t";
+          break;
+
+        case '\v':
+          outputString += "\\v";
+          break;
+
+        case '\\':
+          outputString += "\\\\";
+          break;
+
+        case '\"':
+          outputString += "\\\"";
+          break;
+
+        case '\'':
+          outputString += "\\'";
+          break;
+
+        case '\1':
+          outputString += "\\1";
+          break;
+
+        case '\2':
+          outputString += "\\2";
+          break;
+
+        case '\3':
+          outputString += "\\3";
+          break;
+
+        case '\4':
+          outputString += "\\4";
+          break;
+
+        case '\5':
+          outputString += "\\5";
+          break;
+
+        case '\6':
+          outputString += "\\6";
+          break;
+
+        case '\7':
+          outputString += "\\7";
+          break;
+
+        default:
+          outputString += *b;
+          break;
+    }
+    ++b;
+  }
+}
+
+
 
 } // namespace gcckdm
 

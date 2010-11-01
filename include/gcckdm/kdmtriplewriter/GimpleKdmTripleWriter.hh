@@ -198,6 +198,7 @@ private:
 
   long writeKdmActionRelation(KdmType const & type, long const fromId, RelationTarget const & target);
 
+  long writeKdmFlow(KdmType const & flow, long const fromId, long const toId);
   long writeKdmFlow(long const fromId, long const toId);
 
   void writeKdmUnaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhsTarget);

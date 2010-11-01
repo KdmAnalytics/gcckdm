@@ -801,26 +801,15 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
   //Write true flow
   if (gimple_cond_true_label(gs))
   {
-    tree trueNode(gimple_cond_true_label(gs));
-    long trueFlowId(mKdmWriter.getNextElementId());
-    long trueNodeId(getReferenceId(trueNode));
-
-    mKdmWriter.writeTripleKdmType(trueFlowId, KdmType::TrueFlow());
-    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::From(), actionData->actionId());
-    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::To(), trueNodeId);
-    mKdmWriter.writeTripleContains(actionData->actionId(), trueFlowId, false);
+    tree trueNode = gimple_cond_true_label(gs);
+    writeKdmFlow(KdmType::TrueFlow(), actionData->actionId(), getReferenceId(trueNode));
   }
 
   //Write false flow
   if (gimple_cond_false_label(gs))
   {
-    tree falseNode(gimple_cond_false_label(gs));
-    long falseFlowId(mKdmWriter.getNextElementId());
-    long falseNodeId(getReferenceId(falseNode));
-    mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
-    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionData->actionId());
-    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
-    mKdmWriter.writeTripleContains(actionData->actionId(), falseFlowId, false);
+    tree falseNode = gimple_cond_false_label(gs);
+    writeKdmFlow(KdmType::FalseFlow(), actionData->actionId(), getReferenceId(falseNode));
   }
 
   //Contain this action in a block unit
@@ -1503,10 +1492,14 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
   return arId;
 }
 
+long GimpleKdmTripleWriter::writeKdmFlow(KdmType const & flow, long const fromId, long toId)
+{
+  return writeKdmActionRelation(flow, fromId, toId);
+}
 
 long GimpleKdmTripleWriter::writeKdmFlow(long const fromId, long const toId)
 {
-  return writeKdmActionRelation(KdmType::Flow(), fromId, toId);
+  return writeKdmFlow(KdmType::Flow(), fromId, toId);
 }
 
 void GimpleKdmTripleWriter::writeKdmUnaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhsTarget)

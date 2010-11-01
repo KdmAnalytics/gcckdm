@@ -216,7 +216,7 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
   //Check to see if we are the first actionElement of the callable unit
   if (not mFunctionEntryData)
   {
-    writeKdmActionRelation(KdmType::EntryFlow(), mBlockContextId, actionData->startActionId());
+    writeKdmFlow(KdmType::EntryFlow(), mBlockContextId, actionData->startActionId());
     mFunctionEntryData = actionData;
   }
   else if (mLastData && !mLastData->isReturnAction())
@@ -1449,7 +1449,7 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
   mKdmWriter.writeTripleKdmType(arId, type);
   mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
   mKdmWriter.writeTriple(arId, KdmPredicate::To(), toId);
-  mKdmWriter.writeTripleContains(fromId, arId);
+  mKdmWriter.writeTripleContains(fromId, arId, false);
   return arId;
 }
 

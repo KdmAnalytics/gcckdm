@@ -232,40 +232,71 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
 void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t const loc)
 {
   long blockId = getBlockReferenceId(loc);
-
-  if (!mLabelQueue.empty())
+  ActionDataPtr lastData;
+  for (; !mLabelQueue.empty(); mLabelQueue.pop())
   {
-    //Could be a label or a goto
-    ActionDataPtr lastData = mLabelQueue.front();
-    mLabelQueue.pop();
-    mKdmWriter.writeTripleContains(blockId, lastData->actionId());
+    //If this is the first time through the loop we pop off the
+    //first element and handle special conditions
+    if (!lastData)
+    {
+      lastData = mLabelQueue.front();
+      mLabelQueue.pop();
 
-    for (; !mLabelQueue.empty(); mLabelQueue.pop())
+      //If there was only one element in the queue we can write the
+      //contains and flow and bail.
+      if (mLabelQueue.empty())
+      {
+        mKdmWriter.writeTripleContains(blockId, lastData->actionId());
+        writeKdmFlow(lastData->actionId(), actionData->startActionId());
+        lastData.reset();
+        break;
+      }
+    }
+    //We've got more than one element in the queue
+    else
     {
       ActionDataPtr data = mLabelQueue.front();
-      mKdmWriter.writeTripleContains(blockId, data->actionId());
 
-      if (!lastData->isGotoAction())
+      //If we have more elements in the queue we can write the contains
+      //flows, otherwise the contains and flows are written outside the
+      //loop
+      if (mLabelQueue.size() > 1)
       {
-        writeKdmFlow(lastData->actionId(), data->startActionId());
+        mKdmWriter.writeTripleContains(blockId, data->actionId());
+        //Hook up flow from lastData to current data
+        if (!lastData->isGotoAction())
+        {
+          writeKdmFlow(lastData->actionId(), data->startActionId());
+        }
       }
 
+      //setup lastData for next loop
       if (!(data->isGotoAction()))
       {
         lastData = data;
       }
       else
       {
+        //Skip the goto by popping it off..
         mLabelQueue.pop();
-        lastData=mLabelQueue.front();
+        if (mLabelQueue.empty())
+        {
+          lastData.reset();
+        }
+        else
+        {
+          lastData=mLabelQueue.front();
+        }
       }
     }
+  }
 
-    if (!lastData->isGotoAction())
-    {
-      //hook up flow from last element to the given action element
-      writeKdmFlow(lastData->actionId(), actionData->startActionId());
-    }
+  //If lastData isn't a goto
+  if (lastData && !lastData->isGotoAction())
+  {
+    mKdmWriter.writeTripleContains(blockId, lastData->actionId());
+    //hook up flow from last element to the given action element
+    writeKdmFlow(lastData->actionId(), actionData->startActionId());
   }
   mLabelFlag = !mLabelFlag;
 }
@@ -394,8 +425,9 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
       if (!previousData)
       {
         previousData = mLabelQueue.front();
-
         mLabelQueue.pop();
+
+        //If there was only one element in the queue we can write the contains and bail
         if (mLabelQueue.empty())
         {
           mKdmWriter.writeTripleContains(blockId, previousData->actionId());

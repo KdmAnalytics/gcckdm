@@ -216,10 +216,10 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
   //Check to see if we are the first actionElement of the callable unit
   if (not mFunctionEntryData)
   {
-    writeKdmActionRelation(KdmType::EntryFlow(), mBlockContextId, actionData->startActionId());
+    writeKdmFlow(KdmType::EntryFlow(), mBlockContextId, actionData->startActionId());
     mFunctionEntryData = actionData;
   }
-  else if (mLastData)
+  else if (mLastData && !mLastData->isReturnAction())
   {
     //We aren't the first actionElement
     writeKdmFlow(mLastData->actionId(),actionData->startActionId());
@@ -233,45 +233,35 @@ void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t
 {
   long blockId = getBlockReferenceId(loc);
 
-  if (!mLabelQueue.empty())
+  ActionDataPtr prevData;
+  ActionDataPtr currData;
+
+  for (; !mLabelQueue.empty(); mLabelQueue.pop())
   {
-    //Could be a label or a goto
-    ActionDataPtr lastData = mLabelQueue.front();
-    mLabelQueue.pop();
-    mKdmWriter.writeTripleContains(blockId, lastData->actionId());
+    currData = mLabelQueue.front();
+    //ensure every label/goto is contained in a block unit
+    mKdmWriter.writeTripleContains(blockId, currData->actionId());
 
-    for (; !mLabelQueue.empty(); mLabelQueue.pop())
+    if (prevData && !prevData->isGotoAction())
     {
-      ActionDataPtr data = mLabelQueue.front();
-      mKdmWriter.writeTripleContains(blockId, data->actionId());
-
-      if (!lastData->gotoAction())
-      {
-        writeKdmFlow(lastData->actionId(), data->startActionId());
-      }
-
-      if (!(data->gotoAction()))
-      {
-        lastData = data;
-      }
-      else
-      {
-        mLabelQueue.pop();
-        lastData=mLabelQueue.front();
-      }
+      writeKdmFlow(prevData->actionId(), currData->startActionId());
     }
+    else
+    {
+      prevData=currData;
+    }
+  }
 
-    if (!lastData->gotoAction())
+  if (prevData)
+  {
+    if (!prevData->isGotoAction())
     {
       //hook up flow from last element to the given action element
-      writeKdmFlow(lastData->actionId(), actionData->startActionId());
+      writeKdmFlow(prevData->actionId(), actionData->startActionId());
     }
   }
   mLabelFlag = !mLabelFlag;
 }
-
-
-
 
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
@@ -388,32 +378,26 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
   if (mLabelFlag && !gcckdm::locationIsUnknown(mLastLocation))
   {
     long blockId = getBlockReferenceId(mLastLocation);
-    ActionDataPtr previousData;
+    ActionDataPtr prevData;
+    ActionDataPtr currData;
+
     for (; !mLabelQueue.empty(); mLabelQueue.pop())
     {
-      if (!previousData)
+      ActionDataPtr currData = mLabelQueue.front();
+      //Ensure every label/goto is contained
+      mKdmWriter.writeTripleContains(blockId, currData->actionId());
+
+      if (prevData && (!prevData->isGotoAction() && !prevData->isReturnAction()))
       {
-        previousData = mLabelQueue.front();
-
-        mLabelQueue.pop();
-        if (mLabelQueue.empty())
-        {
-          mKdmWriter.writeTripleContains(blockId, previousData->actionId());
-          mLastData=previousData;
-          break;
-        }
+        writeKdmFlow(prevData->actionId(), currData->actionId());
       }
-      ActionDataPtr currentData = mLabelQueue.front();
-      mKdmWriter.writeTripleContains(blockId, currentData->actionId());
-
-      if (!previousData->gotoAction())
+      else
       {
-        writeKdmFlow(previousData->actionId(), currentData->actionId());
+        mLastData = currData;
+        prevData = currData;
       }
-      mLastData = mLabelQueue.front();
-      previousData = mLabelQueue.front();
-
     }
+
     mLabelFlag = !mLabelFlag;
   }
 
@@ -586,7 +570,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
   ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Asm());
-  mKdmWriter.writeTripleName(actionData->actionId(), gimple_asm_string (gs));
+  std::string name;
+  replaceSpecialCharsCopy(gimple_asm_string (gs), name);
+  mKdmWriter.writeTripleName(actionData->actionId(), name);
 
   unsigned int fields = 0;
 
@@ -712,11 +698,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAssignS
 
 void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
 {
-  long actionId = mKdmWriter.getNextElementId();
-  ActionDataPtr actionData(new ActionData(actionId));
+  ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
 
-  mKdmWriter.writeTripleKdmType(actionId, KdmType::ActionElement());
-  mKdmWriter.writeTripleKind(actionId, KdmKind::Return());
+  mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+  mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Return());
   tree t = gimple_return_retval(gs);
 
   //If this statement is returning a value then we process it
@@ -725,18 +710,21 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
   {
     long id = getReferenceId(t);
     mKdmWriter.processAstNode(t);
-    writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(t, id));
+    writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(t, id));
   }
 
   //figure out what blockunit this statement belongs
   long blockId = getBlockReferenceId(gimple_location(gs));
-  mKdmWriter.writeTripleContains(blockId, actionId);
+  mKdmWriter.writeTripleContains(blockId, actionData->actionId());
 
   writeEntryFlow(actionData);
 
   writeLabelQueue(actionData, gimple_location(gs));
 
-  mLastData.reset();
+  //We don't want any flows from a returns statement therefore we
+  //flag the action as a return action
+  actionData->returnAction(true);
+  mLastData = actionData;
 }
 
 
@@ -797,26 +785,15 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
   //Write true flow
   if (gimple_cond_true_label(gs))
   {
-    tree trueNode(gimple_cond_true_label(gs));
-    long trueFlowId(mKdmWriter.getNextElementId());
-    long trueNodeId(getReferenceId(trueNode));
-
-    mKdmWriter.writeTripleKdmType(trueFlowId, KdmType::TrueFlow());
-    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::From(), actionData->actionId());
-    mKdmWriter.writeTriple(trueFlowId, KdmPredicate::To(), trueNodeId);
-    mKdmWriter.writeTripleContains(actionData->actionId(), trueFlowId, false);
+    tree trueNode = gimple_cond_true_label(gs);
+    writeKdmFlow(KdmType::TrueFlow(), actionData->actionId(), getReferenceId(trueNode));
   }
 
   //Write false flow
   if (gimple_cond_false_label(gs))
   {
-    tree falseNode(gimple_cond_false_label(gs));
-    long falseFlowId(mKdmWriter.getNextElementId());
-    long falseNodeId(getReferenceId(falseNode));
-    mKdmWriter.writeTripleKdmType(falseFlowId, KdmType::FalseFlow());
-    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::From(), actionData->actionId());
-    mKdmWriter.writeTriple(falseFlowId, KdmPredicate::To(), falseNodeId);
-    mKdmWriter.writeTripleContains(actionData->actionId(), falseFlowId, false);
+    tree falseNode = gimple_cond_false_label(gs);
+    writeKdmFlow(KdmType::FalseFlow(), actionData->actionId(), getReferenceId(falseNode));
   }
 
   //Contain this action in a block unit
@@ -1456,7 +1433,7 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
   mKdmWriter.writeTripleKdmType(arId, type);
   mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
   mKdmWriter.writeTriple(arId, KdmPredicate::To(), toId);
-  mKdmWriter.writeTripleContains(fromId, arId);
+  mKdmWriter.writeTripleContains(fromId, arId, false);
   return arId;
 }
 
@@ -1499,10 +1476,14 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
   return arId;
 }
 
+long GimpleKdmTripleWriter::writeKdmFlow(KdmType const & flow, long const fromId, long toId)
+{
+  return writeKdmActionRelation(flow, fromId, toId);
+}
 
 long GimpleKdmTripleWriter::writeKdmFlow(long const fromId, long const toId)
 {
-  return writeKdmActionRelation(KdmType::Flow(), fromId, toId);
+  return writeKdmFlow(KdmType::Flow(), fromId, toId);
 }
 
 void GimpleKdmTripleWriter::writeKdmUnaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhsTarget)

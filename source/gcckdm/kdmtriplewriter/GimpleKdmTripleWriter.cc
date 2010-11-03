@@ -240,7 +240,6 @@ void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t
     if (!lastData)
     {
       lastData = mLabelQueue.front();
-      mLabelQueue.pop();
 
       //If there was only one element in the queue we can write the
       //contains and flow and bail.

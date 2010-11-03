@@ -232,76 +232,36 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
 void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t const loc)
 {
   long blockId = getBlockReferenceId(loc);
-  ActionDataPtr lastData;
+
+  ActionDataPtr prevData;
+  ActionDataPtr currData;
+
   for (; !mLabelQueue.empty(); mLabelQueue.pop())
   {
-    //If this is the first time through the loop we pop off the
-    //first element and handle special conditions
-    if (!lastData)
-    {
-      lastData = mLabelQueue.front();
+    currData = mLabelQueue.front();
+    //ensure every label/goto is contained in a block unit
+    mKdmWriter.writeTripleContains(blockId, currData->actionId());
 
-      //If there was only one element in the queue we can write the
-      //contains and flow and bail.
-      if (mLabelQueue.empty())
-      {
-        mKdmWriter.writeTripleContains(blockId, lastData->actionId());
-        writeKdmFlow(lastData->actionId(), actionData->startActionId());
-        lastData.reset();
-        break;
-      }
+    if (prevData && !prevData->isGotoAction())
+    {
+      writeKdmFlow(prevData->actionId(), currData->startActionId());
     }
-    //We've got more than one element in the queue
     else
     {
-      ActionDataPtr data = mLabelQueue.front();
-
-      //If we have more elements in the queue we can write the contains
-      //flows, otherwise the contains and flows are written outside the
-      //loop
-      if (mLabelQueue.size() > 1)
-      {
-        mKdmWriter.writeTripleContains(blockId, data->actionId());
-        //Hook up flow from lastData to current data
-        if (!lastData->isGotoAction())
-        {
-          writeKdmFlow(lastData->actionId(), data->startActionId());
-        }
-      }
-
-      //setup lastData for next loop
-      if (!(data->isGotoAction()))
-      {
-        lastData = data;
-      }
-      else
-      {
-        //Skip the goto by popping it off..
-        mLabelQueue.pop();
-        if (mLabelQueue.empty())
-        {
-          lastData.reset();
-        }
-        else
-        {
-          lastData=mLabelQueue.front();
-        }
-      }
+      prevData=currData;
     }
   }
 
-  //If lastData isn't a goto
-  if (lastData && !lastData->isGotoAction())
+  if (prevData)
   {
-    mKdmWriter.writeTripleContains(blockId, lastData->actionId());
-    //hook up flow from last element to the given action element
-    writeKdmFlow(lastData->actionId(), actionData->startActionId());
+    if (!prevData->isGotoAction())
+    {
+      //hook up flow from last element to the given action element
+      writeKdmFlow(prevData->actionId(), actionData->startActionId());
+    }
   }
   mLabelFlag = !mLabelFlag;
 }
-
-
-
 
 
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
@@ -418,33 +378,26 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
   if (mLabelFlag && !gcckdm::locationIsUnknown(mLastLocation))
   {
     long blockId = getBlockReferenceId(mLastLocation);
-    ActionDataPtr previousData;
+    ActionDataPtr prevData;
+    ActionDataPtr currData;
+
     for (; !mLabelQueue.empty(); mLabelQueue.pop())
     {
-      if (!previousData)
+      ActionDataPtr currData = mLabelQueue.front();
+      //Ensure every label/goto is contained
+      mKdmWriter.writeTripleContains(blockId, currData->actionId());
+
+      if (prevData && (!prevData->isGotoAction() && !prevData->isReturnAction()))
       {
-        previousData = mLabelQueue.front();
-        mLabelQueue.pop();
-
-        //If there was only one element in the queue we can write the contains and bail
-        if (mLabelQueue.empty())
-        {
-          mKdmWriter.writeTripleContains(blockId, previousData->actionId());
-          mLastData=previousData;
-          break;
-        }
+        writeKdmFlow(prevData->actionId(), currData->actionId());
       }
-      ActionDataPtr currentData = mLabelQueue.front();
-      mKdmWriter.writeTripleContains(blockId, currentData->actionId());
-
-      if (!previousData->isGotoAction() && !previousData->isReturnAction())
+      else
       {
-        writeKdmFlow(previousData->actionId(), currentData->actionId());
+        mLastData = currData;
+        prevData = currData;
       }
-      mLastData = mLabelQueue.front();
-      previousData = mLabelQueue.front();
-
     }
+
     mLabelFlag = !mLabelFlag;
   }
 

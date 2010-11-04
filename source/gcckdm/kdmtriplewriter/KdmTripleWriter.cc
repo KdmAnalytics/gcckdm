@@ -347,7 +347,7 @@ void KdmTripleWriter::startKdmGimplePass()
     {
       if (!hasReferenceId(pNode->decl))
       {
-        writeKdmStorableUnit(pNode->decl, true);
+        writeKdmStorableUnit(pNode->decl, WriteKdmContainsRelation);
         markNodeAsProcessed(pNode->decl);
       }
     }
@@ -563,7 +563,7 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
 {
   assert(DECL_P(decl));
 
-  int treeCode(TREE_CODE(decl));
+  int treeCode = TREE_CODE(decl);
   switch (treeCode)
   {
     case VAR_DECL:
@@ -602,13 +602,17 @@ void KdmTripleWriter::processAstDeclarationNode(tree const decl)
       processAstTemplateDecl(decl);
       break;
     }
-    case RESULT_DECL:
-    {
-      //Ignore for the moment.  In tree-pretty-print.c they simply print "<retval>"
-      //It's possible that we should do something with this but for now.....
-      //Found in gvariant-serialiser.tkdm - glib-2.24.2
-      break;
-    }
+//    case RESULT_DECL:
+//    {
+//
+//      //Should this be moved to gimple?
+//      writeKdmStorableUnit(decl, WriteKdmContainsRelation, LocalStorableUnitScope);
+//      //Ignore for the moment.  In tree-pretty-print.c they simply print "<retval>"
+//      //It's possible that we should do something with this but for now.....
+//      //Found in gvariant-serialiser.tkdm - glib-2.24.2
+//      //Found in gtktext.kdm = gtk+-2.22.0
+//      break;
+//    }
     case LABEL_DECL:
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
@@ -908,7 +912,7 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
 
 void KdmTripleWriter::processAstVariableDeclarationNode(tree const varDeclaration)
 {
-  writeKdmStorableUnit(varDeclaration, true);
+  writeKdmStorableUnit(varDeclaration, WriteKdmContainsRelation);
 }
 
 void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl)
@@ -1213,9 +1217,18 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
   writeTripleContains(signatureId, paramId);
 
   //Iterator through argument list
-  tree arg(DECL_ARGUMENTS (functionDecl));
-  tree argType(TYPE_ARG_TYPES (TREE_TYPE (functionDecl)));
-  while (argType && (argType != void_list_node))
+  tree arg = DECL_ARGUMENTS (functionDecl);
+  tree argType = TYPE_ARG_TYPES (TREE_TYPE (functionDecl));
+  //While it would be reasonable to not allow an argument without a type
+  //C apparently allows this sort of code:
+  //
+  //int foo(depth)
+  //{
+  //  return depth +1;
+  //}
+  // Therefore we have to check to ensure that we don't have
+  // arg or type before exiting the loop
+  while ((arg || argType) && (argType != void_list_node))
   {
     if (arg)
     {
@@ -1224,7 +1237,10 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
       writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }
-    argType = TREE_CHAIN (argType);
+    if (argType)
+    {
+      argType = TREE_CHAIN (argType);
+    }
   }
 
   // Throws
@@ -1795,7 +1811,7 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   return itemId;
 }
 
-long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains, bool local)
+long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy, StorableUnitScopePolicy const scopePolicy)
 {
   long unitId = getReferenceId(var);
   writeTripleKdmType(unitId, KdmType::StorableUnit());
@@ -1806,7 +1822,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains, b
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
 
-  if (!local)
+  if (scopePolicy == GlobalStorableUnitScope)
   {
     if (DECL_EXTERNAL(var))
     {
@@ -1824,7 +1840,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, bool writeContains, b
 //    writeTripleKind(unitId, KdmKind::Global());
 //  }
 
-  if (writeContains)
+  if (containPolicy == WriteKdmContainsRelation)
   {
     writeTripleLinkId(unitId, name);
     writeTripleContains(getSourceFileReferenceId(var), unitId);

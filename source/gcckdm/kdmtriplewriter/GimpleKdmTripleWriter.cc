@@ -545,7 +545,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
     }
     else
     {
-      long declId = mKdmWriter.writeKdmStorableUnit(var, false, true);
+      long declId = mKdmWriter.writeKdmStorableUnit(var, KdmTripleWriter::SkipKdmContainsRelation, KdmTripleWriter::LocalStorableUnitScope);
       std::string name = gcckdm::getAstNodeName(var);
       //local register variable...
       if (boost::starts_with(name, "D."))
@@ -709,7 +709,16 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
   if (t)
   {
     long id = getReferenceId(t);
-    mKdmWriter.processAstNode(t);
+    if (TREE_CODE(t) == RESULT_DECL)
+    {
+      mKdmWriter.writeKdmStorableUnit(t, KdmTripleWriter::SkipKdmContainsRelation, KdmTripleWriter::LocalStorableUnitScope);
+      mKdmWriter.writeTripleContains(mCurrentCallableUnitId, id);
+      mKdmWriter.markNodeAsProcessed(t);
+    }
+    else
+    {
+      mKdmWriter.processAstNode(t);
+    }
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(t, id));
   }
 
@@ -1763,7 +1772,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
     writeKdmFlow(selectData->actionId(), actionData->actionId());
     selectData.reset();
   }
-  else if (TREE_CODE(op0) == COMPONENT_REF || TREE_CODE(op0) == INDIRECT_REF)
+
+  if (TREE_CODE(op0) == COMPONENT_REF || TREE_CODE(op0) == INDIRECT_REF)
   {
     if (TREE_CODE(op0) == COMPONENT_REF)
     {

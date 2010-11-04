@@ -501,7 +501,7 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       // the label to the next actionElement after the label
       // mLabelFlag is set in the processGimpleLabelStatement and processGimpleGotoStatement methods
       //
-      if (mLabelFlag)
+      if (mLabelFlag && !gcckdm::locationIsUnknown(gimple_location(gs)))
       {
         writeLabelQueue(actionData, gimple_location(gs));
       }
@@ -586,6 +586,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
   {
     fields = 1;
   }
+
+  ActionDataPtr prevData;
+  ActionDataPtr currData;
+
   unsigned n;
   for (unsigned f = 0; f < fields; ++f)
   {
@@ -604,16 +608,33 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
               op = TREE_VALUE(op);
             }
             //We are assuming single value in the tree
-            ActionDataPtr valueData = getRhsReferenceId(op);
+            currData = getRhsReferenceId(op);
 
-            //Hook up flows
-            if (valueData->hasActionId())
+            //If we have a PtrSelect we need to contain it in the ASM statement
+            if (currData->hasActionId())
             {
-              actionData->startActionId(*valueData);
-              writeKdmFlow(valueData->actionId(), actionData->actionId());
+              mKdmWriter.writeTripleContains(actionData->actionId(), currData->actionId());
+              //if we don't already have a flow start start one
+              if (!actionData->hasFlow())
+              {
+                actionData->startActionId(*currData);
+              }
             }
-            writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), RelationTarget(op, valueData->outputId()));
+
+            //Hook up flows if we have more than one output
+            if (prevData && currData->hasActionId())
+            {
+              writeKdmFlow(prevData->actionId(), currData->actionId());
+            }
+
+            writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), RelationTarget(op, currData->outputId()));
+
+            if (currData->hasActionId())
+            {
+              prevData = currData;
+            }
           }
+
         }
         break;
       }
@@ -621,7 +642,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
       {
         n = gimple_asm_ninputs (gs);
         if (n != 0)
-        {
           for (unsigned i = 0; i < n; i++)
           {
             tree op = gimple_asm_input_op (gs, i);
@@ -630,18 +650,33 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
               op = TREE_VALUE(op);
             }
             //We are assuming single value in the tree
-            ActionDataPtr valueData = getRhsReferenceId(op);
+            currData = getRhsReferenceId(op);
 
-            //Hook up flows
-            if (valueData->hasActionId())
+            //If we have a PtrSelect we need to contain it in the ASM statement
+            if (currData->hasActionId())
             {
-              actionData->startActionId(*valueData);
-              writeKdmFlow(valueData->actionId(), actionData->actionId());
+              mKdmWriter.writeTripleContains(actionData->actionId(), currData->actionId());
+              //if we don't already have a flow start start one
+              if (!actionData->hasFlow())
+              {
+                actionData->startActionId(*currData);
+              }
             }
 
-            writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(op, valueData->outputId()));
+            //Hook up flows if we have more than one output
+            if (prevData && currData->hasActionId())
+            {
+              writeKdmFlow(prevData->actionId(), currData->actionId());
+            }
+
+            writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), RelationTarget(op, currData->outputId()));
+
+            if (currData->hasActionId())
+            {
+              prevData = currData;
+            }
           }
-        }
+
       }
       default:
       {
@@ -649,6 +684,13 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
       }
     }
   }
+
+  //Hook up flow from last prevData to actionId if we had any compound read or writes
+  if (prevData)
+  {
+    writeKdmFlow(prevData->actionId(), actionData->actionId());
+  }
+
 
   if (actionData)
   {
@@ -810,8 +852,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 {
   ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
-
-  int id = actionData->actionId();
 
   //op0 can be a VAR_DECL, PARM_DECL or FUNCTION_DECL
   tree op0 = resolveCall(gimple_call_fn(gs));

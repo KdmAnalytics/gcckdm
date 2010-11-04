@@ -246,10 +246,7 @@ void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t
     {
       writeKdmFlow(prevData->actionId(), currData->startActionId());
     }
-    else
-    {
-      prevData=currData;
-    }
+    prevData=currData;
   }
 
   if (prevData)
@@ -391,11 +388,8 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
       {
         writeKdmFlow(prevData->actionId(), currData->actionId());
       }
-      else
-      {
-        mLastData = currData;
-        prevData = currData;
-      }
+      mLastData = currData;
+      prevData = currData;
     }
 
     mLabelFlag = !mLabelFlag;
@@ -816,6 +810,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 {
   ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
+
+  int id = actionData->actionId();
 
   //op0 can be a VAR_DECL, PARM_DECL or FUNCTION_DECL
   tree op0 = resolveCall(gimple_call_fn(gs));

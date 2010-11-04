@@ -64,6 +64,18 @@ class KdmTripleWriter: public GccAstListener, public TripleWriter
 {
 public:
 
+  enum ContainsRelationPolicy
+  {
+    WriteKdmContainsRelation = 0,
+    SkipKdmContainsRelation = 1
+  };
+
+  enum StorableUnitScopePolicy
+  {
+    GlobalStorableUnitScope = 0,
+    LocalStorableUnitScope = 1
+  };
+
   /**
    * User Configurable Writer Settings
    *
@@ -251,7 +263,7 @@ public:
    * @param writeContains if true writes contains triple using the file var is found in as the parent
    * @return the refId of the StorableUnit
    */
-  long writeKdmStorableUnit(tree const var, bool writeContains, bool local = false);
+  long writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy, StorableUnitScopePolicy const scopePolicy = GlobalStorableUnitScope);
 
 
   /**

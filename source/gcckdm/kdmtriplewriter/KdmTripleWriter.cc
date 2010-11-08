@@ -2007,10 +2007,13 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
 {
   long typeKdmElementId = getReferenceId(type);
 
-  std::string name(nodeName(type));
+  std::string name = nodeName(type);
 
   KdmType kdmType = KdmType::PrimitiveType();
-  if (name.find("int") != std::string::npos || name.find("long") != std::string::npos)
+  if (name.find("int") != std::string::npos ||
+      name.find("long") != std::string::npos ||
+      name.find("unnamed-unsigned")!= std::string::npos ||
+      name.find("unnamed-signed")!= std::string::npos)
   {
     kdmType = KdmType::IntegerType();
   }
@@ -2030,10 +2033,14 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   {
     kdmType = KdmType::CharType();
   }
-  else if (name.find("bool") != std::string::npos)
+  else if (name.find("bool") != std::string::npos || name.find("_Bool") != std::string::npos)
   {
     kdmType = KdmType::BooleanType();
   }
+//  else
+//  {
+//    writeComment(name);
+//  }
 
   writeTripleKdmType(typeKdmElementId, kdmType);
   writeTripleName(typeKdmElementId, name);

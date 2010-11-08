@@ -426,6 +426,16 @@ std::string getAstNodeName(tree node)
               nameStr = getAstDeclarationNodeName(TYPE_NAME(node));
             }
           }
+          else if (TREE_CODE (node) == INTEGER_TYPE)
+          {
+            nameStr += TYPE_UNSIGNED (node) ? "unnamed-unsigned:" : "unnamed-signed:";
+            nameStr += boost::str(boost::format("%d") % (unsigned)TYPE_PRECISION (node));
+          }
+          else if (TREE_CODE (node) == REAL_TYPE)
+          {
+            nameStr += "float:";
+            nameStr += boost::str(boost::format("%d") % (unsigned)TYPE_PRECISION (node));
+          }
         }
         break;
       }

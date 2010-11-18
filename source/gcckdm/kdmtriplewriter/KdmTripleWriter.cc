@@ -472,6 +472,14 @@ void KdmTripleWriter::processAstNode(tree const ast)
 {
   try
   {
+//    good debug code
+//    if (hasReferenceId(ast))
+//    {
+//      int i = getReferenceId(ast);
+//      std::cerr << "refid: " << i << std::endl;
+//    }
+
+
     //Ensure we haven't processed this node node before
     if (mProcessedNodes.find(ast) == mProcessedNodes.end())
     {
@@ -687,6 +695,7 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
       if(DECL_ARTIFICIAL(typeDecl))
       {
         processAstNode(typeNode);
+        return;
       }
     }
   }
@@ -699,7 +708,7 @@ void KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   tree id (DECL_NAME (typeDecl));
   writeTripleName(typedefKdmElementId, nodeName(id));
 
-  long typeKdmElementId = getReferenceId(typeNode);
+  long typeKdmElementId = getReferenceId(TYPE_MAIN_VARIANT(typeNode));
   writeTriple(typedefKdmElementId, KdmPredicate::Type(), typeKdmElementId);
 
   // Write the containment information
@@ -1794,11 +1803,49 @@ long KdmTripleWriter::writeKdmMemberUnit(tree const member)
   return memberId;
 }
 
+tree typedefTypeCheck(tree const node)
+{
+  //determining type declaration
+  tree type = TREE_TYPE(node);
+
+  //TODO: could put const/volatile/restrict qualifiers here....
+
+  enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
+  if (tclass == tcc_type)
+  {
+    //does this type have a name
+    if (TYPE_NAME (type))
+    {
+      //ensure we are declaring a type and that is has a name
+      if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
+          && DECL_NAME (TYPE_NAME (type)))
+      {
+        if (TYPE_MAIN_VARIANT(TREE_TYPE(node)) == TREE_TYPE(TYPE_NAME (type)))
+        {
+          type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
+        }
+        else
+        {
+          type = TYPE_NAME (type);
+        }
+      }
+    }
+  }
+  else
+  {
+    type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
+  }
+  return type;
+}
+
+
 long KdmTripleWriter::writeKdmItemUnit(tree const item)
 {
   long itemId = getReferenceId(item);
   writeTripleKdmType(itemId, KdmType::ItemUnit());
-  tree type(TYPE_MAIN_VARIANT(TREE_TYPE(item)));
+
+  tree type = typedefTypeCheck(item);
+
   long ref = getReferenceId(type);
   std::string name(nodeName(item));
 
@@ -1815,9 +1862,40 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
 {
   long unitId = getReferenceId(var);
   writeTripleKdmType(unitId, KdmType::StorableUnit());
-  std::string name= nodeName(var);
+  std::string name = nodeName(var);
   writeTripleName(unitId, name);
-  tree type(TYPE_MAIN_VARIANT(TREE_TYPE(var)));
+
+  //determining type declaration
+  tree type = typedefTypeCheck(var);
+
+//  //TODO: could put const/volatile/restrict qualifiers here....
+//
+//  enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
+//  if (tclass == tcc_type)
+//  {
+//    //does this type have a name
+//    if (TYPE_NAME (type))
+//    {
+//      //ensure we are declaring a type and that is has a name
+//      if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
+//          && DECL_NAME (TYPE_NAME (type)))
+//      {
+//        if (TYPE_MAIN_VARIANT(TREE_TYPE(var)) == TREE_TYPE(TYPE_NAME (type)))
+//        {
+//          type = TYPE_MAIN_VARIANT(TREE_TYPE(var));
+//        }
+//        else
+//        {
+//          type = TYPE_NAME (type);
+//        }
+//      }
+//    }
+//  }
+//  else
+//  {
+//    type = TYPE_MAIN_VARIANT(TREE_TYPE(var));
+//  }
+
   long ref = getReferenceId(type);
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
@@ -1834,11 +1912,6 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
       writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
     }
   }
-//  if (!DECL_EXTERNAL(var) && !local)
-//  {
-//    writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
-//    writeTripleKind(unitId, KdmKind::Global());
-//  }
 
   if (containPolicy == WriteKdmContainsRelation)
   {
@@ -2140,6 +2213,12 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
     std::string linkId;
     if (isAnonymousStruct(mainRecordType))
     {
+//        //tree type = TYPE_MAIN_VARIANT (mainRecordType);
+//
+//        //tree decl (TYPE_NAME (type));
+//        tree id (DECL_NAME (mainRecordType));
+//        const char* name2 (IDENTIFIER_POINTER (id));
+//        std::cerr << name2 << std::endl;
       name = unnamedNode;
       linkId = "U." + boost::lexical_cast<std::string>(TYPE_UID(mainRecordType));
     }
@@ -2191,6 +2270,16 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
         }
       }
     }
+
+    if (DECL_ARTIFICIAL(mainRecordType))
+    {
+      std::cerr << "ARTIFICIAL" << std::endl;
+    }
+    else
+    {
+      std::cerr << " NOT ARTIFICIAL" << std::endl;
+    }
+
 
     writeKdmSourceRef(structId, mainRecordType);
     writeTripleContains(compilationUnitId, structId);

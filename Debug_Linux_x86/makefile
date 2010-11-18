@@ -45,7 +45,7 @@ all: libGccKdm.so
 libGccKdm.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++-4.5 -L/usr/local/lib -shared -o"libGccKdm.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	/usr/local/bin/g++ -L/usr/local/lib -shared -o"libGccKdm.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

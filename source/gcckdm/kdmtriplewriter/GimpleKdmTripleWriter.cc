@@ -533,6 +533,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
 
     if (TREE_CODE(var) == TYPE_DECL)
     {
+      mKdmWriter.writeComment("Skipping TYPE_DECL in bind statement....");
       //User has declared a type within a function so we skip it currently
       //to prevent double containment when it is output at the
       //end of the translation unit

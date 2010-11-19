@@ -43,7 +43,8 @@
 
 namespace
 {
-  namespace ktw = gcckdm::kdmtriplewriter;
+
+namespace ktw = gcckdm::kdmtriplewriter;
 
 /// Prefix for all KDM triple format comments
 std::string const commentPrefix("# ");
@@ -55,6 +56,7 @@ std::string const unsupportedPrefix("UNSUPPORTED: ");
 std::string const unnamedNode("<unnamed>");
 
 std::string const linkCallablePrefix("c.function/");
+
 std::string const linkVariablePrefix("c.variable/");
 
 /**
@@ -106,6 +108,14 @@ void fixPathString(std::string & pathStr)
   boost::replace_all(pathStr, "\\", "/");
 }
 
+/**
+ * If the outputCompletePath setting is true, the given path is completed and normalized and tested for
+ * existance, if it exists the complete and normalized path is returned, otherwise the original
+ * path is returned unaltered.
+ *
+ * @param settings the user defined compile time settings
+ * @param p the path to attempt to complete and normalize
+ */
 ktw::KdmTripleWriter::Path checkPathType(ktw::KdmTripleWriter::Settings const & settings, ktw::KdmTripleWriter::Path const & p)
 {
   ktw::KdmTripleWriter::Path tmp = p;
@@ -117,7 +127,13 @@ ktw::KdmTripleWriter::Path checkPathType(ktw::KdmTripleWriter::Settings const & 
   return boost::filesystem::exists(tmp) ? tmp : p;
 }
 
-
+/**
+ * Utility function which determines the type of the given node
+ * if the node is a typedef returns the type of the typedef otherwise
+ * it returns the real type via TYPE_MAIN_VARIANT
+ *
+ * @param node a type node
+ */
 tree typedefTypeCheck(tree const node)
 {
   //determining type declaration
@@ -136,10 +152,12 @@ tree typedefTypeCheck(tree const node)
         if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
             && DECL_NAME (TYPE_NAME (type)))
         {
+          //If we really have the orignal type just return it
           if (TYPE_MAIN_VARIANT(TREE_TYPE(node)) == TREE_TYPE(TYPE_NAME (type)))
           {
             type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
           }
+          //otherwise we have a typedef and return that instead
           else
           {
             type = TYPE_NAME (type);
@@ -147,11 +165,13 @@ tree typedefTypeCheck(tree const node)
         }
       }
     }
+    //return the real type
     else
     {
       type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
     }
   }
+  //This node is a primitive type
   else
   {
     type = TYPE_MAIN_VARIANT(node);
@@ -228,6 +248,9 @@ public:
   {
   }
 
+  /**
+   * Called when a new vertex is discovered in the DFS traversal
+   */
   void discover_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
   {
     //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
@@ -243,6 +266,9 @@ public:
     mLastVertex = v;
   }
 
+  /**
+   * Called when we are leaving a vertex in the DFS traversal
+   */
   void finish_vertex(KdmTripleWriter::Vertex v, KdmTripleWriter::UidGraph const & g)
   {
     //KdmTripleWriter::UidGraph & gg= const_cast<KdmTripleWriter::UidGraph&>(g);
@@ -265,6 +291,7 @@ public:
       mWriter.writeTriple(mGraph[v].elementId, KdmPredicate::LastUid(), boost::lexical_cast<std::string>(mGraph[v].endUid));
     }
   }
+
 private:
   KdmTripleWriter & mWriter;
   KdmTripleWriter::UidGraph & mGraph;
@@ -348,6 +375,9 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this, settings));
 }
 
+/**
+ * Ensure that the kdmSink is flushed before destruction
+ */
 KdmTripleWriter::~KdmTripleWriter()
 {
   //Write out anything remaining in the stream
@@ -380,6 +410,9 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
   }
 }
 
+/**
+ * For C, we have to traverse all variable stored in the var pool
+ */
 void KdmTripleWriter::startKdmGimplePass()
 {
   try
@@ -391,6 +424,9 @@ void KdmTripleWriter::startKdmGimplePass()
       if (!hasReferenceId(pNode->decl))
       {
         writeKdmStorableUnit(pNode->decl, WriteKdmContainsRelation);
+        //Since we are writing storable units directly and not using the processAstXXXX methods
+        //we have to manually mark the decl as processed to ensure that it isn't processed
+        //elsewhere
         markNodeAsProcessed(pNode->decl);
       }
     }
@@ -401,6 +437,10 @@ void KdmTripleWriter::startKdmGimplePass()
   }
 }
 
+/**
+ * Nothing much to do here except ensure that any nodes that have been
+ * placed on the queue while processing other nodes are processsed.
+ */
 void KdmTripleWriter::finishKdmGimplePass()
 {
   try
@@ -439,15 +479,21 @@ void KdmTripleWriter::writeReferencedSharedUnits()
   }
 }
 
+/*8
+ * This class is used when writing the contains graph via graphvis
+ */
 class VertexPropertyWriter
 {
 public:
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> Graph;
+
   VertexPropertyWriter(Graph& graph) : mGraph(graph)
   {
-
   }
 
+  /**
+   * Ensure that label is the elementId instead of a random number
+   */
   template <class Vertex>
   void operator()(std::ostream& out, const Vertex v) const
   {
@@ -475,7 +521,6 @@ void KdmTripleWriter::writeUids()
     }
   }
 
-
   if (foundFlag)
   {
     //Perform a depth_first_search using the segment as our starting point
@@ -499,7 +544,11 @@ void KdmTripleWriter::finishTranslationUnit()
 {
   try
   {
+    //process any remaining nodes
     processNodeQueue();
+
+    //finally If the user wants UIDs in the output,
+    //we write them here
     if (mSettings.generateUids)
     {
       writeUids();

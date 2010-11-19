@@ -2347,14 +2347,14 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
       }
     }
 
-    if (DECL_ARTIFICIAL(mainRecordType))
-    {
-      std::cerr << "ARTIFICIAL" << std::endl;
-    }
-    else
-    {
-      std::cerr << " NOT ARTIFICIAL" << std::endl;
-    }
+//    if (DECL_ARTIFICIAL(mainRecordType))
+//    {
+//      std::cerr << "ARTIFICIAL" << std::endl;
+//    }
+//    else
+//    {
+//      std::cerr << " NOT ARTIFICIAL" << std::endl;
+//    }
 
 
     writeKdmSourceRef(structId, mainRecordType);

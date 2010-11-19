@@ -123,32 +123,38 @@ tree typedefTypeCheck(tree const node)
   //determining type declaration
   tree type = TREE_TYPE(node);
 
-  //TODO: could put const/volatile/restrict qualifiers here....
-
-  enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
-  if (tclass == tcc_type)
+  if (type)
   {
-    //does this type have a name
-    if (TYPE_NAME (type))
+    //TODO: could put const/volatile/restrict qualifiers here....
+    enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
+    if (tclass == tcc_type)
     {
-      //ensure we are declaring a type and that is has a name
-      if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
-          && DECL_NAME (TYPE_NAME (type)))
+      //does this type have a name
+      if (TYPE_NAME (type))
       {
-        if (TYPE_MAIN_VARIANT(TREE_TYPE(node)) == TREE_TYPE(TYPE_NAME (type)))
+        //ensure we are declaring a type and that is has a name
+        if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
+            && DECL_NAME (TYPE_NAME (type)))
         {
-          type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
-        }
-        else
-        {
-          type = TYPE_NAME (type);
+          if (TYPE_MAIN_VARIANT(TREE_TYPE(node)) == TREE_TYPE(TYPE_NAME (type)))
+          {
+            type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
+          }
+          else
+          {
+            type = TYPE_NAME (type);
+          }
         }
       }
+    }
+    else
+    {
+      type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
     }
   }
   else
   {
-    type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
+    type = TYPE_MAIN_VARIANT(node);
   }
   return type;
 }
@@ -1257,9 +1263,10 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
   writeTripleKdmType(signatureId, KdmType::Signature());
   writeTripleName(signatureId, name);
   //Determine return type id
-  tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
-  tree t2(TYPE_MAIN_VARIANT(t));
-  long paramId = writeKdmReturnParameterUnit(t2);
+  //  tree t(TREE_TYPE (TREE_TYPE (functionDecl)));
+  //  tree t2 = typedefTypeCheck(TREE_TYPE (functionDecl));
+  //(TYPE_MAIN_VARIANT(t));
+  long paramId = writeKdmReturnParameterUnit(TREE_TYPE (functionDecl));
   writeTripleContains(signatureId, paramId);
 
   //Iterator through argument list
@@ -1780,7 +1787,8 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
 
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
-  long ref = getReferenceId(TYPE_MAIN_VARIANT(param));
+  tree type = typedefTypeCheck(param);
+  long ref = getReferenceId(type);
   writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
   writeTripleName(mKdmElementId, "__RESULT__");
   writeTriple(mKdmElementId, KdmPredicate::Type(), ref);

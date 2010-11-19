@@ -231,7 +231,7 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
         settings.containmentCheck = true;
       }
     }
-    else if (key == "assembler-output")
+    else if (key == "output-assembler")
     {
       settings.assemberOutput = true;
     }
@@ -283,7 +283,15 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
       fs::path outputDir(value);
       if (!fs::exists(outputDir))
       {
-        fs::create_directory(outputDir);
+        try
+        {
+          fs::create_directory(outputDir);
+        }
+        catch (fs::basic_filesystem_error<fs::path>& e)
+        {
+          fatal_error(G_("Unable to create output directory: %qs"), e.path1().file_string().c_str());
+          exit(1);
+        }
       }
       settings.outputDir = outputDir;
     }

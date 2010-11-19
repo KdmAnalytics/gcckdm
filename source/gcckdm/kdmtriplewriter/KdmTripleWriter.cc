@@ -1868,34 +1868,6 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   //determining type declaration
   tree type = typedefTypeCheck(var);
 
-//  //TODO: could put const/volatile/restrict qualifiers here....
-//
-//  enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
-//  if (tclass == tcc_type)
-//  {
-//    //does this type have a name
-//    if (TYPE_NAME (type))
-//    {
-//      //ensure we are declaring a type and that is has a name
-//      if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
-//          && DECL_NAME (TYPE_NAME (type)))
-//      {
-//        if (TYPE_MAIN_VARIANT(TREE_TYPE(var)) == TREE_TYPE(TYPE_NAME (type)))
-//        {
-//          type = TYPE_MAIN_VARIANT(TREE_TYPE(var));
-//        }
-//        else
-//        {
-//          type = TYPE_NAME (type);
-//        }
-//      }
-//    }
-//  }
-//  else
-//  {
-//    type = TYPE_MAIN_VARIANT(TREE_TYPE(var));
-//  }
-
   long ref = getReferenceId(type);
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);

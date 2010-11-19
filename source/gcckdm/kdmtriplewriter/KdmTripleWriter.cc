@@ -1946,6 +1946,9 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
 
+
+
+
   if (scopePolicy == GlobalStorableUnitScope)
   {
     if (DECL_EXTERNAL(var))
@@ -1964,6 +1967,13 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
     writeTripleLinkId(unitId, name);
     writeTripleContains(getSourceFileReferenceId(var), unitId);
   }
+
+  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE)
+  {
+    writeRelation(KdmType::HasType(), unitId, ref);
+  }
+
+
   return unitId;
 }
 
@@ -2546,6 +2556,18 @@ void KdmTripleWriter::writeLanguageUnitContains(long const child, bool uid)
   writeTripleContains(KdmElementId_LanguageUnit, child, uid);
   lockUid(val);
 }
+
+
+long KdmTripleWriter::writeRelation(KdmType const & type, long const fromId, long const toId)
+{
+  long relId = getNextElementId();
+  writeTripleKdmType(relId, type);
+  writeTriple(relId, KdmPredicate::From(), fromId);
+  writeTriple(relId, KdmPredicate::To(), toId);
+  writeTripleContains(fromId, relId, false); //relations don't have uid's
+  return relId;
+}
+
 
 } // namespace kdmtriplewriter
 

@@ -69,6 +69,9 @@ public:
 
 private:
 
+  /**
+   * Wrapper class to allow action relationships to know the actual node as well as the id
+   */
   struct RelationTarget
   {
     RelationTarget(tree const targetNode, long nodeRefId) : node(targetNode), id(nodeRefId)
@@ -142,6 +145,15 @@ private:
   void processGimpleBindStatement(gimple const gs);
 
 
+  /**
+   * Processes an GIMPLE ASM statement, we don't specifically
+   * support ASM statements however we parse the ASM enough
+   * to create a Asm KDM element that has 0 or more reads from variables
+   * in the ASM and that has 0 or more writes to variables in the ASM
+   *
+   * @param gs the GIMPLE_ASM statment
+   * @param a pointer to a ActionData representing the gimple asm statement
+   */
   ActionDataPtr processGimpleAsmStatement(gimple const gs);
 
   /**

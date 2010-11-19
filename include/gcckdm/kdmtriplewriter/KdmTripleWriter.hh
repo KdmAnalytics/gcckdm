@@ -382,8 +382,23 @@ public:
    */
   void markNodeAsProcessed(tree node);
 
-
+  /**
+   * Return an id for the given value node.  If a node
+   * with the same name exists already in the language unit
+   * that value is returned instead
+   *
+   * @param node a value node ie string, integer, etc
+   */
   long getValueId(tree const node);
+
+  /**
+   * Write relation of the given type from fromId to toId
+   *
+   * @param type the KDM type of the relation to write
+   * @param fromId the id of the origin of the relation
+   * @param toId the id of the target of the relation
+   */
+  long writeRelation(KdmType const & type, const long fromId, const long toId);
 
 private:
 
@@ -653,6 +668,10 @@ private:
    * @returns true if the graph was updated (no duplicate containment)
    */
   bool updateUidGraph(const long parent, const long child);
+
+
+
+
 
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
   long mKdmElementId; /// The current element id, incremented for each new element

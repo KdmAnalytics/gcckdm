@@ -1475,12 +1475,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmNopForLabel(
 
 long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long const fromId, long const toId)
 {
-  long arId = mKdmWriter.getNextElementId();
-  mKdmWriter.writeTripleKdmType(arId, type);
-  mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
-  mKdmWriter.writeTriple(arId, KdmPredicate::To(), toId);
-  mKdmWriter.writeTripleContains(fromId, arId, false);
-  return arId;
+  return mKdmWriter.writeRelation(type, fromId, toId);
 }
 
 

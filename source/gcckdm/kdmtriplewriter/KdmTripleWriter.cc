@@ -191,8 +191,32 @@ namespace gcckdm
 namespace kdmtriplewriter
 {
 
-  namespace bfs = boost::filesystem;
+namespace bfs = boost::filesystem;
 
+/**
+ * This class is used when writing the contains graph via graphviz
+ */
+class VertexPropertyWriter
+{
+public:
+  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> Graph;
+
+  VertexPropertyWriter(Graph& graph) : mGraph(graph)
+  {
+  }
+
+  /**
+   * Ensure that label is the elementId instead of a random number
+   */
+  template <class Vertex>
+  void operator()(std::ostream& out, const Vertex v) const
+  {
+    out << "[label=\"" << mGraph[v].elementId << "\"]";
+  }
+
+private:
+  Graph & mGraph;
+};
 
 
 /**
@@ -401,9 +425,6 @@ void KdmTripleWriter::startTranslationUnit(Path const & file)
 {
   try
   {
-//    //Ensure we have the complete path
-//    mCompilationFile = (!file.is_complete()) ? bfs::complete(file) : file;
-
     mCompilationFile = file;
     writeVersionHeader();
     writeDefaultKdmModelElements();
@@ -483,30 +504,6 @@ void KdmTripleWriter::writeReferencedSharedUnits()
   }
 }
 
-/*8
- * This class is used when writing the contains graph via graphvis
- */
-class VertexPropertyWriter
-{
-public:
-  typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> Graph;
-
-  VertexPropertyWriter(Graph& graph) : mGraph(graph)
-  {
-  }
-
-  /**
-   * Ensure that label is the elementId instead of a random number
-   */
-  template <class Vertex>
-  void operator()(std::ostream& out, const Vertex v) const
-  {
-    out << "[label=\"" << mGraph[v].elementId << "\"]";
-  }
-
-private:
-  Graph & mGraph;
-};
 
 void KdmTripleWriter::writeUids()
 {
@@ -1946,9 +1943,6 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
 
-
-
-
   if (scopePolicy == GlobalStorableUnitScope)
   {
     if (DECL_EXTERNAL(var))
@@ -1968,6 +1962,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
     writeTripleContains(getSourceFileReferenceId(var), unitId);
   }
 
+  //For the moment we only want structures to have hasType relationship
   if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE)
   {
     writeRelation(KdmType::HasType(), unitId, ref);

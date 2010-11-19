@@ -684,6 +684,8 @@ private:
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
+
+  /// Value cache
   ValueMap mValues;
 
   //Graph to store generated UID's

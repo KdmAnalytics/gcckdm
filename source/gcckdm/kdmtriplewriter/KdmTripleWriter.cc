@@ -1050,7 +1050,10 @@ void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
 
 void KdmTripleWriter::processAstValueNode(tree const val)
 {
-  writeKdmValue(val);
+  if (mValues.find(nodeName(val)) == mValues.end())
+  {
+    writeKdmValue(val);
+  }
 }
 
 
@@ -2022,7 +2025,10 @@ long KdmTripleWriter::getReferenceId(tree const node)
   return retValue;
 }
 
-
+/**
+ * Returns the id of the value, if it's cached...
+ * for values that haven't been cached they are processed immediately
+ */
 long KdmTripleWriter::getValueId(tree const node)
 {
   std::string name = nodeName(node);
@@ -2032,6 +2038,7 @@ long KdmTripleWriter::getValueId(tree const node)
   {
     valueId = getReferenceId(node);
     mValues.insert(std::make_pair(name, valueId));
+    processAstNode(node);
   }
   else
   {

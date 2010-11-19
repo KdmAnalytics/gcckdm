@@ -327,7 +327,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
   {
     data = ActionDataPtr(new ActionData());
     data->outputId(mKdmWriter.getValueId(rhs));
-    mKdmWriter.processAstNode(rhs);
   }
   else if (TREE_CODE(rhs) == ADDR_EXPR)
   {

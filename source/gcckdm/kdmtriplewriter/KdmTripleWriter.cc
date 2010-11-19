@@ -59,6 +59,8 @@ std::string const linkCallablePrefix("c.function/");
 
 std::string const linkVariablePrefix("c.variable/");
 
+long const InvalidId = -1;
+
 /**
  * Returns the name of the given node or the value of unnamedNode
  *
@@ -326,6 +328,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mInventoryMap(),
   mProcessedNodes(),
   mNodeQueue(),
+  mValues(),
   mUidGraph(),
   mUid(0),
   mUserTypes(),
@@ -353,6 +356,7 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
   mInventoryMap(),
   mProcessedNodes(),
   mNodeQueue(),
+  mValues(),
   mUidGraph(),
   mUid(0),
   mUserTypes(),
@@ -1965,7 +1969,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
 
 long KdmTripleWriter::writeKdmValue(tree const val)
 {
-  long valueId = getReferenceId(val);
+  long valueId = getValueId(val);
   tree type = TYPE_MAIN_VARIANT(TREE_TYPE(val));
   long ref = getReferenceId(type);
 
@@ -2011,6 +2015,24 @@ long KdmTripleWriter::getReferenceId(tree const node)
     retValue = result.first->second;
   }
   return retValue;
+}
+
+
+long KdmTripleWriter::getValueId(tree const node)
+{
+  std::string name = nodeName(node);
+  ValueMap::const_iterator i = mValues.find(name);
+  long valueId = InvalidId;
+  if (i == mValues.end())
+  {
+    valueId = getReferenceId(node);
+    mValues.insert(std::make_pair(name, valueId));
+  }
+  else
+  {
+    valueId = i->second;
+  }
+  return valueId;
 }
 
 

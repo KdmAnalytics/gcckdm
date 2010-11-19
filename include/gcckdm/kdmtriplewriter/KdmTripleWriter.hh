@@ -383,6 +383,7 @@ public:
   void markNodeAsProcessed(tree node);
 
 
+  long getValueId(tree const node);
 
 private:
 
@@ -401,6 +402,7 @@ private:
     }
   };
 
+  typedef std::tr1::unordered_map<std::string, long> ValueMap;
   typedef std::tr1::unordered_map<tree, long> TreeMap;
   typedef std::tr1::unordered_map<Path, long> FileMap;
   typedef std::tr1::unordered_set<tree> TreeSet;
@@ -663,6 +665,7 @@ private:
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
+  ValueMap mValues;
 
   //Graph to store generated UID's
   UidGraph mUidGraph;

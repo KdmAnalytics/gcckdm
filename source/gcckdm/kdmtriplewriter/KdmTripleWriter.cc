@@ -118,6 +118,43 @@ ktw::KdmTripleWriter::Path checkPathType(ktw::KdmTripleWriter::Settings const & 
 }
 
 
+tree typedefTypeCheck(tree const node)
+{
+  //determining type declaration
+  tree type = TREE_TYPE(node);
+
+  //TODO: could put const/volatile/restrict qualifiers here....
+
+  enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
+  if (tclass == tcc_type)
+  {
+    //does this type have a name
+    if (TYPE_NAME (type))
+    {
+      //ensure we are declaring a type and that is has a name
+      if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
+          && DECL_NAME (TYPE_NAME (type)))
+      {
+        if (TYPE_MAIN_VARIANT(TREE_TYPE(node)) == TREE_TYPE(TYPE_NAME (type)))
+        {
+          type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
+        }
+        else
+        {
+          type = TYPE_NAME (type);
+        }
+      }
+    }
+  }
+  else
+  {
+    type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
+  }
+  return type;
+}
+
+
+
 } // namespace
 
 namespace gcckdm
@@ -1767,8 +1804,18 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewEleme
 
   writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
 
-  tree type = TREE_TYPE(param) ? TREE_TYPE(param) : TREE_VALUE (param);
-  long ref = getReferenceId(TYPE_MAIN_VARIANT(type));
+  tree type = NULL_TREE;
+  if (TREE_TYPE(param))
+  {
+    type = typedefTypeCheck(param);
+  }
+  else
+  {
+    type = TYPE_MAIN_VARIANT(TREE_VALUE (param));
+  }
+
+
+  long ref = getReferenceId(type);
 
   std::string name(nodeName(param));
   writeTripleName(parameterUnitId, name);
@@ -1803,40 +1850,6 @@ long KdmTripleWriter::writeKdmMemberUnit(tree const member)
   return memberId;
 }
 
-tree typedefTypeCheck(tree const node)
-{
-  //determining type declaration
-  tree type = TREE_TYPE(node);
-
-  //TODO: could put const/volatile/restrict qualifiers here....
-
-  enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
-  if (tclass == tcc_type)
-  {
-    //does this type have a name
-    if (TYPE_NAME (type))
-    {
-      //ensure we are declaring a type and that is has a name
-      if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL
-          && DECL_NAME (TYPE_NAME (type)))
-      {
-        if (TYPE_MAIN_VARIANT(TREE_TYPE(node)) == TREE_TYPE(TYPE_NAME (type)))
-        {
-          type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
-        }
-        else
-        {
-          type = TYPE_NAME (type);
-        }
-      }
-    }
-  }
-  else
-  {
-    type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
-  }
-  return type;
-}
 
 
 long KdmTripleWriter::writeKdmItemUnit(tree const item)

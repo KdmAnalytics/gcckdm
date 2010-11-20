@@ -556,21 +556,19 @@ std::string getAstNodeName(tree node)
         }
         else if (!host_integerp(node, 0))
         {
-          {
-            tree val = node;
-            unsigned HOST_WIDE_INT low = TREE_INT_CST_LOW (val);
-            HOST_WIDE_INT high = TREE_INT_CST_HIGH(val);
+          tree val = node;
+          unsigned HOST_WIDE_INT low = TREE_INT_CST_LOW (val);
+          HOST_WIDE_INT high = TREE_INT_CST_HIGH(val);
 
-            if (tree_int_cst_sgn(val) < 0)
-            {
-              nameStr += "-";
-              high = ~high + !low;
-              low = -low;
-            }
-            /* Would "%x%0*x" or "%x%*0x" get zero-padding on all
-             systems?  */
-            nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DOUBLE_HEX) % static_cast<HOST_WIDE_INT> (high) % low);
+          if (tree_int_cst_sgn(val) < 0)
+          {
+            nameStr += "-";
+            high = ~high + !low;
+            low = -low;
           }
+          /* Would "%x%0*x" or "%x%*0x" get zero-padding on all
+           systems?  */
+          nameStr += boost::str(boost::format(HOST_WIDE_INT_PRINT_DOUBLE_HEX) % static_cast<HOST_WIDE_INT> (high) % low);
         }
         else
         {

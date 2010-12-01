@@ -326,8 +326,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tr
   if (isValueNode(rhs))
   {
     data = ActionDataPtr(new ActionData());
-    data->outputId(getReferenceId(rhs));
-    mKdmWriter.processAstNode(rhs);
+    data->outputId(mKdmWriter.getValueId(rhs));
   }
   else if (TREE_CODE(rhs) == ADDR_EXPR)
   {
@@ -533,6 +532,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
 
     if (TREE_CODE(var) == TYPE_DECL)
     {
+      mKdmWriter.writeComment("Skipping TYPE_DECL in bind statement....");
       //User has declared a type within a function so we skip it currently
       //to prevent double containment when it is output at the
       //end of the translation unit
@@ -1474,12 +1474,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmNopForLabel(
 
 long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long const fromId, long const toId)
 {
-  long arId = mKdmWriter.getNextElementId();
-  mKdmWriter.writeTripleKdmType(arId, type);
-  mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
-  mKdmWriter.writeTriple(arId, KdmPredicate::To(), toId);
-  mKdmWriter.writeTripleContains(fromId, arId, false);
-  return arId;
+  return mKdmWriter.writeRelation(type, fromId, toId);
 }
 
 

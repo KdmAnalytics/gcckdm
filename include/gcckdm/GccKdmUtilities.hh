@@ -89,7 +89,15 @@ int getTypeQualifiers(tree const type);
 std::string getLinkId(tree const typeName, std::string const name);
 
 
-
+/**
+ * Iterates over the given range, and replaces chars that gcc places in it's strings
+ * with escaped equivalents and places the result in the given outputString.
+ *
+ * Characters that are escaped:  \b, \f, \n, \v, \\, \", \', \1, \2, \3, \4, \5, \6, \7,
+ *
+ * @param c an array of characters or a std::string
+ * @param outputString the result of escaping characters in the range 'c'
+ */
 template <typename Range>
 void
 replaceSpecialCharsCopy(Range const & c, std::string & outputString)

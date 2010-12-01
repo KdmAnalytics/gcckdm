@@ -43,6 +43,9 @@ extern "C" int kdm_plugin_init(struct plugin_name_args *plugin_info, struct plug
 extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_gcc_version *version);
 extern "C" void executeStartUnit(void *event_data, void *data);
 extern "C" void executeFinishType(void *event_data, void *data);
+#ifdef HAS_FINISH_DECL
+extern "C" void executeFinishDecl(void *event_data, void *data);
+#endif
 extern "C" void executePreGeneric(void *event_data, void *data);
 extern "C" unsigned int executeKdmGimplePass();
 extern "C" void executeFinishUnit(void *event_data, void *data);
@@ -150,10 +153,10 @@ void printHelpMessage(std::ostream & os)
       << "\n  --output-extension=[EXT]              Add the given suffix to generated output (default: .tkdm)"
       << "\n  --output-gimple=[true|false]          Include gimple in generated KDM (default: false)"
       << "\n  --output-complete-path=[true|false]   Attempt to complete all paths to source files"
+      << "\n  --output-assembler=[true|false]       Generate assembler output (default: false)"
       << "\n  --bodies=[true|false]                 Generate MicroKDM for function bodies (default: true)"
       << "\n  --uids=[true|fasle]                   Generate UID's for Kdm Elements (default: true)"
       << "\n  --uid-graph=[true|false]              Generate UID graph in dot format (default: false)"
-      << "\n  --assembler-output=[true|false]       Generate assembler output (default: false)"
       << "\n  --debug-contains-check=[true|false]   Enable double containment checking (default: false)"
       << "\n  --help                                Prints this message"
       << "\n  --version                             Prints the GccKdm version"
@@ -228,7 +231,7 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
         settings.containmentCheck = true;
       }
     }
-    else if (key == "assembler-output")
+    else if (key == "output-assembler")
     {
       settings.assemberOutput = true;
     }
@@ -280,7 +283,15 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
       fs::path outputDir(value);
       if (!fs::exists(outputDir))
       {
-        fs::create_directory(outputDir);
+        try
+        {
+          fs::create_directory(outputDir);
+        }
+        catch (fs::basic_filesystem_error<fs::path>& e)
+        {
+          fatal_error(G_("Unable to create output directory: %qs"), e.path1().file_string().c_str());
+          exit(1);
+        }
       }
       settings.outputDir = outputDir;
     }
@@ -356,6 +367,12 @@ void registerCallbacks(char const * pluginName)
   {
     // Called whenever a type has been parsed
     register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
+    // Called whenever a type has been parsed
+
+#ifdef HAS_FINISH_DECL
+    register_callback(pluginName, PLUGIN_FINISH_DECL, static_cast<plugin_callback_func> (executeFinishDecl), NULL);
+#endif
+
   }
   //Attempt to get the very first gimple AST before any optimizations, called for every function
   struct register_pass_info pass_info;
@@ -408,8 +425,7 @@ extern "C" void executeStartUnit(void *event_data, void *data)
  */
 extern "C" void executeFinishType(void *event_data, void *data)
 {
-  tree type(static_cast<tree> (event_data));
-  //    if (!errorcount && TREE_CODE(type) == RECORD_TYPE)
+  tree type = static_cast<tree> (event_data);
   if (!errorcount)
   {
     //Appending nodes to the queue instead of processing them immediately is
@@ -419,6 +435,32 @@ extern "C" void executeFinishType(void *event_data, void *data)
     typeQueue.push(type);
   }
 }
+
+#ifdef HAS_FINISH_DECL
+/**
+ * Called after GCC finishes parsing a declaration
+ */
+extern "C" void executeFinishDecl(void *event_data, void *data)
+{
+  tree decl = static_cast<tree> (event_data);
+  int dc = TREE_CODE (decl);
+  tree type = TREE_TYPE (decl);
+  if (type)
+  {
+    int tc = TREE_CODE (type);
+    if (dc == TYPE_DECL && tc == RECORD_TYPE)
+    {
+      if (!DECL_ARTIFICIAL (decl))
+      {
+        //we have a typedef
+        gccAstListener->processAstNode(decl);
+        gccAstListener->finishKdmGimplePass();
+      }
+    }
+  }
+}
+
+#endif
 
 /**
  * Called once for each function that is parsed by GCC
@@ -453,17 +495,17 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
     //Process all recorded types
     for (; !typeQueue.empty(); typeQueue.pop())
     {
-      //TODO: It appears that GCC GC's some types before the end of the translation unit
-      // Skip these for now and how that we don't need them
+      //FIXME: It appears that GCC GC's some types before the end of the translation unit
+      // Skip these for now and hope that we don't need them
       if (!TYPE_P (typeQueue.front()))
+      {
         continue;
+      }
       gccAstListener->processAstNode(typeQueue.front());
     }
     gccAstListener->finishTranslationUnit();
   }
+}
 
-  //int retValue(0);
-  //exit(retValue);
-}
-}
+} //namespace
 

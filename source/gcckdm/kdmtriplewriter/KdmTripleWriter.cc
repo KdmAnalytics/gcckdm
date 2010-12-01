@@ -1341,12 +1341,14 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
   //}
   // Therefore we have to check to ensure that we don't have
   // arg or type before exiting the loop
+  int count = 0;
   while ((arg || argType) && (argType != void_list_node))
   {
     if (arg)
     {
       long refId = writeKdmParameterUnit(arg);
       writeKdmTypeQualifiers(arg);
+      writeTriplePosition(refId, count++);
       writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }
@@ -1380,6 +1382,16 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
 /**
  *
  */
+void KdmTripleWriter::writeTriplePosition(long const id, int pos)
+{
+  std::stringstream ss;
+  ss << pos;
+  writeTriple(id, KdmPredicate::Pos(), ss.str());
+}
+
+/**
+ *
+ */
 long KdmTripleWriter::writeKdmThrows(long const id)
 {
   writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
@@ -1403,9 +1415,11 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
 
   //Iterator through argument list
   tree argType = TYPE_ARG_TYPES (functionType);
+  int count = 0;
   while (argType && (argType != void_list_node))
   {
     long refId = writeKdmParameterUnit(argType, true);
+    writeTriplePosition(refId, count++);
     writeTripleContains(signatureId, refId);
     argType = TREE_CHAIN (argType);
   }

@@ -215,6 +215,13 @@ public:
   void writeTripleName(long const subject, std::string const & name);
 
   /**
+   * Convenience method to write the common "pos" triple
+   *
+   * writes: <subject> <pos> <int>
+   */
+  void writeTriplePosition(long const id, int pos);
+
+  /**
    * Convenience method to write the common "contains" triple
    *
    * writes: <subject> <contains> <child>

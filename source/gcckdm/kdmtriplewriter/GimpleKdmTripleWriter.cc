@@ -899,6 +899,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
 
   ActionDataPtr lastParamData;
   //Read each parameter
+  int count = 0;
   if (gimple_call_num_args(gs) > 0)
   {
     for (size_t i = 0; i < gimple_call_num_args(gs); i++)
@@ -949,7 +950,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       }
 
       //Hook up the read to each parameter
-      writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(callArg, paramData->outputId()));
+      long arId = writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(callArg, paramData->outputId()));
+      mKdmWriter.writeTriplePosition(arId, count++);
     }
 
   }

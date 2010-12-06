@@ -51,6 +51,7 @@ private:
     KdmPredicate_Stereotype,
     KdmPredicate_Size,
     KdmPredicate_EnumName,
+    KdmPredicate_Pos,
   };
 
 public:
@@ -72,6 +73,7 @@ public:
   static const KdmPredicate Stereotype() { return KdmPredicate(KdmPredicate_Stereotype, "stereotype"); }
   static const KdmPredicate Size()       { return KdmPredicate(KdmPredicate_Size, "size"); }
   static const KdmPredicate EnumName()   { return KdmPredicate(KdmPredicate_EnumName, "enumName"); }
+  static const KdmPredicate Pos()        { return KdmPredicate(KdmPredicate_Pos, "pos"); }
 
   int const id() const
   {

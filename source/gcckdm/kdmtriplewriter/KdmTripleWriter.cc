@@ -1384,9 +1384,7 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
  */
 void KdmTripleWriter::writeTriplePosition(long const id, int pos)
 {
-  std::stringstream ss;
-  ss << pos;
-  writeTriple(id, KdmPredicate::Pos(), ss.str());
+  writeTriple(id, KdmPredicate::Pos(), boost::lexical_cast<std::string>(pos));
 }
 
 /**

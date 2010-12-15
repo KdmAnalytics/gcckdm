@@ -994,7 +994,20 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
 
   for (tree tv = TYPE_VALUES (enumType); tv ; tv = TREE_CHAIN (tv))
   {
-    if(TREE_CODE (TREE_VALUE (tv)) == INTEGER_CST)
+	//
+	// The following source code
+	// triggers INTEGER_CST handling branch when compiled with cc1,
+	// and CONST_DECL handling branch when compiled with cc1plus:
+	//
+	//   enum E {
+	//     a,
+	//     b,
+	//     c,
+	//   };
+	//   enum E e;
+	//   int main() { return 0; }
+    //
+	if(TREE_CODE (TREE_VALUE (tv)) == INTEGER_CST)
     {
       long valueId = getReferenceId(tv);
       int value = TREE_INT_CST_LOW (TREE_VALUE (tv));
@@ -1005,6 +1018,10 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
       writeTriple(valueId, KdmPredicate::Type(), KdmType::IntegerType());
       writeTriple(valueId, KdmPredicate::EnumName(), nodeName(TREE_PURPOSE(tv)));
       writeTripleContains(enumId, valueId);
+    }
+    else if (TREE_CODE (TREE_VALUE (tv)) == CONST_DECL)
+    {
+    	processAstNode(tv);
     }
     else
     {
@@ -2429,8 +2446,8 @@ void KdmTripleWriter::writeKdmClassType(tree const recordType)
     writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereotype);
 
   // Hide artificial classes
-  if (DECL_ARTIFICIAL (recordType))
-    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
+//  if (DECL_ARTIFICIAL (recordType))
+//    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
 
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/

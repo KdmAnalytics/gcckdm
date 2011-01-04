@@ -153,6 +153,7 @@ void printHelpMessage(std::ostream & os)
       << "\n  --output-extension=[EXT]              Add the given suffix to generated output (default: .tkdm)"
       << "\n  --output-gimple=[true|false]          Include gimple in generated KDM (default: false)"
       << "\n  --output-complete-path=[true|false]   Attempt to complete all paths to source files"
+      << "\n  --output-register-name=[true|false]   Generate register variable names (default: false)"
       << "\n  --output-assembler=[true|false]       Generate assembler output (default: false)"
       << "\n  --bodies=[true|false]                 Generate MicroKDM for function bodies (default: true)"
       << "\n  --uids=[true|fasle]                   Generate UID's for Kdm Elements (default: true)"
@@ -305,6 +306,23 @@ void processPluginArguments(struct plugin_name_args *plugin_info, ktw::KdmTriple
       else if (value == "false")
       {
         settings.outputCompletePath = false;
+      }
+      else
+      {
+        warning(0, G_("plugin %qs: unrecognized value for %qs ignored"), plugin_info->base_name, key.c_str());
+        continue;
+      }
+    }
+    else if (key == "output-register-name")
+    {
+      std::string value(argv[i].value);
+      if (value == "true")
+      {
+        settings.outputRegVarNames = true;
+      }
+      else if (value == "false")
+      {
+        settings.outputRegVarNames = false;
       }
       else
       {

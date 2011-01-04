@@ -2192,7 +2192,10 @@ long GimpleKdmTripleWriter::writeKdmStorableUnit(long const typeId, expanded_loc
 {
   long unitId = mKdmWriter.getNextElementId();
   mKdmWriter.writeTripleKdmType(unitId, KdmType::StorableUnit());
-  mKdmWriter.writeTripleName(unitId, "M." + boost::lexical_cast<std::string>(++mRegisterVariableIndex));
+  if (mSettings.outputRegVarNames)
+  {
+    mKdmWriter.writeTripleName(unitId, "M." + boost::lexical_cast<std::string>(++mRegisterVariableIndex));
+  }
   mKdmWriter.writeTripleKind(unitId, KdmKind::Register());
   mKdmWriter.writeTriple(unitId, KdmPredicate::Type(), typeId);
   mKdmWriter.writeKdmSourceRef(unitId, xloc);

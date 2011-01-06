@@ -908,12 +908,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   }
   else
   {
+	bool call_is_virtual = false;
     if (TREE_CODE(TREE_TYPE(op0)) == METHOD_TYPE)
     {
       if (TREE_CODE(ttt) == OBJ_TYPE_REF)
       {
         //virtual call
         mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::VirtualCall());
+        call_is_virtual = true;
       } else {
         //method call
         mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::MethodCall());
@@ -923,11 +925,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Call());
     }
 
-    long relId = -1;
-    if (DECL_EXTERNAL(op0))
+    if (DECL_EXTERNAL(op0) || call_is_virtual)
     {
       expanded_location e = expand_location(gcckdm::locationOf(op0));
-      mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getAstNodeName(op0));
+
+      if (!call_is_virtual)
+        mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getLinkId(op0, gcckdm::getAstNodeName(op0)));
 
       if (DECL_BUILT_IN(op0) && std::string(e.file) == "<built-in>")
       {
@@ -935,7 +938,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       }
       else
       {
-        relId = mKdmWriter.getNextElementId();
+        long relId = mKdmWriter.getNextElementId();
         mKdmWriter.writeTripleKdmType(relId, KdmType::CompliesTo());
         mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionData->actionId());
         mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);
@@ -944,7 +947,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     }
     else
     {
-      relId = mKdmWriter.getNextElementId();
+      long relId = mKdmWriter.getNextElementId();
       mKdmWriter.writeTripleKdmType(relId, KdmType::Calls());
       mKdmWriter.writeTriple(relId, KdmPredicate::From(), actionData->actionId());
       mKdmWriter.writeTriple(relId, KdmPredicate::To(), callableId);

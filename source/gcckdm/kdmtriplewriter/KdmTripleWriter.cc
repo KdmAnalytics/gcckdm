@@ -1276,6 +1276,8 @@ void KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl)
 
   long signatureId = writeKdmSignature(functionDecl);
   writeTripleContains(callableUnitId, signatureId);
+  writeTriple(callableUnitId, KdmPredicate::Type(), signatureId);
+
 
   if (mSettings.functionBodies)
   {
@@ -1878,10 +1880,12 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
   tree type = typedefTypeCheck(param);
   long ref = getReferenceId(type);
-  writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
-  writeTripleName(mKdmElementId, "__RESULT__");
-  writeTriple(mKdmElementId, KdmPredicate::Type(), ref);
-  return mKdmElementId;
+  long subjectId = ++mKdmElementId;
+  writeTripleKdmType(subjectId, KdmType::ParameterUnit());
+  writeTripleName(subjectId, "__RESULT__");
+  writeTripleKind(subjectId, KdmKind::Return());
+  writeTriple(subjectId, KdmPredicate::Type(), ref);
+  return subjectId;
 }
 
 long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewElementId)

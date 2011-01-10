@@ -96,7 +96,8 @@ public:
         outputDir(""),
         outputGimple(false),
         preprocessed(false),
-        outputCompletePath(false)
+        outputCompletePath(false),
+        outputRegVarNames(false)
     {}
 
     /// If true function body information written to output
@@ -121,6 +122,8 @@ public:
     bool preprocessed;
     // If true attempts to use complete path when dealing with file locations
     bool outputCompletePath;
+    // If true output the name of register variable
+    bool outputRegVarNames;
 
   };
 

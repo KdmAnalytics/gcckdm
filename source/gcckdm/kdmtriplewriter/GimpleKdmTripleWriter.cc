@@ -194,16 +194,54 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
       case COMPONENT_REF:
         //Fall Through
       case SSA_NAME:
-        //Fall Through
-      case OBJ_TYPE_REF:
       {
         flag = false;
+        break;
+      }
+      case OBJ_TYPE_REF:
+      {
+    	tree t = op0;
+    	tree obj_type;
+    	int index;
+    	tree fun;
+
+    	/* The following code resolves the vtable offsets into
+    	 * an actual function. It will be similar to the function
+    	 * which is actually called by the code, although that
+    	 * of course depends upon the runtime contents of the
+    	 * pointer on which we're calling this virtual function.
+    	 * The reason we dump this is that it's virtually (!)
+    	 * impossible to work out the function being called from
+    	 * the rest of the information dumped here (i.e.
+    	 * the vtable offset and the other things we have).
+    	 * Doing so involves working out what function GCC has
+    	 * stuffed into which vtable position, which isn't
+    	 * recorded elsewhere in the XML. It also involves lots
+    	 * of GCC rules and is therefore likely to be inaccurate.
+    	 * So, we use GCC's internal mechanisms to resolve
+    	 * the function in question accurately.
+    	 * The code itself comes from
+    	 * resolve_virtual_fun_from_obj_type_ref(...)
+    	 * which is used by the tree pretty-printer elsewhere
+    	 * in the GCC source. */
+    	obj_type = TREE_TYPE (OBJ_TYPE_REF_OBJECT (t));
+    	index = tree_low_cst (OBJ_TYPE_REF_TOKEN (t), 1);
+    	fun = BINFO_VIRTUALS (TYPE_BINFO (TREE_TYPE (obj_type)));
+    	  while (index--)
+    	    fun = TREE_CHAIN (fun);
+
+    	op0 = fun;
+        if (TREE_CODE(op0) == TREE_LIST)
+        {
+          op0 = TREE_VALUE(op0);
+        }
         break;
       }
       default:
       {
         std::string msg(boost::str(boost::format("GIMPLE call statement (%1%) in %2%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION));
         mKdmWriter.writeUnsupportedComment(msg);
+        flag = false;
       }
     }
   }
@@ -280,10 +318,14 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 //  {
 //    int i = 0;
 //  }
-//  if (TREE_CODE(ast) == TREE_LIST)
-//  {
-//    int i = 0;
-//  }
+	//  if (TREE_CODE(ast) == TREE_LIST)
+	//  {
+	//    int i = 0;
+	//  }
+//if (TREE_CODE(ast) == OBJ_TYPE_REF)
+//{
+//   int i = 0;
+//}
 
   //Labels are apparently reused causing different
   //labels to be referenced as the same label which
@@ -854,7 +896,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
 
   //op0 can be a VAR_DECL, PARM_DECL or FUNCTION_DECL
-  tree op0 = resolveCall(gimple_call_fn(gs));
+  tree ttt = gimple_call_fn(gs);
+  tree op0 = resolveCall(ttt);
   long callableId(getReferenceId(op0));
 
   if (TREE_CODE(TREE_TYPE(op0)) == POINTER_TYPE)
@@ -865,8 +908,20 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   }
   else
   {
-    //regular call
-    mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Call());
+    if (TREE_CODE(TREE_TYPE(op0)) == METHOD_TYPE)
+    {
+      if (TREE_CODE(ttt) == OBJ_TYPE_REF)
+      {
+        //virtual call
+        mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::VirtualCall());
+      } else {
+        //method call
+        mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::MethodCall());
+      }
+    } else {
+      //regular call
+      mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Call());
+    }
 
     long relId = -1;
     if (DECL_EXTERNAL(op0))
@@ -2192,7 +2247,10 @@ long GimpleKdmTripleWriter::writeKdmStorableUnit(long const typeId, expanded_loc
 {
   long unitId = mKdmWriter.getNextElementId();
   mKdmWriter.writeTripleKdmType(unitId, KdmType::StorableUnit());
-  mKdmWriter.writeTripleName(unitId, "M." + boost::lexical_cast<std::string>(++mRegisterVariableIndex));
+  if (mSettings.outputRegVarNames)
+  {
+    mKdmWriter.writeTripleName(unitId, "M." + boost::lexical_cast<std::string>(++mRegisterVariableIndex));
+  }
   mKdmWriter.writeTripleKind(unitId, KdmKind::Register());
   mKdmWriter.writeTriple(unitId, KdmPredicate::Type(), typeId);
   mKdmWriter.writeKdmSourceRef(unitId, xloc);

@@ -55,6 +55,8 @@ std::string const unsupportedPrefix("UNSUPPORTED: ");
 //If a AST node doesn't have a name use this name
 std::string const unnamedNode("<unnamed>");
 
+std::string const unnamedStructNode("<unnamed struct>");
+
 std::string const linkCallablePrefix("c.function/");
 
 std::string const linkVariablePrefix("c.variable/");
@@ -2413,7 +2415,7 @@ void KdmTripleWriter::writeKdmRecordType(tree const recordType)
 //        tree id (DECL_NAME (mainRecordType));
 //        const char* name2 (IDENTIFIER_POINTER (id));
 //        std::cerr << name2 << std::endl;
-      name = unnamedNode;
+      name = unnamedStructNode;
       linkId = "U." + boost::lexical_cast<std::string>(TYPE_UID(mainRecordType));
     }
     else

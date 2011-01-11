@@ -200,37 +200,40 @@ tree GimpleKdmTripleWriter::resolveCall(tree const node)
       }
       case OBJ_TYPE_REF:
       {
-    	tree t = op0;
-    	tree obj_type;
-    	int index;
-    	tree fun;
+        tree t = op0;
+        tree obj_type;
+        int index;
+        tree fun;
 
-    	/* The following code resolves the vtable offsets into
-    	 * an actual function. It will be similar to the function
-    	 * which is actually called by the code, although that
-    	 * of course depends upon the runtime contents of the
-    	 * pointer on which we're calling this virtual function.
-    	 * The reason we dump this is that it's virtually (!)
-    	 * impossible to work out the function being called from
-    	 * the rest of the information dumped here (i.e.
-    	 * the vtable offset and the other things we have).
-    	 * Doing so involves working out what function GCC has
-    	 * stuffed into which vtable position, which isn't
-    	 * recorded elsewhere in the XML. It also involves lots
-    	 * of GCC rules and is therefore likely to be inaccurate.
-    	 * So, we use GCC's internal mechanisms to resolve
-    	 * the function in question accurately.
-    	 * The code itself comes from
-    	 * resolve_virtual_fun_from_obj_type_ref(...)
-    	 * which is used by the tree pretty-printer elsewhere
-    	 * in the GCC source. */
-    	obj_type = TREE_TYPE (OBJ_TYPE_REF_OBJECT (t));
-    	index = tree_low_cst (OBJ_TYPE_REF_TOKEN (t), 1);
-    	fun = BINFO_VIRTUALS (TYPE_BINFO (TREE_TYPE (obj_type)));
-    	  while (index--)
+        /* The following code resolves the vtable offsets into
+         * an actual function. It will be similar to the function
+         * which is actually called by the code, although that
+         * of course depends upon the runtime contents of the
+         * pointer on which we're calling this virtual function.
+         * The reason we dump this is that it's virtually (!)
+         * impossible to work out the function being called from
+         * the rest of the information dumped here (i.e.
+         * the vtable offset and the other things we have).
+         * Doing so involves working out what function GCC has
+         * stuffed into which vtable position, which isn't
+         * recorded elsewhere in the XML. It also involves lots
+         * of GCC rules and is therefore likely to be inaccurate.
+         * So, we use GCC's internal mechanisms to resolve
+         * the function in question accurately.
+         * The code itself comes from
+         * resolve_virtual_fun_from_obj_type_ref(...)
+         * which is used by the tree pretty-printer elsewhere
+         * in the GCC source. */
+        obj_type = TREE_TYPE (OBJ_TYPE_REF_OBJECT (t));
+        index = tree_low_cst (OBJ_TYPE_REF_TOKEN (t), 1);
+        fun = BINFO_VIRTUALS (TYPE_BINFO (TREE_TYPE (obj_type)));
+
+        while (index--)
+    	  {
     	    fun = TREE_CHAIN (fun);
+    	  }
 
-    	op0 = fun;
+    	  op0 = fun;
         if (TREE_CODE(op0) == TREE_LIST)
         {
           op0 = TREE_VALUE(op0);

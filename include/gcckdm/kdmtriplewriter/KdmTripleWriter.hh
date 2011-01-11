@@ -680,7 +680,19 @@ private:
   bool updateUidGraph(const long parent, const long child);
 
 
-
+  /**
+   * Write hasValue relationships for cases where we need to detect values of intialized variables:
+   *
+   * For example:
+   *
+   * typedef void (*FuncPtr)();
+   *
+   * void foo()
+   * void bar()
+   * FuncPtr funcs[] = { foo, bar }
+   *
+   */
+  void writeHasValueRelationships(const long storableUnitId, const tree constructor);
 
 
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream

@@ -1996,6 +1996,15 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
     {
       writeTripleKind(unitId, KdmKind::Global());
       writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
+
+      //We now check to see if this variable is initialized
+      //  example int e[] = { 1, 2, 3 }
+      //  MyFunctionPtrType  f[] = { foo, bar }
+      tree declInitial = DECL_INITIAL(var);
+      if (declInitial && declInitial != error_mark_node && TREE_CODE(declInitial) == CONSTRUCTOR)
+      {
+        writeHasValueRelationships(unitId, declInitial);
+      }
     }
   }
 
@@ -2011,9 +2020,77 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
     writeRelation(KdmType::HasType(), unitId, ref);
   }
 
-
   return unitId;
 }
+
+/**
+ * Write a hasValue Relation for each value contained in the constructor/initializer
+ *
+ * code lifted from print-tree.c
+ */
+void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree constructor)
+{
+  unsigned HOST_WIDE_INT cnt;
+  tree index, value;
+  VEC_length (constructor_elt, CONSTRUCTOR_ELTS (constructor));
+  FOR_EACH_CONSTRUCTOR_ELT (CONSTRUCTOR_ELTS (constructor), cnt, index, value)
+  {
+    switch(TREE_CODE(value))
+    {
+      case ADDR_EXPR:
+      {
+        tree op0 = TREE_OPERAND (value, 0);
+        if (op0)
+        {
+          long id = getReferenceId(op0);
+          writeRelation(KdmType::HasValue(), storableUnitId, id);
+        }
+        break;
+      }
+      case CONSTRUCTOR:
+      {
+        writeHasValueRelationships(storableUnitId, value);
+        break;
+      }
+      case STRING_CST:
+      case INTEGER_CST:
+      case REAL_CST:
+      {
+        writeRelation(KdmType::HasValue(), storableUnitId, getReferenceId(value));
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+}
+
+
+//void KdmTripleWriter::writeKdmPtr(tree const addrExpr)
+//{
+//
+//  // ptr = &a[0];
+//  if (TREE_CODE(op0) == ARRAY_REF)
+//  {
+//    std::string msg(str(boost::format("ARRAY_REF(%1%) in %2%") % tree_code_name[TREE_CODE(op0)] % BOOST_CURRENT_FUNCTION));
+//    writeUnsupportedComment(msg);
+//  }
+//  // a = &b.d;
+//  else if (TREE_CODE(op0) == COMPONENT_REF)
+//  {
+//    std::string msg(str(boost::format("COMPONENT_REF (%1%) in %2%") % tree_code_name[TREE_CODE(op0)] % BOOST_CURRENT_FUNCTION));
+//    writeUnsupportedComment(msg);
+//  }
+//  // void foo();
+//  // a = { foo };
+//  else
+//  {
+//    //we have to create a temp variable... aka temp1
+//    //long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)), gcckdm::locationOf(addrExpr));
+//
+//  }
+//}
 
 long KdmTripleWriter::writeKdmValue(tree const val)
 {

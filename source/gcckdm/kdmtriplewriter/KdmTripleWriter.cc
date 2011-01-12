@@ -833,8 +833,8 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         writeComment("--- End Specialization");
         break;
       }
-      //      case TEMPLATE_DECL:
-      //        break;
+      case TEMPLATE_DECL:
+        break;
       default:
       {
         std::string msg(str(boost::format("AST Template Specialization Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
@@ -887,6 +887,21 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
       }
     }
   }
+
+#if 1  //BBBBB
+//  std::string msg1(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[TREE_CODE            (templateDecl) ] % BOOST_CURRENT_FUNCTION));
+//  writeUnsupportedComment(msg1);
+//  std::string msg2(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[TREE_CODE (TREE_TYPE (templateDecl))] % BOOST_CURRENT_FUNCTION));
+//  writeUnsupportedComment(msg2);
+
+  processAstNode(TREE_TYPE (templateDecl));
+
+// Now as the type is handled right above,
+// we need to find the way to get to the actual function defined by the template,
+// which means we should probably call here something like
+// processAstNode(???(templateDecl));
+
+#endif
 }
 
 
@@ -935,6 +950,27 @@ void KdmTripleWriter::processAstTypeNode(tree const typeNode)
       writeEnumType(typeNode);
       break;
     }
+    case TEMPLATE_TYPE_PARM:
+#if 1  //BBBBB
+   	{
+   	  long compilationUnitId(getSourceFileReferenceId(typeNode));
+   	  long structId = getReferenceId(typeNode);
+   	  writeTripleKdmType(structId, KdmType::TemplateType());
+
+   	  tree tt = TYPE_IDENTIFIER (typeNode);
+   	  std::string name = IDENTIFIER_POINTER(tt);
+//      std::string name = nodeName(mainRecordType);
+   	  std::string linkId = name;
+
+   	  writeTripleName(structId, name);
+   	  writeTripleLinkId(structId, linkId);
+
+      writeKdmSourceRef(structId, typeNode);
+      writeTripleContains(compilationUnitId, structId);
+   	}
+#endif
+   	  break;
+
     case UNION_TYPE:
       //Fall Through
     case RECORD_TYPE:
@@ -971,8 +1007,11 @@ void KdmTripleWriter::processAstRecordTypeNode(tree const typeNode)
     else
     {
       // This is a class template.  We don't want to dump it.
-      std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-      writeUnsupportedComment(msg);
+
+ /* We do not output anything (at the moment at least) for templates themselves, only when they are instantiated.
+  *   std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+  *   writeUnsupportedComment(msg);
+  */
     }
   }
   else

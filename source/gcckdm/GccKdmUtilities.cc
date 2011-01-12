@@ -643,6 +643,22 @@ std::string getAstNodeName(tree node)
         }
         break;
       }
+      case TEMPLATE_TYPE_PARM:
+      {
+//BV: This was falling through to "Unimplemented" in gccxml.
+#if 1  //BBBBBB
+        if (TYPE_IDENTIFIER (node))
+        {
+          tree tt = TYPE_IDENTIFIER (node);
+          nameStr = getAstIdentifierNodeName(tt);
+        }
+        else
+        {
+          std::cerr << "# UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;
+        }
+        break;
+#endif
+      }
       default:
       {
         std::cerr << "# UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;

@@ -71,7 +71,7 @@ am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
 am__installdirs = "$(DESTDIR)$(libdir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libGccKdm_la_LIBADD =
+libGccKdm_la_DEPENDENCIES =
 am__objects_1 =
 am_libGccKdm_la_OBJECTS = libGccKdm_la-GimpleKdmTripleWriter.lo \
 	libGccKdm_la-KdmTripleWriter.lo \
@@ -81,7 +81,7 @@ am_libGccKdm_la_OBJECTS = libGccKdm_la-GimpleKdmTripleWriter.lo \
 libGccKdm_la_OBJECTS = $(am_libGccKdm_la_OBJECTS)
 libGccKdm_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(libGccKdm_la_CXXFLAGS) \
-	$(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
+	$(CXXFLAGS) $(libGccKdm_la_LDFLAGS) $(LDFLAGS) -o $@
 DEFAULT_INCLUDES = -I.@am__isrc@ -I$(top_builddir)
 depcomp = $(SHELL) $(top_srcdir)/depcomp
 am__depfiles_maybe = depfiles
@@ -139,6 +139,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GCC_PLUGIN_INCLUDES = @GCC_PLUGIN_INCLUDES@
 GREP = @GREP@
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
@@ -228,7 +229,6 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-GCCPLUGINS_DIR = `$(CXX) -print-file-name=plugin`
 GCCKDMHEADERS = $(top_srcdir)/include/gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh\
   $(top_srcdir)/include/gcckdm/kdmtriplewriter/KdmTripleWriter.hh\
   $(top_srcdir)/include/gcckdm/kdmtriplewriter/ActionData.hh\
@@ -260,8 +260,10 @@ libGccKdm_la_SOURCES = gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.cc\
                        gcckdm/KdmType.cc\
                        $(GCCKDMHEADERS)
 
-libGccKdm_la_CPPFLAGS = -I$(top_srcdir)/include -I$(GCCPLUGINS_DIR)/include
+libGccKdm_la_CPPFLAGS = @BOOST_CPPFLAGS@ -I$(top_srcdir)/include @GCC_PLUGIN_INCLUDES@
 libGccKdm_la_CXXFLAGS = -Wno-deprecated
+libGccKdm_la_LDFLAGS = @BOOST_LDFLAGS@
+libGccKdm_la_LIBADD = @BOOST_FILESYSTEM_LIB@
 all: all-am
 
 .SUFFIXES:

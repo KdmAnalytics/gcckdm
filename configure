@@ -14793,12 +14793,6 @@ fi
                   done
 
             fi
-            if test "x$ax_lib" = "x"; then
-                as_fn_error $? "Could not find a version of the library!" "$LINENO" 5
-            fi
-			if test "x$link_filesystem" != "xyes"; then
-				as_fn_error $? "Could not link against $ax_lib !" "$LINENO" 5
-			fi
 		fi
 
 		CPPFLAGS="$CPPFLAGS_SAVED"

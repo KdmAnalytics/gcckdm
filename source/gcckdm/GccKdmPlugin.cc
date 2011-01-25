@@ -490,7 +490,7 @@ extern "C" unsigned int executeKdmGimplePass()
   if (!errorcount && !sorrycount)
   {
     gccAstListener->startKdmGimplePass();
-    gccAstListener->processAstNode(current_function_decl);
+    gccAstListener->processAstNode0(current_function_decl);
     gccAstListener->finishKdmGimplePass();
   }
   return retValue;
@@ -505,7 +505,7 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
   // will provide access to all data in the system.
   if(gcckdm::isFrontendCxx())
   {
-    gccAstListener->processAstNode(global_namespace);
+    gccAstListener->processAstNode0(global_namespace);
   }
 
   if (!errorcount && !sorrycount)
@@ -519,7 +519,7 @@ extern "C" void executeFinishUnit(void *event_data, void *data)
       {
         continue;
       }
-      gccAstListener->processAstNode(typeQueue.front());
+      gccAstListener->processAstNode0(typeQueue.front());
     }
     gccAstListener->finishTranslationUnit();
   }

@@ -132,6 +132,8 @@ public:
    */
   static const int KdmTripleVersion = 1;
 
+  static long const invalidId = -1;
+
   /**
    * Pointer to the output stream this writer uses to create output
    */
@@ -173,7 +175,8 @@ public:
   /**
    * @see GccAstListener::processAstNode
    */
-  virtual void processAstNode(tree const ast);
+  long processAstNode(tree const ast, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+  virtual void processAstNode0(tree const ast) { processAstNode(ast, WriteKdmContainsRelation, /*isTemplate*/ false); }
 
   /**
    * @see GccAstListener::finishKdmGimplePass
@@ -491,7 +494,7 @@ private:
   /**
    * Process the AST Constructor node
    */
-  void processAstDeclarationNode(tree const decl);
+  long processAstDeclarationNode(tree const decl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
 
   /**
    * Convert the given FUNCTION_DECL node to the equivalent KDM
@@ -500,7 +503,7 @@ private:
    * @see writeKdmCallableUnit
    * @param functionDecl a FUNCTION_DECL to convert to CallableUnit
    */
-  void processAstFunctionDeclarationNode(tree const functionDecl);
+  void processAstFunctionDeclarationNode(tree const functionDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
 
   /**
    * Convert a FIELD_DECL into an KDM ItemUnit and write the result
@@ -527,8 +530,7 @@ private:
    *
    * @param typeNode the AST type node to convert to KDM
    */
-  void processAstTypeNode(tree const typeNode);
-
+  long processAstTypeNode(tree const typeNode, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false, const long containedInId = invalidId);
 
   /**
    * Determines if the given recordTypeNode is suitable for KDM representation
@@ -536,7 +538,7 @@ private:
    *
    * @param recordTypeNode
    */
-  void processAstRecordTypeNode(tree const recordTypeNode);
+  long processAstRecordTypeNode(tree const recordTypeNode);
 
   /**
    * Iterates through all template specializations and instantiations
@@ -550,7 +552,7 @@ private:
   /**
    * A type declaration may be a typedef, a new class, or an enumeration
    */
-  void processAstTypeDecl(tree const typeNode);
+  long processAstTypeDecl(tree const typeNode);
   void processAstVariableDeclarationNode(tree const varDecl);
   void processAstValueNode(tree const valueConst);
 
@@ -589,7 +591,7 @@ private:
    *
    * @param callableDecl an ast node of a function or method
    */
-  void writeKdmCallableUnit(tree const callableDecl);
+  long writeKdmCallableUnit(tree const callableDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
 
   /**
    * In C++ containment of various elements depends on whether the definition's "context" is
@@ -600,17 +602,18 @@ private:
   long writeKdmReturnParameterUnit(tree const param);
   long writeKdmParameterUnit(tree const param, bool forceNewElementId = false);
   void writeKdmPrimitiveType(tree const type);
-  void writeKdmPointerType(tree const type);
+  long writeKdmPointerType(tree const pointerType, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false, const long containedInId = invalidId);
   void writeEnumType(tree const enumType);
+
   /**
    * Handles output of enums, and structs, pass through of class to writeKdmClassType
    */
-  void writeKdmRecordType(tree const type);
+  long writeKdmRecordType(tree const type, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
 
   /**
    * Handles output of classes
    */
-  void writeKdmClassType(tree const recordType);
+  long writeKdmClassType(tree const recordType, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
 
   /**
    *
@@ -658,6 +661,7 @@ private:
   long getDirectoryId(Path const & path);
   long getLocationContextId(Path const & path, long const rootId, FileMap & fMap, KdmType const & type);
 
+  int find_template_parm (tree t);
   /**
    * Allow or prevent the increase in the UID when a contains relationship is called.
    * Used to set everything below the CallableUnit to have the same UIDs

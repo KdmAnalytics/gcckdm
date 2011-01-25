@@ -1515,6 +1515,7 @@ long KdmTripleWriter::writeKdmSignature(tree const function)
 void KdmTripleWriter::writeVersionHeader()
 {
   *mKdmSink << "KDM_Triple:" << KdmTripleWriter::KdmTripleVersion << "\n";
+  writeComment("Created with GccKdmPlugin " + gcckdm::GccKdmVersion);
 }
 
 void writeCommentWithWriter(CommentWriter const & writer, std::string const & comment)

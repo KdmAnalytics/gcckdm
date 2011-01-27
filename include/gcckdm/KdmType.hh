@@ -94,7 +94,7 @@ private:
     KdmType_CompliesTo,
     KdmType_TryUnit,
     KdmType_CatchUnit,
-    KdmType_FinallyUnit,
+    KdmType_FinallyUnit
   };
 
 public:

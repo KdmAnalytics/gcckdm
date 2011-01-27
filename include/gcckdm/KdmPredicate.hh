@@ -51,7 +51,7 @@ private:
     KdmPredicate_Stereotype,
     KdmPredicate_Size,
     KdmPredicate_EnumName,
-    KdmPredicate_Pos,
+    KdmPredicate_Pos
   };
 
 public:

@@ -1,6 +1,4 @@
 
-GCCPLUGINS_DIR = `$(CXX) -print-file-name=plugin`
-
 GCCKDMHEADERS = $(top_srcdir)/include/gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh\
   $(top_srcdir)/include/gcckdm/kdmtriplewriter/KdmTripleWriter.hh\
   $(top_srcdir)/include/gcckdm/kdmtriplewriter/ActionData.hh\
@@ -34,5 +32,7 @@ libGccKdm_la_SOURCES = gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.cc\
                        gcckdm/KdmType.cc\
                        $(GCCKDMHEADERS)
                        
-libGccKdm_la_CPPFLAGS = -I$(top_srcdir)/include -I$(GCCPLUGINS_DIR)/include
+libGccKdm_la_CPPFLAGS = @BOOST_CPPFLAGS@ -I$(top_srcdir)/include @GCC_PLUGIN_INCLUDES@
 libGccKdm_la_CXXFLAGS = -Wno-deprecated
+libGccKdm_la_LDFLAGS = @BOOST_LDFLAGS@
+libGccKdm_la_LIBADD = @BOOST_FILESYSTEM_LIB@

@@ -10,6 +10,9 @@ AC_CONFIG_SRCDIR([source/gcckdm/GccKdmPlugin.cc])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 
+
+
+
 # Checks for programs.
 AC_PROG_CXX
 AC_PROG_INSTALL
@@ -20,6 +23,15 @@ AX_BOOST_BASE([1.40])
 AX_BOOST_FILESYSTEM
 
 # Checks for header files.
+
+if test "x$GCC_SRC_ROOT" = "x"; then
+  plugin_includes=-I`$CXX -print-file-name=plugin`/include
+  AC_SUBST(GCC_PLUGIN_INCLUDES, $plugin_includes)
+else
+  AC_SUBST(GCC_PLUGIN_INCLUDES, $plugin_includes)
+  plugin_includes="-I$GCC_SRC_ROOT/include -I$GCC_SRC_ROOT/gcc  -I$GCC_SRC_ROOT/libcpp"
+fi
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL

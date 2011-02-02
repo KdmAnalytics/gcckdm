@@ -339,6 +339,10 @@ std::string getDemangledName(tree node)
         }
 
         return demangledName;
+      } else {
+    	int something_to_put_breakpoint = 1234;
+//    	mangledName += "(cplus_demangle() UNABLE TO DEMANGLE THIS NAME)";
+//    	return mangledName;
       }
     }
   }
@@ -399,6 +403,12 @@ std::string getAstNodeName(tree node)
         nameStr += getAstNodeName(TREE_VALUE(node));
         break;
       }
+
+      case TYPENAME_TYPE:
+        if (TREE_TYPE (node)) {
+          node = TREE_TYPE (node);
+        }
+        // Fall through
       case VOID_TYPE:
       case INTEGER_TYPE:
       case REAL_TYPE:
@@ -654,19 +664,26 @@ std::string getAstNodeName(tree node)
         }
         else
         {
-          std::cerr << "# UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;
+            std::string msg(str(boost::format("AST Type Node (%1%) in %2%") % tree_code_name[TREE_CODE(node)] % BOOST_CURRENT_FUNCTION));
+//            writeUnsupportedComment(msg);
+            std::cerr << msg << std::endl;
         }
         break;
 #endif
       }
+      case TEMPLATE_DECL:
+      {
+//        std::cerr << "# UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;
+        break;
+      }
       default:
       {
-        std::cerr << "# UNSUPPORTED: node type (" << tree_code_name[TREE_CODE(node)] << ") in " << BOOST_CURRENT_FUNCTION << std::endl;
+          std::string msg(str(boost::format("AST Type Node (%1%) in %2%") % tree_code_name[TREE_CODE(node)] % BOOST_CURRENT_FUNCTION));
+//          writeUnsupportedComment(msg);
+          std::cerr << msg << std::endl;
       }
-
     }
   }
-
 
   boost::replace_all(nameStr, "\n" ,"\\n");
 

@@ -69,7 +69,10 @@ private:
     KdmType_Package,
     KdmType_HasType,
     KdmType_HasValue,
+    KdmType_TemplateUnit,
+    KdmType_TemplateParameter,
     KdmType_TemplateType,
+    KdmType_InstanceOf,
 
     //Source Group
     KdmType_InventoryModel,
@@ -135,7 +138,10 @@ public:
   static const KdmType Package()          { return KdmType(KdmType_Package, "code/Package"); }
   static const KdmType HasType()          { return KdmType(KdmType_HasType, "code/HasType"); }
   static const KdmType HasValue()         { return KdmType(KdmType_HasValue, "code/HasValue"); }
-  static const KdmType TemplateType()     { return KdmType(KdmType_TemplateType, "code/TemplateType"); }
+  static const KdmType TemplateUnit()     { return KdmType(KdmType_TemplateUnit, "code/TemplateUnit");}
+  static const KdmType TemplateParameter(){ return KdmType(KdmType_TemplateParameter, "code/TemplateParameter");}
+  static const KdmType TemplateType()     { return KdmType(KdmType_TemplateType, "code/TemplateType");}
+  static const KdmType InstanceOf()       { return KdmType(KdmType_InstanceOf, "code/InstanceOf");}
 
   //static const KdmType () { return KdmType(KdmType_, "code/");}
   //static const KdmType () { return KdmType(KdmType_, "code/");}

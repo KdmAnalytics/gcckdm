@@ -275,7 +275,7 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
   else
   {
 	fprintf(stderr, "writeEntryFlow(actionData->startActionId()==<%ld>)\n", actionData->startActionId());
-	mKdmWriter.writeTriple(actionData->startActionId(), KdmPredicate::Attr(), "NoNaturalInFlow");
+	mKdmWriter.writeTriple(actionData->startActionId(), KdmPredicate::NoNaturalInFlow(), "true");
   }
 }
 
@@ -1549,7 +1549,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmNopForLabel(
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Nop());
   mKdmWriter.writeTripleName(actionData->actionId(), gcckdm::getAstNodeName(label));
-  mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::Attr(), "NoNaturalInFlow");
+  mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::NoNaturalInFlow(), "true");
   return actionData;
 }
 

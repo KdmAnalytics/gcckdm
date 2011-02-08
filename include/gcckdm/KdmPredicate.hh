@@ -52,7 +52,7 @@ private:
     KdmPredicate_Size,
     KdmPredicate_EnumName,
     KdmPredicate_Pos,
-    KdmPredicate_Attr
+    KdmPredicate_NoNaturalInFlow
   };
 
 public:
@@ -75,7 +75,7 @@ public:
   static const KdmPredicate Size()       { return KdmPredicate(KdmPredicate_Size, "size"); }
   static const KdmPredicate EnumName()   { return KdmPredicate(KdmPredicate_EnumName, "enumName"); }
   static const KdmPredicate Pos()        { return KdmPredicate(KdmPredicate_Pos, "pos"); }
-  static const KdmPredicate Attr()       { return KdmPredicate(KdmPredicate_Attr, "attr"); }
+  static const KdmPredicate NoNaturalInFlow()  { return KdmPredicate(KdmPredicate_NoNaturalInFlow, "noNaturalInFlow"); }
 
   int const id() const
   {

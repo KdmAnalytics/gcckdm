@@ -52,7 +52,7 @@ private:
     KdmPredicate_Size,
     KdmPredicate_EnumName,
     KdmPredicate_Pos,
-    KdmPredicate_Attr,
+    KdmPredicate_Attr
   };
 
 public:

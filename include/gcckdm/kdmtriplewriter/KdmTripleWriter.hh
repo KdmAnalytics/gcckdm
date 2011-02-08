@@ -488,7 +488,7 @@ private:
     KdmElementId_ClassSharedUnit,
     KdmElementId_InventoryModel,
     KdmElementId_CompilationUnit,
-    KdmElementId_DefaultStart,
+    KdmElementId_DefaultStart
   };
 
   /**

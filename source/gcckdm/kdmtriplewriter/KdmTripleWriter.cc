@@ -35,8 +35,10 @@
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
+#include "gcckdm/GccKdmVersion.hh"
 #include <boost/graph/depth_first_search.hpp>
 #include <boost/graph/graphviz.hpp>
+
 #include <fstream>
 
 
@@ -1812,7 +1814,6 @@ long KdmTripleWriter::writeKdmSignature(tree const function)
   else
   {
     sigId = writeKdmSignatureType(function);
-
   }
   return sigId;
 
@@ -1821,6 +1822,7 @@ long KdmTripleWriter::writeKdmSignature(tree const function)
 void KdmTripleWriter::writeVersionHeader()
 {
   *mKdmSink << "KDM_Triple:" << KdmTripleWriter::KdmTripleVersion << "\n";
+  writeComment("KDM File created with GccKdmPlugin Version: " + gcckdm::GccKdmVersion);
 }
 
 void writeCommentWithWriter(CommentWriter const & writer, std::string const & comment)

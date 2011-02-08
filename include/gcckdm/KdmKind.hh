@@ -107,7 +107,7 @@ private:
     KdmKind_BitAssign, //Not in KdmSpec
     KdmKind_RightRotate, // Not in KdmSpec
     KdmKind_LeftRotate, // Not in KdmSpec
-    KdmKind_Case, // Not in KdmSpec
+    KdmKind_Case // Not in KdmSpec
   };
 
 public:

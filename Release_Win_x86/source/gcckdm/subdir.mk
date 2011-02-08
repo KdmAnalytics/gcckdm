@@ -26,7 +26,7 @@ CC_DEPS += \
 source/gcckdm/%.o: ../source/gcckdm/%.cc
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	g++-4.5 -D__WIN32__ -I"C:\workspace-c\MingW-kdm-dev\gcc-4.5.0\libcpp\include" -I"C:\workspace-c\MingW-kdm-dev\gcc-4.5.0\include" -I"C:\workspace-c\MingW-kdm-dev\build\gcc" -I"C:\workspace-c\MingW-kdm-dev\gcc-4.5.0\gcc" -I"C:\boost-1.43" -I"C:\workspace-c\GccKdmPlugin\include" -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
+	g++ -D__WIN32__ -I"C:\workspace-c\MingW-kdm-dev\gcc-4.5.0\libcpp\include" -I"C:\workspace-c\MingW-kdm-dev\gcc-4.5.0\include" -I"C:\workspace-c\MingW-kdm-dev\build\gcc" -I"C:\workspace-c\MingW-kdm-dev\gcc-4.5.0\gcc" -I"C:\boost-1.43" -I"C:\workspace-c\GccKdmPlugin\include" -O3 -Wall -c -fmessage-length=0 -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@:%.o=%.d)" -o"$@" "$<"
 	@echo 'Finished building: $<'
 	@echo ' '
 

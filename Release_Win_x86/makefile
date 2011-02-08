@@ -56,7 +56,7 @@ clean:
 	-@echo ' '
 
 post-build:
-	-sh C:/workspace-c/GccKdmPlugin/win32/post-build-release.sh
+	-sh C:/workspace-c/GccKdmPlugin/win32/post-build.sh
 	-@echo ' '
 
 .PHONY: all clean dependents

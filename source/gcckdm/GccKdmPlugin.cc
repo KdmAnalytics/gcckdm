@@ -83,6 +83,18 @@ extern "C" int kdm_plugin_init(struct plugin_name_args *plugin_info, struct plug
 }
 
 /**
+ * Implement a less strict version checking scheme than plugin_default_version_check(...)
+ * We only check to see if the version is in the 4.5.x family
+ */
+bool kdm_plugin_version_check(struct plugin_gcc_version *plugin_version, struct plugin_gcc_version *version)
+{
+  std::string minPluginVer = "4.5";
+  std::string pluginBaseVer = plugin_version->basever;
+  std::string gccBaseVer = version->basever;
+  return boost::starts_with(pluginBaseVer, minPluginVer) && boost::starts_with(gccBaseVer, minPluginVer);
+}
+
+/**
  * This initialization function is used on linux for the standard DSO plugin
  *
  */
@@ -91,7 +103,7 @@ extern "C" int plugin_init(struct plugin_name_args *plugin_info, struct plugin_g
   int retValue(0);
 
   //Recommended version check
-  if (plugin_default_version_check(version, &gcc_version))
+  if (kdm_plugin_version_check(version, &gcc_version))
   {
     if (!std::string(gcc_version.basever).empty())
     {

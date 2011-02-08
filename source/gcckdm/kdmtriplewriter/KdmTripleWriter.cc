@@ -488,7 +488,10 @@ void KdmTripleWriter::processNodeQueue()
   //Process any nodes that are still left on the queue
   for (; !mNodeQueue.empty(); mNodeQueue.pop())
   {
-    processAstNode(mNodeQueue.front());
+	tree node = mNodeQueue.front();
+//Keeping this here for debugging
+    fprintf(stderr,"mNodeQueue.front: %p <%ld>\n", node, getReferenceId(node));
+    processAstNodeInternal(node);
   }
 }
 
@@ -565,7 +568,7 @@ void KdmTripleWriter::finishTranslationUnit()
   }
 }
 
-long KdmTripleWriter::processAstNode(tree const ast, ContainsRelationPolicy const containPolicy, bool isTemplate)
+long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy, bool isTemplate)
 {
   long id = invalidId;
   try
@@ -584,19 +587,17 @@ long KdmTripleWriter::processAstNode(tree const ast, ContainsRelationPolicy cons
       int treeCode(TREE_CODE(ast));
 
       //All non built-in delcarations go here...
-      if (DECL_P(ast) && !DECL_IS_BUILTIN(ast))
-      {
-        id = processAstDeclarationNode(ast, containPolicy, isTemplate);
+      if (DECL_P(ast)) {
+    	  if (DECL_IS_BUILTIN(ast)) {
+    	    // SKIP all built-in declarations??
+    	  } else {
+            id = processAstDeclarationNode(ast, containPolicy, isTemplate);
+    	  }
       }
       else if(treeCode == NAMESPACE_DECL)
       {
         processAstNamespaceNode(ast);
       }
-      else if (DECL_P(ast) && DECL_IS_BUILTIN(ast))
-      {
-        // SKIP all built-in declarations??
-      }
-      //
       else if (treeCode == LABEL_DECL)
       {
         //Not required.. . labels are handled in the gimple
@@ -611,7 +612,7 @@ long KdmTripleWriter::processAstNode(tree const ast, ContainsRelationPolicy cons
           tree treeValue = TREE_VALUE(l);
           if(treeValue)
           {
-            processAstNode(treeValue);
+            processAstNodeInternal(treeValue);
           }
           l = TREE_CHAIN (l);
         }
@@ -795,7 +796,7 @@ long KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
       // If this is artificial then it is a class declaration, otherwise a typedef.
       if(DECL_ARTIFICIAL(typeDecl))
       {
-        return processAstNode(typeNode);
+        return processAstNodeInternal(typeNode);
       }
     }
   }
@@ -1014,7 +1015,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         case FUNCTION_DECL:
         {
           writeComment("--- Start Specialization");
-          processAstNode(ts);
+          processAstNodeInternal(ts);
           writeComment("--- End Specialization");
           break;
         }
@@ -1042,7 +1043,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         {
           /* Add the instantiation only if it is real.  */
           if (!find_template_parm (TYPE_TI_ARGS(TREE_TYPE(ts)))) {
-            long instantiationTypeId = processAstNode(ts);
+            long instantiationTypeId = processAstNodeInternal(ts);
     	    writeRelation(KdmType::InstanceOf(), instantiationTypeId /*fromId*/, templateUnitId /*toId*/);
           }
           break;
@@ -1068,7 +1069,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         {
 //        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
 //        writeUnsupportedComment(msg);
-//        //        processAstNode(tl);
+//        //        processAstNodeInternal(tl);
 
 //        processAstTemplateDecl(tl);
 
@@ -1342,7 +1343,7 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
     }
     else if (TREE_CODE (TREE_VALUE (tv)) == CONST_DECL)
     {
-    	processAstNode(tv);
+    	processAstNodeInternal(tv);
     }
     else
     {
@@ -1420,7 +1421,7 @@ void KdmTripleWriter::processAstNamespaceNode(tree const namespaceDecl)
 
     if (!errorcount)
     {
-      processAstNode(decl);
+      processAstNodeInternal(decl);
     }
   }
 
@@ -1589,7 +1590,11 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
 
     // Friendship
+#if 1 //BBBBB
+    writeKdmFriends(callableUnitId, functionDecl);
+#else
     writeKdmFriends(callableUnitId, DECL_BEFRIENDING_CLASSES(functionDecl));
+#endif
 
     // Containment
     if (containPolicy == WriteKdmContainsRelation)
@@ -2289,6 +2294,9 @@ long KdmTripleWriter::writeKdmMemberUnit(tree const member)
     else if (TREE_PROTECTED (member)) writeTripleExport(memberId, "protected");
     else writeTripleExport(memberId, "public");
   }
+
+  writeTripleContains(getReferenceId(context), memberId);
+
   return memberId;
 }
 
@@ -2466,6 +2474,8 @@ long KdmTripleWriter::getReferenceId(tree const node)
     //if we haven't processed this node before new node....queue it node for later processing
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
+//Keeping this here for debugging
+      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
       mNodeQueue.push(node);
     }
 
@@ -2497,7 +2507,7 @@ long KdmTripleWriter::getValueId(tree const node)
   if (i == mValues.end())
   {
     valueId = getReferenceId(node);
-    processAstNode(node);
+    processAstNodeInternal(node);
   }
   else
   {
@@ -2668,7 +2678,7 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
   tree treeType(TREE_TYPE(pointerType));
   tree t2(TYPE_MAIN_VARIANT(treeType));
   long pointerTypeKdmElementId = getReferenceId(t2);
-  processAstNode(t2);
+  processAstNodeInternal(t2);
 
   writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
 
@@ -2792,7 +2802,7 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
           {
             if (!DECL_SELF_REFERENCE_P(d))
             {
-              processAstNode(d);
+              processAstNodeInternal(d);
 //              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
 //              writeUnsupportedComment(msg);
             }
@@ -2802,13 +2812,13 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
           {
             if (!DECL_ARTIFICIAL(d))
             {
-              processAstNode(d);
+              processAstNodeInternal(d);
             }
             break;
           }
           case VAR_DECL:
           {
-            processAstNode(d);
+            processAstNodeInternal(d);
             break;
           }
           case TEMPLATE_DECL:
@@ -2845,25 +2855,69 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
   }
 }
 
-/**
- *
- */
+
+#if 1 //BBBB
+
+void KdmTripleWriter::writeKdmFriends(long const id, tree const scope)
+{
+//	static int
+//	friend_accessible_p (tree scope, tree decl, tree binfo)
+
+	  tree befriending_classes;
+
+	  if (!scope)
+	    return;
+
+	  if (TREE_CODE (scope) == FUNCTION_DECL
+	      || DECL_FUNCTION_TEMPLATE_P (scope))
+	    befriending_classes = DECL_BEFRIENDING_CLASSES (scope);
+	  else if (TYPE_P (scope))
+	    befriending_classes = CLASSTYPE_BEFRIENDING_CLASSES (scope);
+	  else
+	    return;
+
+      for (tree frnd = befriending_classes; frnd; frnd = TREE_CHAIN (frnd)) {
+    	if (TREE_CODE (frnd) != FUNCTION_DECL) {
+		  tree tv = TREE_VALUE (frnd);
+	      if (tv != NULL && TREE_CODE (tv) != TEMPLATE_DECL) {
+	        tree friendType = TREE_VALUE (frnd);
+	        long friendId = getReferenceId(friendType);
+	        long relId = writeKdmFriend(id, friendId);
+	        writeTripleContains(id, relId);
+	      }
+    	}
+	  }
+
+      if (TREE_CODE (scope) == FUNCTION_DECL
+	      || DECL_FUNCTION_TEMPLATE_P (scope)) {
+	      /* Perhaps this SCOPE is a member of a class which is a friend.  */
+	      if (DECL_CLASS_SCOPE_P (scope)) {
+	        writeKdmFriends(id, DECL_CONTEXT (scope));
+	      }
+      }
+}
+
+#else
+
 void KdmTripleWriter::writeKdmFriends(long const id, tree const befriending)
 {
-  for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd))
-  {
-    if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
-    {
-      if(TREE_CODE (TREE_VALUE (frnd)) != TEMPLATE_DECL)
-      {
+
+#if 1
+    for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd)) {
+	  tree tv = TREE_VALUE (frnd);
+      if (tv != NULL && TREE_CODE (tv) != TEMPLATE_DECL) {
         tree friendType = TREE_VALUE (frnd);
         long friendId = getReferenceId(friendType);
         long relId = writeKdmFriend(id, friendId);
         writeTripleContains(id, relId);
       }
     }
-  }
+#endif
+
 }
+
+#endif
+
 
 /**
  *
@@ -2942,7 +2996,11 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
   }
 
   // Friends
+#if 1 //BBBBB
+  writeKdmFriends(classId, recordType);
+#else
   writeKdmFriends(classId, CLASSTYPE_BEFRIENDING_CLASSES(recordType));
+#endif
 
   // Traverse members.
   for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
@@ -2953,7 +3011,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
       {
         if (!DECL_SELF_REFERENCE_P (d))
         {
-          processAstNode(d);
+          processAstNodeInternal(d);
         }
         break;
       }
@@ -2962,14 +3020,14 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
         if (!DECL_ARTIFICIAL (d))
         {
           long itemId = getReferenceId(d);
-          processAstNode(d);
-          writeTripleContains(classId, itemId);
+          processAstNodeInternal(d);
+//BBBB          writeTripleContains(classId, itemId);
         }
         break;
       }
       default:
       {
-        processAstNode(d);
+        processAstNodeInternal(d);
         break;
       }
     }
@@ -2979,7 +3037,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
   {
     if (!DECL_ARTIFICIAL (d))
     {
-      processAstNode(d, WriteKdmContainsRelation, isTemplate);
+      processAstNodeInternal(d, WriteKdmContainsRelation, isTemplate);
     }
   }
 

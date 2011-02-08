@@ -38,7 +38,7 @@ public:
   virtual void startTranslationUnit(Path const & filename) = 0;
   virtual void startKdmGimplePass() = 0;
   virtual void finishKdmGimplePass() = 0;
-  virtual void processAstNode0(tree const ast) = 0;
+  virtual void processAstNodeWrapper(tree const ast) = 0;
   virtual void finishTranslationUnit() = 0;
 };
 

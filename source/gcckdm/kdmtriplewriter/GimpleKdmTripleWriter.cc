@@ -119,7 +119,10 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   //inline functions haven't been gimplified yet so we do it to simplify processing
   if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL(functionDeclNode))
   {
-    gimplify_function_tree (functionDeclNode);
+// Had to disable the following call for CPP, since it SEGFAULTS on at least this example:
+// test/c++-tests/basic-elements/classes37.cpp
+	  if (!isFrontendCxx())
+	    gimplify_function_tree (functionDeclNode);
   }
 
   if (gimple_has_body_p(functionDeclNode))
@@ -267,6 +270,11 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
   }
   //Last element was a label... do nothing it will be fixed in the
   //write label queue
+  else
+  {
+	fprintf(stderr, "writeEntryFlow(actionData->startActionId()==<%ld>)\n", actionData->startActionId());
+	mKdmWriter.writeTriple(actionData->startActionId(), KdmPredicate::Attr(), "NoNaturalInFlow");
+  }
 }
 
 
@@ -525,6 +533,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
       case GIMPLE_TRY:
       {
         processGimpleTryStatement(gs);
+        break;
+      }
+      case GIMPLE_EH_MUST_NOT_THROW:
+      {
+        //This statement doesn't appear to have any relevance to KDM
         break;
       }
       default:
@@ -798,7 +811,7 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
     }
     else
     {
-      mKdmWriter.processAstNode(t);
+      mKdmWriter.processAstNodeInternal(t);
     }
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(t, id));
   }
@@ -935,7 +948,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       if (!call_is_virtual)
         mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getLinkId(op0, gcckdm::getAstNodeName(op0)));
 
+#if 0 //BBBB
       if (DECL_BUILT_IN(op0) && std::string(e.file) == "<built-in>")
+#else
+      if (DECL_P(op0) && DECL_IS_BUILTIN(op0))
+#endif
       {
         mKdmWriter.writeKdmBuiltinStereotype(actionData->actionId());
       }
@@ -1530,6 +1547,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmNopForLabel(
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Nop());
   mKdmWriter.writeTripleName(actionData->actionId(), gcckdm::getAstNodeName(label));
+  mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::Attr(), "NoNaturalInFlow");
   return actionData;
 }
 

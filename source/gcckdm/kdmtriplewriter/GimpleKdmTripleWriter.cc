@@ -274,7 +274,7 @@ void GimpleKdmTripleWriter::writeEntryFlow(ActionDataPtr actionData)
   //write label queue
   else
   {
-	fprintf(stderr, "writeEntryFlow(actionData->startActionId()==<%ld>)\n", actionData->startActionId());
+//DBG	fprintf(stderr, "# writeEntryFlow(actionData->startActionId()==<%ld>)\n", actionData->startActionId());
 	mKdmWriter.writeTriple(actionData->startActionId(), KdmPredicate::NoNaturalInFlow(), "true");
   }
 }

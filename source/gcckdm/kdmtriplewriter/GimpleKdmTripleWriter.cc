@@ -2171,8 +2171,23 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
   //  // Example: a = &b;
   else
   {
+#if 1 //BBBBB
+
+    lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),loc) : getReferenceId(lhs);
+
+    ActionDataPtr rhsData = getRhsReferenceId(op0);
+    actionData = writeKdmPtr(RelationTarget(lhs,lhsId), RelationTarget(op0, rhsData->outputId()));
+
+    if (not lhs)
+    {
+      mKdmWriter.writeTripleContains(actionData->actionId(), lhsId);
+    }
+
+#else
     //we have to create a temp variable... aka temp1
-    long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),gcckdm::locationOf(rhs));
+	long const typeId = getReferenceId(TREE_TYPE(op0));
+	location_t const loc = gcckdm::locationOf(rhs);
+    long storableId = writeKdmStorableUnit(typeId, loc);
 
     //Address.... temp1 = &rhs
     ActionDataPtr rhsData = getRhsReferenceId(op0);
@@ -2180,6 +2195,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
 
     //Contain the tmp in the ptr action element
     mKdmWriter.writeTripleContains(actionData->actionId(), storableId);
+#endif
 
     //Hook up flows if required
     if (rhsData->hasActionId())

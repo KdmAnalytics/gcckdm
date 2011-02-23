@@ -813,7 +813,7 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
     }
     else
     {
-      mKdmWriter.processAstNodeInternal(t);
+      mKdmWriter.processAstNode(t);
     }
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(t, id));
   }

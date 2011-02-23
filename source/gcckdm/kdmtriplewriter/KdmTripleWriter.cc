@@ -493,7 +493,7 @@ void KdmTripleWriter::processNodeQueue()
 	tree node = mNodeQueue.front();
 //Keeping this here for debugging
     fprintf(stderr,"mNodeQueue.front: %p <%ld>\n", node, getReferenceId(node));
-    processAstNodeInternal(node);
+    processAstNode(node);
   }
 }
 
@@ -569,6 +569,13 @@ void KdmTripleWriter::finishTranslationUnit()
     std::cerr << boost::diagnostic_information(e);
   }
 }
+
+//Simply call the internal version of process node
+void KdmTripleWriter::processAstNode(tree const ast)
+{
+  processAstNodeInternal(ast);
+}
+
 
 long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy, bool isTemplate)
 {
@@ -3022,7 +3029,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
         if (!DECL_ARTIFICIAL (d))
         {
           long itemId = getReferenceId(d);
-          processAstNodeInternal(d);
+          processAstNode(d);
 //BBBB          writeTripleContains(classId, itemId);
         }
         break;

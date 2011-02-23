@@ -175,8 +175,7 @@ public:
   /**
    * @see GccAstListener::processAstNode
    */
-  long processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
-  virtual void processAstNodeWrapper(tree const ast) { processAstNodeInternal(ast, WriteKdmContainsRelation, /*isTemplate*/ false); }
+  virtual void processAstNode(tree const ast);
 
   /**
    * @see GccAstListener::finishKdmGimplePass
@@ -490,6 +489,19 @@ private:
     KdmElementId_CompilationUnit,
     KdmElementId_DefaultStart
   };
+
+
+  /**
+   * Version of processAstNode to be used inside the triple writer.  Adds default variables
+   *
+   * @param ast the ast node to process
+   * @param containPolicy the policy to follow when writing the contains relationship
+   * @param isTemplate true is the node being processed is a template node.
+   *
+   * @return the id assigned to the node being processed, to be used to reference the processed node
+   */
+  long processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+
 
   /**
    * Process the AST Constructor node

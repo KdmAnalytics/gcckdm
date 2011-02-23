@@ -1725,6 +1725,8 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
     }
     if (argType)
     {
+//      long ref = getReferenceId(TREE_VALUE(argType));
+//      writeRelation(KdmType::HasType(), signatureId, ref);
       argType = TREE_CHAIN (argType);
     }
   }
@@ -1791,6 +1793,20 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
     long refId = writeKdmParameterUnit(argType, true);
     writeTriplePosition(refId, count++);
     writeTripleContains(signatureId, refId);
+
+    //To ensure that
+//    tree type = NULL_TREE;
+//    if (TREE_TYPE(argType))
+//    {
+//      type = typedefTypeCheck(param);
+//    }
+//    else
+//    {
+//      type = TYPE_MAIN_VARIANT(TREE_VALUE (param));
+//    }
+//    long ref = getReferenceId(TREE_VALUE(argType));
+//    writeRelation(KdmType::HasType(), signatureId, ref);
+
     argType = TREE_CHAIN (argType);
   }
 
@@ -2240,6 +2256,11 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
   writeTripleName(subjectId, "__RESULT__");
   writeTripleKind(subjectId, KdmKind::Return());
   writeTriple(subjectId, KdmPredicate::Type(), ref);
+  // For the moment ensure that all parameters have the hasType relationship
+  // this may result is a huge explosion of data that we eventually might
+  // to restrict to just non-primitive types
+  writeRelation(KdmType::HasType(), subjectId, ref);
+
   return subjectId;
 }
 
@@ -2277,6 +2298,10 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewEleme
   writeTripleName(parameterUnitId, name);
 
   writeTriple(parameterUnitId, KdmPredicate::Type(), ref);
+  // For the moment ensure that all parameters have the hasType relationship
+  // this may result is a huge explosion of data that we eventually might
+  // to restrict to just non-primitive types
+  writeRelation(KdmType::HasType(), parameterUnitId, ref);
   return parameterUnitId;
 }
 

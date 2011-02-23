@@ -3028,7 +3028,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
       {
         if (!DECL_ARTIFICIAL (d))
         {
-          long itemId = getReferenceId(d);
+          getReferenceId(d);
           processAstNode(d);
 //BBBB          writeTripleContains(classId, itemId);
         }

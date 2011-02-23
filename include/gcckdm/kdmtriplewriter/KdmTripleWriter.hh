@@ -9,12 +9,12 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
-
+//
 // libGccKdm is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU General Public License for more details.
-
+//
 // You should have received a copy of the GNU General Public License
 // along with libGccKdm.  If not, see <http://www.gnu.org/licenses/>.
 //
@@ -490,6 +490,19 @@ private:
     KdmElementId_CompilationUnit,
     KdmElementId_DefaultStart
   };
+
+
+  /**
+   * Version of processAstNode to be used inside the triple writer.  Adds default variables
+   *
+   * @param ast the ast node to process
+   * @param containPolicy the policy to follow when writing the contains relationship
+   * @param isTemplate true is the node being processed is a template node.
+   *
+   * @return the id assigned to the node being processed, to be used to reference the processed node
+   */
+  long processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+
 
   /**
    * Process the AST Constructor node

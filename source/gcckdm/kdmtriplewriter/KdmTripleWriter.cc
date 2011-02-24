@@ -1659,6 +1659,8 @@ bool KdmTripleWriter::lockUid() const
 void KdmTripleWriter::writeKdmCxxContains(tree const decl)
 {
   long id = getReferenceId(decl);
+
+#if 0 //BBBBB Temporarily commented out, to avoid issue in current linker with UID ranges
   if (isFrontendCxx())
   {
     tree context = CP_DECL_CONTEXT (decl);
@@ -1675,6 +1677,7 @@ void KdmTripleWriter::writeKdmCxxContains(tree const decl)
       }
     }
   }
+#endif
 
   // Otherwise the file is the parent
   Path sourceFile(DECL_SOURCE_FILE(decl));

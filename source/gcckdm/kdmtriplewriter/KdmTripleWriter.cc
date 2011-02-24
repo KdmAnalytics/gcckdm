@@ -492,7 +492,7 @@ void KdmTripleWriter::processNodeQueue()
   {
 	tree node = mNodeQueue.front();
 //Keeping this here for debugging
-    fprintf(stderr,"mNodeQueue.front: %p <%ld>\n", node, getReferenceId(node));
+//    fprintf(stderr,"mNodeQueue.front: %p <%ld>\n", node, getReferenceId(node));
     processAstNode(node);
   }
 }

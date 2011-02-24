@@ -1626,7 +1626,8 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     writeTriple(callableUnitId, KdmPredicate::Type(), signatureId);
   }
 
-  if (!isTemplate)
+  //If we are skipping the signature
+  if (!isTemplate && signaturePolicy != SkipSignatureUnit)
   {
     if (mSettings.functionBodies)
     {

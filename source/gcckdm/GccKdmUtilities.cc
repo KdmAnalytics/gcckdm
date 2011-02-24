@@ -340,7 +340,7 @@ std::string getDemangledName(tree node)
 
         return demangledName;
       } else {
-    	int something_to_put_breakpoint = 1234;
+//    	int something_to_put_breakpoint = 1234;
 //    	mangledName += "(cplus_demangle() UNABLE TO DEMANGLE THIS NAME)";
 //    	return mangledName;
       }

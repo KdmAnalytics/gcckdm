@@ -490,7 +490,7 @@ void KdmTripleWriter::processNodeQueue()
   //Process any nodes that are still left on the queue
   for (; !mNodeQueue.empty(); mNodeQueue.pop())
   {
-	tree node = mNodeQueue.front();
+    tree node = mNodeQueue.front();
 //Keeping this here for debugging
 //    fprintf(stderr,"mNodeQueue.front: %p <%ld>\n", node, getReferenceId(node));
     processAstNode(node);

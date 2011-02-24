@@ -175,7 +175,8 @@ public:
   /**
    * @see GccAstListener::processAstNode
    */
-  virtual void processAstNode(tree const ast);
+  long processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+  virtual void processAstNode(tree const ast) { processAstNodeInternal(ast, WriteKdmContainsRelation, /*isTemplate*/ false); }
 
   /**
    * @see GccAstListener::finishKdmGimplePass

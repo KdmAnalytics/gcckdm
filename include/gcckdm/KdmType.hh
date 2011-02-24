@@ -93,6 +93,8 @@ private:
     KdmType_FalseFlow,
     KdmType_EntryFlow,
     KdmType_GuardedFlow,
+    KdmType_ExceptionFlow,
+    KdmType_ExitFlow,
     KdmType_Calls,
     KdmType_CompliesTo,
     KdmType_TryUnit,
@@ -164,7 +166,9 @@ public:
   static const KdmType TrueFlow()         { return KdmType(KdmType_TrueFlow, "action/TrueFlow");  }
   static const KdmType FalseFlow()        { return KdmType(KdmType_FalseFlow, "action/FalseFlow");  }
   static const KdmType EntryFlow()        { return KdmType(KdmType_EntryFlow, "action/EntryFlow");  }
-  static const KdmType GuardedFlow()      { return KdmType(KdmType_GuardedFlow, "action/GuardedFlow");}
+  static const KdmType GuardedFlow()      { return KdmType(KdmType_GuardedFlow, "action/GuardedFlow"); }
+  static const KdmType ExceptionFlow()    { return KdmType(KdmType_ExceptionFlow, "action/ExceptionFlow"); }
+  static const KdmType ExitFlow()         { return KdmType(KdmType_ExitFlow, "action/ExitFlow"); }
   static const KdmType Calls()            { return KdmType(KdmType_Calls, "action/Calls");  }
   static const KdmType CompliesTo()       { return KdmType(KdmType_CompliesTo, "action/CompliesTo");  }
   static const KdmType TryUnit()          { return KdmType(KdmType_TryUnit, "action/TryUnit"); }

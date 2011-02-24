@@ -198,6 +198,7 @@ private:
   void processGimpleGotoStatement(gimple const gs);
   ActionDataPtr processGimpleSwitchStatement(gimple const gs);
   void processGimpleTryStatement(gimple const gs);
+  void processGimpleCatchStatement(gimple const gs);
 
   ActionDataPtr processGimpleUnaryAssignStatement(gimple const gs);
   ActionDataPtr processGimpleBinaryAssignStatement(gimple const gs);
@@ -212,6 +213,8 @@ private:
 
   long writeKdmFlow(KdmType const & flow, long const fromId, long const toId);
   long writeKdmFlow(long const fromId, long const toId);
+  long writeKdmExceptionFlow(long const fromId, long const toId);
+  long writeKdmExitFlow(long const fromId, long const toId);
 
   void writeKdmUnaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhsTarget);
   void writeKdmBinaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhs1Target, RelationTarget const & rhs2Target);
@@ -356,6 +359,9 @@ private:
   KdmTripleWriter::Settings mSettings;
 
   long mBlockContextId;
+
+  ActionDataPtr finallyData;
+  ActionDataPtr afterCatchLabelData;
 };
 
 } // namespace kdmtriplewriter

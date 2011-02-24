@@ -2509,7 +2509,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 //Keeping this here for debugging
-      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
+//      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
       mNodeQueue.push(node);
     }
 

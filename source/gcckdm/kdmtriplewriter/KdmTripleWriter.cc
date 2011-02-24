@@ -824,7 +824,7 @@ long KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   writeTriple(typedefKdmElementId, KdmPredicate::Type(), typeKdmElementId);
 
   // Write the containment information
-  writeKdmCxxContains(typeDecl);
+  writeKdmCxxContains(typedefKdmElementId, typeDecl);
 
   return typedefKdmElementId;
 }
@@ -1097,7 +1097,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
 	  writeTripleKdmType(templateUnitId, KdmType::TemplateUnit());
 	  writeTripleName(templateUnitId, name);
 	  writeKdmSourceRef(templateUnitId, templateDecl);
-	  writeKdmCxxContains(templateDecl);
+	  writeKdmCxxContains(templateUnitId, templateDecl);
 
 	  // Write TemplateParameters
       tree parms = DECL_TEMPLATE_PARMS (templateDecl);
@@ -1465,14 +1465,11 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
-/**
- *
- */
-long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate)
-{
-  std::string name(nodeName(functionDecl));
 
-  long callableUnitId = getReferenceId(functionDecl);
+long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate, SignatureUnitPolicy signaturePolicy)
+{
+  std::string name = nodeName(functionDecl);
+  std::string linkSnkStr = linkCallablePrefix + gcckdm::getLinkId(functionDecl, name);
 
   if (isFrontendCxx())
   {
@@ -1482,7 +1479,7 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
       writeTripleKind(callableUnitId, KdmKind::Constructor());
       //Identify this as a sink
       if (!isTemplate)
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
+        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
     else if(DECL_DESTRUCTOR_P(functionDecl))
     {
@@ -1490,7 +1487,7 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
       writeTripleKind(callableUnitId, KdmKind::Destructor());
       //Identify this as a sink
       if (!isTemplate)
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
+        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
     else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
@@ -1498,7 +1495,7 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
       writeTripleKind(callableUnitId, KdmKind::Operator());
       //Identify this as a sink
       if (!isTemplate)
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
+        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
     else if(DECL_FUNCTION_MEMBER_P(functionDecl))
     {
@@ -1506,7 +1503,7 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
       writeTripleKind(callableUnitId, KdmKind::Method());
       //Identify this as a sink
       if (!isTemplate)
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
+        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
     else
     {
@@ -1520,7 +1517,7 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
         writeTripleKind(callableUnitId, KdmKind::Regular());
         //Identify this as a sink
         if (!isTemplate)
-          writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
+          writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
       }
     }
     // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
@@ -1607,7 +1604,7 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
 
     // Containment
     if (containPolicy == WriteKdmContainsRelation)
-      writeKdmCxxContains(functionDecl);
+      writeKdmCxxContains(callableUnitId, functionDecl);
   }
   else
   {
@@ -1622,14 +1619,17 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
 
   lockUid(true);
 
-  long signatureId = writeKdmSignature(functionDecl);
+  if (signaturePolicy == WriteSignatureUnit)
+  {
+    long signatureId = writeKdmSignature(functionDecl);
+    writeTripleContains(callableUnitId, signatureId);
+    writeTriple(callableUnitId, KdmPredicate::Type(), signatureId);
+  }
 
-  writeTripleContains(callableUnitId, signatureId);
-
-  writeTriple(callableUnitId, KdmPredicate::Type(), signatureId);
-
-  if (!isTemplate) {
-    if (mSettings.functionBodies) {
+  if (!isTemplate)
+  {
+    if (mSettings.functionBodies)
+    {
       mGimpleWriter->processAstFunctionDeclarationNode(functionDecl);
     }
   }
@@ -1637,7 +1637,19 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
   lockUid(false);
 
   return callableUnitId;
+
+
 }
+
+
+/**
+ * Just get the reference of the functionDecl and pass it along
+ */
+long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate)
+{
+  return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, containPolicy, isTemplate, WriteSignatureUnit);
+}
+
 
 void KdmTripleWriter::lockUid(bool val)
 {
@@ -1653,14 +1665,12 @@ bool KdmTripleWriter::lockUid() const
  * C++ containment is more complicated then standard C containment. In KDM we follow
  * the following procedure:
  *
- *   If the context is a class, the parent is a class
- *   Otherwise the parent is the compilation/shared unit
+ * If the context is a class and decl is a function/method
+ *    if decl is in the same file as the context class the parent is the class
+ *    otherwise put a fake callable in the class and the parent is the compilation/shared unit
  */
-void KdmTripleWriter::writeKdmCxxContains(tree const decl)
+void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
 {
-  long id = getReferenceId(decl);
-
-#if 0 //BBBBB Temporarily commented out, to avoid issue in current linker with UID ranges
   if (isFrontendCxx())
   {
     tree context = CP_DECL_CONTEXT (decl);
@@ -1672,22 +1682,35 @@ void KdmTripleWriter::writeKdmCxxContains(tree const decl)
       if(treeCode == RECORD_TYPE)
       {
         long classUnitId = getReferenceId(context);
-        writeTripleContains(classUnitId, id);
-        return;
+        if (TREE_CODE(decl) == FUNCTION_DECL)
+        {
+          //this decl is in the same file as the context... to make a prettier diagram
+          //we stuff this decl in the class
+          if (getSourceFileReferenceId(context) == getSourceFileReferenceId(decl))
+          {
+            writeTripleContains(classUnitId, declId);
+            return;
+          }
+          //We are not in the same file as our context, therefore we stick a fake callable in
+          //our context and the _real_ parent is the the compilation/shared unit where
+          //the decl is actually defined.
+          else
+          {
+            long fakeId = getNextElementId();
+            //We skip writing a signature for this fake callable since at the moment it leads to
+            //double containment problems.
+            writeKdmCallableUnit(fakeId, decl, SkipKdmContainsRelation, false, SkipSignatureUnit);
+            writeTripleContains(classUnitId, fakeId);
+          }
+        }
       }
     }
   }
-#endif
 
   // Otherwise the file is the parent
   Path sourceFile(DECL_SOURCE_FILE(decl));
-//  if (!sourceFile.is_complete())
-//  {
-//    sourceFile = bfs::complete(sourceFile);
-//  }
-
   long unitId(sourceFile == mCompilationFile ? KdmElementId_CompilationUnit : getSourceFileReferenceId(decl));
-  writeTripleContains(unitId, id);
+  writeTripleContains(unitId, declId);
 }
 
 long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)

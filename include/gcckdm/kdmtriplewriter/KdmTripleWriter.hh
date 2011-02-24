@@ -64,16 +64,25 @@ class KdmTripleWriter: public GccAstListener, public TripleWriter
 {
 public:
 
+  //Flag to determine if the contains relationship is to be written or not
   enum ContainsRelationPolicy
   {
     WriteKdmContainsRelation = 0,
     SkipKdmContainsRelation = 1
   };
 
+  //Flag to determin the scope of a storable
   enum StorableUnitScopePolicy
   {
     GlobalStorableUnitScope = 0,
     LocalStorableUnitScope = 1
+  };
+
+  //Flag to determine if the signature is to be written or not
+  enum SignatureUnitPolicy
+  {
+    WriteSignatureUnit = 0,
+    SkipSignatureUnit = 1
   };
 
   /**
@@ -606,10 +615,26 @@ private:
   long writeKdmCallableUnit(tree const callableDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
 
   /**
+   * Write a CallableUnit kdm element to the KdmSink stream using the
+   * given 'callable' delcaration currently supported 'callables'
+   *
+   *   Function
+   *   Method
+   *     Destructor
+   *     Constructor
+   *     Operator
+   *
+   *  Allows control of the callableDeclId and if the signature is to be written for this callable or not.
+   *
+   * @param callableDecl an ast node of a function or method
+   */
+  long writeKdmCallableUnit(long const callableDeclId, tree const callableDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false, SignatureUnitPolicy const sigUnitPolicy = WriteSignatureUnit);
+
+  /**
    * In C++ containment of various elements depends on whether the definition's "context" is
    * a class or not. This method determines containment in these more complex situations.
    */
-  void writeKdmCxxContains(tree const decl);
+  void writeKdmCxxContains(long const declId, tree const decl);
 
   long writeKdmReturnParameterUnit(tree const param);
   long writeKdmParameterUnit(tree const param, bool forceNewElementId = false);

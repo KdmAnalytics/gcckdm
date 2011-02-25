@@ -549,6 +549,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         //This statement doesn't appear to have any relevance to KDM
         break;
       }
+      case GIMPLE_EH_FILTER:
+      {
+        //This statement doesn't appear to have any relevance to KDM
+        break;
+      }
       default:
       {
         std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))] % BOOST_CURRENT_FUNCTION));
@@ -1449,7 +1454,9 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
     mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::FinallyUnit());
     writeKdmExitFlow(tryData->actionId(), finallyData->actionId());
     //Also flow from the last ActionElement in the TryUnit to the FinallyUnit
-    writeKdmFlow(mLastData->actionId(), finallyData->actionId());
+    if (mLastData) {
+      writeKdmFlow(mLastData->actionId(), finallyData->actionId());
+    }
   }
 
   //Set out context to the FinallyUnit

@@ -122,10 +122,10 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
 // Had to disable the following call for CPP, since it SEGFAULTS
 // when there is multiple inheritance, with BOTH parent classes having virtual destructors declared (bodies NOT necessary), and the inherited class has destructor (regardless virtual or not), with body (empty ok) declared OUTSIDE the class.
 // (see e.g. this example: test/c++-tests/basic-elements/classes37.cpp)
-	  if (!isFrontendCxx())
-	  {
+//	  if (!isFrontendCxx())
+//	  {
 	    gimplify_function_tree (functionDeclNode);
-	  }
+//	  }
   }
 
   if (gimple_has_body_p(functionDeclNode))

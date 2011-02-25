@@ -549,6 +549,11 @@ void GimpleKdmTripleWriter::processGimpleStatement(gimple const gs)
         //This statement doesn't appear to have any relevance to KDM
         break;
       }
+      case GIMPLE_EH_FILTER:
+      {
+        //This statement doesn't appear to have any relevance to KDM
+        break;
+      }
       default:
       {
         std::string msg(boost::str(boost::format("GIMPLE statement (%1%) in %2%") % gimple_code_name[static_cast<int> (gimple_code(gs))] % BOOST_CURRENT_FUNCTION));

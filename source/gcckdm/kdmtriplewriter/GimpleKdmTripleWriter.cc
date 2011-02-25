@@ -1530,6 +1530,29 @@ void GimpleKdmTripleWriter::processGimpleCatchStatement(gimple const gs)
 
   mKdmWriter.writeTripleKdmType(tryData->actionId(), KdmType::CatchUnit());
 
+  tree type_or_list = gimple_catch_types(gs);
+  /* Ensure to always end up with a type list to normalize further
+     processing, then register each type against the runtime types map.  */
+  if (type_or_list) {
+	  tree type_list = type_or_list;
+	  if (TREE_CODE (type_or_list) != TREE_LIST) {
+	     type_list = tree_cons (NULL_TREE, type_or_list, NULL_TREE);
+	  }
+      int count = 0;
+	  for (tree type_node = type_list; type_node; type_node = TREE_CHAIN (type_node)) {
+	  	  long parameterUnitId = mKdmWriter.writeKdmParameterUnit(type_node, true);
+	  	  mKdmWriter.writeTripleKind(parameterUnitId, KdmKind::Exception());
+	   	  mKdmWriter.writeTriplePosition(parameterUnitId, count++);
+	   	  mKdmWriter.writeTripleContains(tryData->actionId(), parameterUnitId);
+	  }
+  } else {
+	  /* This is a catch-all/catch(...) case. */
+	  long parameterUnitId = mKdmWriter.getNextElementId();
+	  mKdmWriter.writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
+	  mKdmWriter.writeTripleKind(parameterUnitId, KdmKind::CatchAll());
+   	  mKdmWriter.writeTripleContains(tryData->actionId(), parameterUnitId);
+  }
+
   assert(finallyData != NULL);
   writeKdmExceptionFlow(finallyData->actionId(), tryData->actionId());
 

@@ -87,6 +87,8 @@ private:
     KdmKind_InstanceOf,
     KdmKind_DynCast,
     KdmKind_TypeCast,
+    KdmKind_Exception,
+    KdmKind_CatchAll,
 
     // CallableKinds
     KdmKind_External,
@@ -169,6 +171,8 @@ public:
   static const KdmKind InstanceOf()           { return KdmKind(KdmKind_InstanceOf, "InstanceOf"); }
   static const KdmKind DynCast()              { return KdmKind(KdmKind_DynCast, "DynCast"); }
   static const KdmKind TypeCast()             { return KdmKind(KdmKind_TypeCast, "TypeCast"); }
+  static const KdmKind Exception()            { return KdmKind(KdmKind_Exception, "Exception"); }
+  static const KdmKind CatchAll()             { return KdmKind(KdmKind_CatchAll, "CatchAll"); }
 
   // CallableKind
   static const KdmKind External()             { return KdmKind(KdmKind_External, "external"); }

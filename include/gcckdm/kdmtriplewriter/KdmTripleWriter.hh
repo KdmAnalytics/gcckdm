@@ -236,17 +236,6 @@ public:
   void writeTriplePosition(long const id, int pos);
 
   /**
-   * Convenience method to write the common "contains" triple
-   *
-   * writes: <subject> <contains> <child>
-   *
-   * @param parent
-   * @param child
-   * @param uid if true adds the given contains relationship to the uid graph
-   */
-  void writeTripleContains(long const parent, long const child, bool uid = true);
-
-  /**
    * Convenience method to write the common "LinkId" triple
    *
    * writes: <subject> <link:id> <linkId>
@@ -420,6 +409,19 @@ public:
    * @param toId the id of the target of the relation
    */
   long writeRelation(KdmType const & type, const long fromId, const long toId);
+
+  long writeKdmParameterUnit(tree const param, bool forceNewElementId = false);
+
+  /**
+   * Convenience method to write the common "contains" triple
+   *
+   * writes: <subject> <contains> <child>
+   *
+   * @param parent
+   * @param child
+   * @param uid if true adds the given contains relationship to the uid graph
+   */
+  void writeTripleContains(long const parent, long const child, bool uid = true);
 
 private:
 
@@ -637,7 +639,6 @@ private:
   void writeKdmCxxContains(long const declId, tree const decl);
 
   long writeKdmReturnParameterUnit(tree const param);
-  long writeKdmParameterUnit(tree const param, bool forceNewElementId = false);
   void writeKdmPrimitiveType(tree const type);
   long writeKdmPointerType(tree const pointerType, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false, const long containedInId = invalidId);
   void writeEnumType(tree const enumType);

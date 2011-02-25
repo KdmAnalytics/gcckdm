@@ -1449,7 +1449,9 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
     mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::FinallyUnit());
     writeKdmExitFlow(tryData->actionId(), finallyData->actionId());
     //Also flow from the last ActionElement in the TryUnit to the FinallyUnit
-    writeKdmFlow(mLastData->actionId(), finallyData->actionId());
+    if (mLastData) {
+      writeKdmFlow(mLastData->actionId(), finallyData->actionId());
+    }
   }
 
   //Set out context to the FinallyUnit

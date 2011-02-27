@@ -119,7 +119,7 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   //inline functions haven't been gimplified yet so we do it to simplify processing
   if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL(functionDeclNode))
   {
-    dump_function_to_file(functionDeclNode, stdout, 0);
+//    dump_function_to_file(functionDeclNode, stdout, 0);
     if (DECL_SAVED_TREE (functionDeclNode) == NULL)
     {
       gimple_seq body = gimple_body (functionDeclNode);

@@ -119,13 +119,17 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   //inline functions haven't been gimplified yet so we do it to simplify processing
   if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL(functionDeclNode))
   {
-// Had to disable the following call for CPP, since it SEGFAULTS
-// when there is multiple inheritance, with BOTH parent classes having virtual destructors declared (bodies NOT necessary), and the inherited class has destructor (regardless virtual or not), with body (empty ok) declared OUTSIDE the class.
-// (see e.g. this example: test/c++-tests/basic-elements/classes37.cpp)
-//	  if (!isFrontendCxx())
-//	  {
-	    gimplify_function_tree (functionDeclNode);
-//	  }
+    if (DECL_SAVED_TREE (functionDeclNode) == NULL)
+    {
+      gimple_seq body = gimple_body (functionDeclNode);
+
+      if (gimple_seq_first_stmt (body)
+        && gimple_seq_first_stmt (body) == gimple_seq_last_stmt (body)
+        && gimple_code (gimple_seq_first_stmt (body)) == GIMPLE_BIND)
+      {
+        gimplify_function_tree (functionDeclNode);
+      }
+    }
   }
 
   if (gimple_has_body_p(functionDeclNode))

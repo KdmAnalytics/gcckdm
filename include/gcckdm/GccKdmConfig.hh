@@ -35,6 +35,7 @@ extern "C"
 #include <coretypes.h>
 #include <tree.h>
 #include <tree-pass.h>
+#include <tree-dump.h>
 #include <intl.h>
 #include <tm.h>
 #include <langhooks.h>

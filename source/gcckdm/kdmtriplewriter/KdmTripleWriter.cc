@@ -2388,6 +2388,10 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   writeTripleKdmType(unitId, KdmType::StorableUnit());
   std::string name = nodeName(var);
   writeTripleName(unitId, name);
+  // Mark D.XXXX as hidden
+  if (!name.empty() && name[0] == 'D' && name[1] == '.') {
+    writeTriple(unitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
+  }
 
   //determining type declaration
   tree type = typedefTypeCheck(var);

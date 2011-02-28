@@ -1433,6 +1433,30 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
   long oldContextId = mBlockContextId;
   mBlockContextId = tryData->actionId();
 
+#if 1 //BBBB
+#if 1 //BBBB
+  {
+	gimple_stmt_iterator i = gsi_start(gimple_try_eval(gs));
+	if (!gsi_end_p(i)) {
+	  gimple gsi = gsi_stmt(i);
+      location_t const loc = gimple_location(gsi);
+      if (loc != 0) {
+        expanded_location xloc = expand_location(loc);
+        mKdmWriter.writeKdmSourceRef(tryData->actionId(), xloc);
+      }
+    }
+  }
+#else
+  {
+    location_t const loc = gimple_location(gs);
+    if (loc != 0) {
+      expanded_location xloc = expand_location(loc);
+      mKdmWriter.writeKdmSourceRef(tryData->actionId(), xloc);
+    }
+  }
+#endif
+#endif
+
   // process try - gimple_try_eval (gs)
   processGimpleSequence(gimple_try_eval (gs));
 
@@ -1450,6 +1474,19 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
 
   if (gimple_try_kind (gs) == GIMPLE_TRY_CATCH) {
 	mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::CatchUnit());
+#if 1 //BBBB
+	{
+	  gimple_stmt_iterator i = gsi_start(gimple_try_cleanup(gs));
+	  if (!gsi_end_p(i)) {
+	    gimple gsi = gsi_stmt(i);
+        location_t const loc = gimple_location(gsi);
+        if (loc != 0) {
+          expanded_location xloc = expand_location(loc);
+          mKdmWriter.writeKdmSourceRef(finallyData->actionId(), xloc);
+        }
+	  }
+	}
+#endif
 	writeKdmExceptionFlow(tryData->actionId(), finallyData->actionId());
 
 	ActionDataPtr afterCatchLabelData0(new ActionData(mKdmWriter.getNextElementId()));
@@ -1461,6 +1498,19 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
   } else {
 	assert(gimple_try_kind (gs) == GIMPLE_TRY_FINALLY);
     mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::FinallyUnit());
+#if 1 //BBBB
+	{
+	  gimple_stmt_iterator i = gsi_start(gimple_try_cleanup(gs));
+	  if (!gsi_end_p(i)) {
+	    gimple gsi = gsi_stmt(i);
+        location_t const loc = gimple_location(gsi);
+        if (loc != 0) {
+          expanded_location xloc = expand_location(loc);
+          mKdmWriter.writeKdmSourceRef(finallyData->actionId(), xloc);
+        }
+	  }
+	}
+#endif
     writeKdmExitFlow(tryData->actionId(), finallyData->actionId());
 #if 0 //BBBB
     //Also flow from the last ActionElement in the TryUnit to the FinallyUnit
@@ -1547,6 +1597,29 @@ void GimpleKdmTripleWriter::processGimpleCatchStatement(gimple const gs)
   mLastData = tryData;
 
   mKdmWriter.writeTripleKdmType(tryData->actionId(), KdmType::CatchUnit());
+#if 1 //BBBB
+#if 0 //BBBB
+  {
+	gimple_stmt_iterator i = gsi_start(gimple_catch_handler(gs));
+	if (!gsi_end_p(i)) {
+	  gimple gsi = gsi_stmt(i);
+      location_t const loc = gimple_location(gsi);
+      if (loc != 0) {
+        expanded_location xloc = expand_location(loc);
+        mKdmWriter.writeKdmSourceRef(tryData->actionId(), xloc);
+      }
+    }
+  }
+#else
+  {
+    location_t const loc = gimple_location(gs);
+    if (loc != 0) {
+      expanded_location xloc = expand_location(loc);
+      mKdmWriter.writeKdmSourceRef(tryData->actionId(), xloc);
+    }
+  }
+#endif
+#endif
 
   tree type_or_list = gimple_catch_types(gs);
   /* Ensure to always end up with a type list to normalize further

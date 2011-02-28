@@ -81,6 +81,9 @@ std::string nodeName(tree const node)
   else
   {
     name = gcckdm::getAstNodeName(node);
+
+//DBG fprintf(stderr, "name.c_str()==\"%s\"\n", name.c_str());
+
     if (name.empty())
     {
       name = unnamedNode;
@@ -2409,7 +2412,13 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
     else
     {
       writeTripleKind(unitId, KdmKind::Global());
+
+#if 1 //BBBB
+      std::string linkSnkStr = linkVariablePrefix + gcckdm::getLinkId(var, name);
+      writeTriple(unitId, KdmPredicate::LinkSnk(), linkSnkStr);
+#else
       writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
+#endif
 
       //We now check to see if this variable is initialized
       //  example int e[] = { 1, 2, 3 }
@@ -2424,7 +2433,12 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
 
   if (containPolicy == WriteKdmContainsRelation)
   {
+#if 1 //BBBB
+    std::string linkIdStr = gcckdm::getLinkId(var, name);
+    writeTripleLinkId(unitId, linkIdStr);
+#else
     writeTripleLinkId(unitId, name);
+#endif
     writeTripleContains(getSourceFileReferenceId(var), unitId);
   }
 

@@ -71,7 +71,7 @@ std::string getAstDeclarationNodeName(tree node)
     }
     else
     {
-      std::string prefix = TREE_CODE(node) == CONST_DECL ? "C" : "D";
+      std::string prefix = ((TREE_CODE(node) == CONST_DECL) ? "C" : "D");
       unsigned int uid = DECL_UID(node);
       std::string uidStr(boost::lexical_cast<std::string>(uid));
       nodeName = prefix + "." + uidStr;
@@ -283,30 +283,50 @@ std::string const locationString(location_t loc)
  */
 std::string getDemangledName(tree node)
 {
-  // First try for the demangled assembler name
+  tree mangledNameNode = NULL_TREE;
+  int demangle_opt;
+
   if (HAS_DECL_ASSEMBLER_NAME_P(node) &&
       DECL_NAME (node) &&
       DECL_ASSEMBLER_NAME (node) &&
-      DECL_ASSEMBLER_NAME (node) != DECL_NAME (node))
-  {
-    tree mangledNameNode = DECL_ASSEMBLER_NAME (node);
-    const char *namePtr = IDENTIFIER_POINTER (mangledNameNode);
-    if(namePtr)
-    {
-      std::string mangledName(namePtr);
+      DECL_ASSEMBLER_NAME (node) != DECL_NAME (node)) {
+    // Try the assembler name
+    mangledNameNode = DECL_ASSEMBLER_NAME (node);
+    demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_TYPES | DMGL_ANSI) & ~DMGL_JAVA;
+  } else if (node != NULL_TREE) {
+	switch (TREE_CODE(node)) {
+	  case VAR_DECL:
+	  case PARM_DECL:
+	  case FIELD_DECL:
+	  case CONST_DECL:
+	  case FUNCTION_DECL:
+	  case LABEL_DECL:
+		if (DECL_NAME(node)) {
+          mangledNameNode = DECL_NAME(node);
+          demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_ANSI) & ~DMGL_JAVA;
+		}
+	    break;
+	  default:
+	    break;
+	}
+  }
+
+  if (mangledNameNode != NULL_TREE) {
+    if (IDENTIFIER_POINTER (mangledNameNode)) {
+      std::string mangledName(IDENTIFIER_POINTER (mangledNameNode));
+      //DBG fprintf(stderr, "mangledName.c_str()==\"%s\"\n", mangledName.c_str());
 
       // Remove INTERNAL name
       size_t index = mangledName.find(" *INTERNAL* ");
-      if (index != std::string::npos)
-      {
+      if (index != std::string::npos) {
         mangledName.erase(index, 12);
       }
 
-      const int demangle_opt = (DMGL_STYLE_MASK | DMGL_PARAMS | DMGL_TYPES | DMGL_ANSI) & ~DMGL_JAVA;
-      namePtr = cplus_demangle(mangledName.c_str(), demangle_opt);
-      if(namePtr)
-      {
-        std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
+      const char *demangledNamePtr = cplus_demangle(mangledName.c_str(), demangle_opt);
+      //DBG fprintf(stderr, "demangledNamePtr==\"%s\"\n", demangledNamePtr);
+      if(demangledNamePtr) {
+//        std::string demangledName(cplus_demangle(mangledName.c_str(), demangle_opt));
+        std::string demangledName(demangledNamePtr);
         // Remove class qualifier part of the name, if it exists
         index = demangledName.find("::");
         size_t braceIndex = demangledName.find("(");
@@ -343,6 +363,8 @@ std::string getDemangledName(tree node)
 //    	int something_to_put_breakpoint = 1234;
 //    	mangledName += "(cplus_demangle() UNABLE TO DEMANGLE THIS NAME)";
 //    	return mangledName;
+    	std::string nameStr(mangledName.c_str());
+    	return nameStr;
       }
     }
   }
@@ -381,6 +403,9 @@ std::string getAstNodeName(tree node)
   if(isFrontendCxx())
   {
     std::string name(getDemangledNodeName(node));
+
+    //DBG fprintf(stderr, "name.c_str()==\"%s\"\n", name.c_str());
+
     if(!name.empty())
     {
       return name;
@@ -732,15 +757,37 @@ int getTypeQualifiers(tree const type)
 /**
  *
  */
-std::string getLinkId(tree const typeName, std::string const name)
+std::string getLinkId(tree const node, std::string const name)
 {
-  if (HAS_DECL_ASSEMBLER_NAME_P(typeName) &&
-      DECL_NAME (typeName) &&
-      DECL_ASSEMBLER_NAME (typeName) &&
-      DECL_ASSEMBLER_NAME (typeName) != DECL_NAME (typeName))
-  {
-    tree asmNode = DECL_ASSEMBLER_NAME (typeName);
-    return std::string(IDENTIFIER_POINTER (asmNode));
+  tree mangledNameNode = NULL_TREE;
+
+  if (HAS_DECL_ASSEMBLER_NAME_P(node) &&
+	DECL_NAME (node) &&
+	DECL_ASSEMBLER_NAME (node) &&
+	DECL_ASSEMBLER_NAME (node) != DECL_NAME (node)) {
+	// Try the assembler name
+	mangledNameNode = DECL_ASSEMBLER_NAME (node);
+  } else if (node != NULL_TREE) {
+	switch (TREE_CODE(node)) {
+	  case VAR_DECL:
+	  case PARM_DECL:
+	  case FIELD_DECL:
+	  case CONST_DECL:
+	  case FUNCTION_DECL:
+	  case LABEL_DECL:
+		if (DECL_NAME(node)) {
+	      mangledNameNode = DECL_NAME(node);
+		}
+	    break;
+	  default:
+	    break;
+	}
+  }
+
+  if (mangledNameNode != NULL_TREE) {
+	if (IDENTIFIER_POINTER (mangledNameNode)) {
+	  return std::string(IDENTIFIER_POINTER (mangledNameNode));
+	}
   }
 
   return name;

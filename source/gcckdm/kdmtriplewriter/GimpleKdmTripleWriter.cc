@@ -605,7 +605,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
       mKdmWriter.writeComment("Skipping external variable in bind statement....");
       continue;
     }
-    // NGINX has LABEL_DECLS in the bind vars... don't think we need them
+    // Some Projects have LABEL_DECLS in the bind vars... don't think we need them
     // so we are skipping them until we actually know what they are for
     if (TREE_CODE(var) == LABEL_DECL)
     {

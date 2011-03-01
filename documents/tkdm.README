@@ -1,0 +1,33 @@
+The KDM specification defines KDM element classes, their attributes, and their
+associations with other classes. See the annotated reference for more information
+(http://kdmanalytics.com/kdmspec/index.php)
+
+The gcckdm plugin represents the KDM model in a modified version of the N-Triples format.
+The information is written as a series of statements, each statement being composed of
+three fields separated by whitespace and terminated by a full stop. The fields are:
+  o subject
+  o predicate
+  o object
+
+The subject is a unique ID for the KDM element, and each triple which has the same
+subject is providing additional information about the same KDM element (class name,
+attributes, associations).
+
+The predicates indicate the triple is describing one of the following:
+  o the package/class name for the element, as defined the KDM specification
+  o an attribute for the element as defined in the KDM specification
+  o as association with another element as defined in the KDM specification
+  o a free form attribute (in the case that the predicate is not one of the pre-defined
+    attributes in the specification).
+
+The value of the object depends on the predicate:
+  o if the predicate represents the KDM class, then the object is the package/class
+    name for an element as described in the KDM specification (string literal)
+  o if the predicate represents an attribute as defined in the specification, the
+    object is a string literal with the value of the attribute.
+  o if the predicate represents an association with an element, the object is the
+    id of the target element.
+  o if the predicate is undefined in the specification (and is therefore a free-form
+    attribute), then the object is a string literal with a value for the attribute,
+    where the predicate/object combination become the tag/value of the Attribute
+    class as defined in the KDM specification.

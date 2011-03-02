@@ -1,8 +1,8 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.67])
-AC_INIT([libKdmGcc], [0.0.13], [bugs@kdmanalytics.com])
+AC_PREREQ([2.65])
+AC_INIT([libKdmGcc], [0.0.15], [bugs@kdmanalytics.com])
 AM_INIT_AUTOMAKE
 LT_PREREQ([2.2])
 LT_INIT([shared])

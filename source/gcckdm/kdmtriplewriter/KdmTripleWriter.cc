@@ -192,8 +192,7 @@ tree typedefTypeCheck(tree const node)
 
 std::string getLinkIdForType(tree type)
 {
-  //Note TYPE_UID isn't reliable across compilation units...
-  return "U." + boost::lexical_cast<std::string>(TYPE_UID(enumType));
+  return gcckdm::locationString(gcckdm::locationOf(type));
 }
 
 

@@ -26,7 +26,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/current_function.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
@@ -1724,7 +1723,7 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
 long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
 {
   std::string name(nodeName(functionDecl));
-  long signatureId = ++mKdmElementId;
+  long signatureId = getNextElementId();
   writeTripleKdmType(signatureId, KdmType::Signature());
   writeTripleName(signatureId, name);
   //Determine return type id

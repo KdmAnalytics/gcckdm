@@ -85,7 +85,7 @@ private:
   typedef boost::shared_ptr<ActionData> ActionDataPtr;
   typedef std::queue<ActionDataPtr> LabelQueue;
   typedef std::tr1::unordered_map<std::string, long> LabelMap;
-
+  typedef std::tr1::unordered_map<long, long> LongMap;
 
   /**
    * Iterates through all gimple statements in the given gimple_seq and
@@ -327,6 +327,23 @@ private:
   void writeLabelQueue(ActionDataPtr actionData, location_t const loc);
 
 
+  /**
+   * Sets the current callable context and resets the context state.  After calling this function the
+   * field mCurrentFunctionDeclarationNode is set to the given funcDecl,
+   * the mCurrentCallableUnitId is set to the reference id of the
+   * given funcDecl and the mBlockContetId is set to the mCurrentCallableUnitId
+   *
+   * @param funcDecl the function declaration that contains all the gimple that is to be processed
+   * @see GimpleKdmTripleWriter::resetContextState()
+   */
+  void setCallableContext(tree const funcDecl);
+
+  /**
+   * Resets all variables that maintain state while processing a callable unit(function declaration)
+   */
+  void resetContextState();
+
+
   /// The current AST node containing the gimple statements being processed
   tree mCurrentFunctionDeclarationNode;
 
@@ -350,6 +367,15 @@ private:
 
   LabelQueue mLabelQueue;
   LabelMap   mLabelMap;
+
+  /**
+   * Gcc GIMPLE can assign a member to a local variable, in the case of function pointers
+   * we need a map to track the original source of the assignment to be able to hook
+   * up dispatches and addressses relationships correctly.  This map is used for that
+   * purpose
+   */
+  LongMap mLocalFunctionPointerMap;
+
   long mRegisterVariableIndex;
 
   ActionDataPtr mLastData;

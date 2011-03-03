@@ -19,9 +19,10 @@
 // along with libGccKdm.  If not, see <http://www.gnu.org/licenses/>.
 //
 #include <boost/format.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/current_function.hpp>
 #include <boost/assign/list_of.hpp> // for 'map_list_of()'
-#include <boost/algorithm/string.hpp>
+
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/KdmTripleWriter.hh"
 #include "gcckdm/KdmKind.hh"
@@ -95,6 +96,7 @@ GimpleKdmTripleWriter::GimpleKdmTripleWriter(KdmTripleWriter & tripleWriter, Kdm
       mLabelFlag(false),
       mLabelQueue(),
       mLabelMap(),
+      mLocalFunctionPointerMap(),
       mRegisterVariableIndex(0),
       mLastData(),
       mLastLocation(UNKNOWN_LOCATION),
@@ -141,28 +143,16 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
 
   if (gimple_has_body_p(functionDeclNode))
   {
-    // Clear the block map to ensure we do not reuse blocks in situations where line numbers
-    // are duplicated (template functions, for example).
-    mBlockUnitMap.clear();
-
-    mCurrentFunctionDeclarationNode = functionDeclNode;
-    mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
-    mBlockContextId = mCurrentCallableUnitId;
-    //
-    mFunctionEntryData.reset();
-    mLastData.reset();
-    //Labels are only unique within a function, have to clear map for each function or
-    //we get double containment if the user used the same label in to functions
-    mLabelMap.clear();
+    setCallableContext(functionDeclNode);
 
 //    mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
     processGimpleSequence(seq);
 //    mKdmWriter.writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
-
-
   }
 }
+
+
 
 /**
  * Attempt to resolve the call... most of the time it's a
@@ -939,24 +929,30 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   //op0 can be a VAR_DECL, PARM_DECL or FUNCTION_DECL
   tree ttt = gimple_call_fn(gs);
   tree op0 = resolveCall(ttt);
-  long callableId(getReferenceId(op0));
+  long callableId = getReferenceId(op0);
 
   if (TREE_CODE(TREE_TYPE(op0)) == POINTER_TYPE)
   {
     //it's a function pointer call
     mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrCall());
-    writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), callableId);
+    LocalPointerMap::const_iterator i = mLocalPointerMap.find(callableId);
+    //Since gimple can break-up a ptrCall in to multiple statements we have to check
+    //our local pointer map to ensure the proper target of the following relationships
+    long result = (i == mLocalPointerMap.end()) ? callableId : i->second;
+    mKdmWriter.writeComment("writing both Addresses and dispatches since the spec is unclear");
+    writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), result);
+    writeKdmActionRelation(KdmType::Dispatches(), actionData->actionId(), result);
   }
   else
   {
-	bool call_is_virtual = false;
+	  bool isCallVirtual = false;
     if (TREE_CODE(TREE_TYPE(op0)) == METHOD_TYPE)
     {
       if (TREE_CODE(ttt) == OBJ_TYPE_REF)
       {
         //virtual call
         mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::VirtualCall());
-        call_is_virtual = true;
+        isCallVirtual = true;
       } else {
         //method call
         mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::MethodCall());
@@ -966,11 +962,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Call());
     }
 
-    if (DECL_EXTERNAL(op0) || call_is_virtual)
+    if (DECL_EXTERNAL(op0) || isCallVirtual)
     {
       expanded_location e = expand_location(gcckdm::locationOf(op0));
 
-      if (!call_is_virtual)
+      if (!isCallVirtual)
         mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getLinkId(op0, gcckdm::getAstNodeName(op0)));
 
 #if 0 //BBBB
@@ -2315,6 +2311,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
     ActionDataPtr op0Data = getRhsReferenceId(op0);
     ActionDataPtr op1Data = getRhsReferenceId(op1);
+
+
     actionData = writeKdmMemberSelect(RelationTarget(NULL_TREE, lhsData->outputId()), RelationTarget(op1,op1Data->outputId()), RelationTarget(op0,op0Data->outputId()));
 
     if (lhsData->hasActionId())
@@ -2328,6 +2326,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
     {
       configureDataAndFlow(actionData, op0Data, op1Data);
     }
+
+    if (TREE_CODE(TREE_TYPE(op1)) == POINTER_TYPE)
+    {
+      mLocalFunctionPointerMap.insert(std::make_pair(actionData->outputId(), op1Data->outputId()));
+    }
+//    std::string msg(boost::str(boost::format("MemberSelect (%1%) in %2%") % tree_code_name[TREE_CODE(TREE_TYPE(op1))] % BOOST_CURRENT_FUNCTION));
+//    mKdmWriter.writeComment(msg);
+
 
     if (not lhs)
     {
@@ -2595,6 +2601,43 @@ void GimpleKdmTripleWriter::writeKdmBinaryRelationships(long const actionId, Rel
   writeKdmActionRelation(KdmType::Reads(), actionId, rhs2Target);
   writeKdmActionRelation(KdmType::Writes(), actionId, lhsTarget);
 }
+
+
+/*
+ * Set the current context to the given function declaration and
+ * and reset any state variables
+ */
+void GimpleKdmTripleWriter::setCallableContext(tree const funcDecl)
+{
+  mCurrentFunctionDeclarationNode = funcDecl;
+  mCurrentCallableUnitId = getReferenceId(mCurrentFunctionDeclarationNode);
+  mBlockContextId = mCurrentCallableUnitId;
+
+  resetContextState();
+}
+
+/**
+ * Reset processing state variables
+ */
+void GimpleKdmTripleWriter::resetContextState()
+{
+  // Clear the block map to ensure we do not reuse blocks in situations where line numbers
+  // are duplicated (template functions, for example).
+  mBlockUnitMap.clear();
+
+  //Clear the local function pointer map
+  mLocalFunctionPointerMap.clear();
+
+  //Labels are only unique within a function, have to clear map for each function or
+  //we get double containment if the user used the same label in to functions
+  mLabelMap.clear();
+
+  //Clear a few pointers
+  mFunctionEntryData.reset();
+  mLastData.reset();
+}
+
+
 
 } // namespace kdmtriplewriter
 

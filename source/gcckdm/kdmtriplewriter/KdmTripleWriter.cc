@@ -2284,7 +2284,7 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
   tree type = typedefTypeCheck(param);
   long ref = getReferenceId(type);
-  long subjectId = ++mKdmElementId;
+  long subjectId = getNextElementId();
   writeTripleKdmType(subjectId, KdmType::ParameterUnit());
   writeTripleName(subjectId, "__RESULT__");
   writeTripleKind(subjectId, KdmKind::Return());

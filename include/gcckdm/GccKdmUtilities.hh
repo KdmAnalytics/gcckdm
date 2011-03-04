@@ -29,10 +29,15 @@
 namespace gcckdm
 {
 
+//If a AST node doesn't have a name use this name
+extern std::string const unnamedNode;
+
 /**
  * Return the name of the given node
  */
 std::string getAstNodeName(tree node);
+
+std::string nodeName(tree const node);
 
 /**
  * Returns true if the location <code>loc</code> is a known location

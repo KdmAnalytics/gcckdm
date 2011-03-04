@@ -616,7 +616,9 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
     }
     else
     {
-      long declId = mKdmWriter.writeKdmStorableUnit(var, KdmTripleWriter::SkipKdmContainsRelation, KdmTripleWriter::LocalStorableUnitScope);
+      long declId = mKdmWriter.writeKdmStorableUnit(var, KdmTripleWriter::SkipKdmContainsRelation);
+      writeKdmStorableUnitKindLocal(var);
+#if 0 //BBBB  (moved this into mKdmWriter.writeKdmStorableUnit())
       std::string name = gcckdm::getAstNodeName(var);
       //local register variable...
       if (boost::starts_with(name, "D."))
@@ -628,6 +630,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
       {
         mKdmWriter.writeTripleKind(declId, KdmKind::Local());
       }
+#endif
       mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
       mKdmWriter.markNodeAsProcessed(var);
     }
@@ -824,7 +827,8 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
     long id = getReferenceId(t);
     if (TREE_CODE(t) == RESULT_DECL)
     {
-      mKdmWriter.writeKdmStorableUnit(t, KdmTripleWriter::SkipKdmContainsRelation, KdmTripleWriter::LocalStorableUnitScope);
+      mKdmWriter.writeKdmStorableUnit(t, KdmTripleWriter::SkipKdmContainsRelation);
+      writeKdmStorableUnitKindLocal(t);
       mKdmWriter.writeTripleContains(mCurrentCallableUnitId, id);
       mKdmWriter.markNodeAsProcessed(t);
     }
@@ -2468,11 +2472,27 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(Re
 }
 
 
+void GimpleKdmTripleWriter::writeKdmStorableUnitKindLocal(tree const var)
+{
+  long unitId = mKdmWriter.getReferenceId(var);
+  std::string name = gcckdm::nodeName(var);
+  if (boost::starts_with(name, "D.")) {
+    //local register variable...
+	mKdmWriter.writeTripleKind(unitId, KdmKind::Register());
+    // Also mark as hidden
+	mKdmWriter.writeTriple(unitId, KdmPredicate::Stereotype(), KdmTripleWriter::KdmElementId_HiddenStereotype);
+  } else {
+    //user define local variable
+	mKdmWriter.writeTripleKind(unitId, KdmKind::Local());
+  }
+}
+
 
 long GimpleKdmTripleWriter::writeKdmStorableUnit(long const typeId, location_t const loc)
 {
   return writeKdmStorableUnit(typeId, expand_location(loc));
 }
+
 
 long GimpleKdmTripleWriter::writeKdmStorableUnit(long const typeId, expanded_location const & xloc)
 {
@@ -2529,8 +2549,6 @@ void GimpleKdmTripleWriter::resetContextState()
   mFunctionEntryData.reset();
   mLastData.reset();
 }
-
-
 
 } // namespace kdmtriplewriter
 

@@ -2602,7 +2602,6 @@ void GimpleKdmTripleWriter::writeKdmBinaryRelationships(long const actionId, Rel
   writeKdmActionRelation(KdmType::Writes(), actionId, lhsTarget);
 }
 
-} // namespace kdmtriplewriter
 /*
  * Set the current context to the given function declaration and
  * and reset any state variables
@@ -2642,3 +2641,4 @@ void GimpleKdmTripleWriter::resetContextState()
 } // namespace kdmtriplewriter
 
 } // namespace gcckdm
+

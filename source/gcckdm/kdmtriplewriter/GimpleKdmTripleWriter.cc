@@ -939,10 +939,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
   {
     //it's a function pointer call
     mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrCall());
-    LocalPointerMap::const_iterator i = mLocalPointerMap.find(callableId);
+    LongMap::const_iterator i = mLocalFunctionPointerMap.find(callableId);
     //Since gimple can break-up a ptrCall in to multiple statements we have to check
     //our local pointer map to ensure the proper target of the following relationships
-    long result = (i == mLocalPointerMap.end()) ? callableId : i->second;
+    long result = (i == mLocalFunctionPointerMap.end()) ? callableId : i->second;
     mKdmWriter.writeComment("writing both Addresses and dispatches since the spec is unclear");
     writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), result);
     writeKdmActionRelation(KdmType::Dispatches(), actionData->actionId(), result);
@@ -1734,9 +1734,9 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
 {
   long arId = mKdmWriter.getNextElementId();
 
-  //If the target is external then we replace the requested relationship with
-  //a CompliesTo and a LinkSrc
-  if (target.node != NULL_TREE && DECL_P(target.node) && DECL_EXTERNAL(target.node))
+  //If the target is external then we replace the requested relationship with a CompliesTo and a LinkSrc
+  //Bitfields are external however Nick wants them to have writes instead of compilesTo
+  if (target.node != NULL_TREE && DECL_P(target.node) && DECL_EXTERNAL(target.node) && !CONSTRUCTOR_BITFIELD_P(target.node))
   {
     std::string nodeName(gcckdm::getAstNodeName(target.node));
     if (type == KdmType::Addresses())
@@ -2496,7 +2496,7 @@ void GimpleKdmTripleWriter::writeKdmBinaryRelationships(long const actionId, Rel
   writeKdmActionRelation(KdmType::Writes(), actionId, lhsTarget);
 }
 
-
+} // namespace kdmtriplewriter
 /*
  * Set the current context to the given function declaration and
  * and reset any state variables

@@ -1842,7 +1842,7 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
 
   //If the target is external then we replace the requested relationship with a CompliesTo and a LinkSrc
   //Bitfields are external however Nick wants them to have writes instead of compilesTo
-  if (target.node != NULL_TREE && DECL_P(target.node) && DECL_EXTERNAL(target.node) && !CONSTRUCTOR_BITFIELD_P(target.node))
+  if (target.node != NULL_TREE && DECL_P(target.node) && DECL_EXTERNAL(target.node) && !DECL_BIT_FIELD(target.node))
   {
     std::string nodeName(gcckdm::getAstNodeName(target.node));
     if (type == KdmType::Addresses())

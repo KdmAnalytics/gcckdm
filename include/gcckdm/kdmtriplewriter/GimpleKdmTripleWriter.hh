@@ -281,6 +281,7 @@ private:
 
   long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
   long writeKdmStorableUnit(long const typeId, location_t loc);
+  void writeKdmStorableUnitKindLocal(tree const var);
 
 
   ActionDataPtr writeBitAssign(gimple const gs);

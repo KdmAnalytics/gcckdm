@@ -53,43 +53,12 @@ std::string const commentPrefix("# ");
 /// Prefix for all KDM triple unsupported node statements, used in conjunction with commentPrefix
 std::string const unsupportedPrefix("UNSUPPORTED: ");
 
-//If a AST node doesn't have a name use this name
-std::string const unnamedNode("<unnamed>");
-
 std::string const unnamedStructNode("<unnamed struct>");
 
 std::string const linkCallablePrefix("c.function/");
 
 std::string const linkVariablePrefix("c.variable/");
 
-
-/**
- * Returns the name of the given node or the value of unnamedNode
- *
- * @param node the node to query for it's name
- *
- * @return the name of the given node or the value of unnamedNode
- */
-std::string nodeName(tree const node)
-{
-  std::string name;
-  if (node == NULL_TREE)
-  {
-    name = unnamedNode;
-  }
-  else
-  {
-    name = gcckdm::getAstNodeName(node);
-
-//DBG fprintf(stderr, "name.c_str()==\"%s\"\n", name.c_str());
-
-    if (name.empty())
-    {
-      name = unnamedNode;
-    }
-  }
-  return name;
-}
 
 /**
  * True if the given AST node is an annoymous struct
@@ -105,6 +74,7 @@ bool isAnonymousStruct(tree const t)
   return !name || ANON_AGGRNAME_P (name);
 }
 
+
 void fixPathString(std::string & pathStr)
 {
   //Gcc likes to put double slashes at the start of the string... boost::filesystem
@@ -114,6 +84,7 @@ void fixPathString(std::string & pathStr)
   //Correct windows paths so boost::filesystem doesn't bork
   boost::replace_all(pathStr, "\\", "/");
 }
+
 
 /**
  * If the outputCompletePath setting is true, the given path is completed and normalized and tested for
@@ -461,6 +432,7 @@ void KdmTripleWriter::startKdmGimplePass()
       if (!hasReferenceId(pNode->decl))
       {
         writeKdmStorableUnit(pNode->decl, WriteKdmContainsRelation);
+        writeKdmStorableUnitKindGlobal(pNode->decl);
         //Since we are writing storable units directly and not using the processAstXXXX methods
         //we have to manually mark the decl as processed to ensure that it isn't processed
         //elsewhere
@@ -1377,6 +1349,7 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
 void KdmTripleWriter::processAstVariableDeclarationNode(tree const varDeclaration)
 {
   writeKdmStorableUnit(varDeclaration, WriteKdmContainsRelation);
+  writeKdmStorableUnitKindGlobal(varDeclaration);
 }
 
 void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate)
@@ -2395,28 +2368,14 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   return itemId;
 }
 
-long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy, StorableUnitScopePolicy const scopePolicy)
+
+void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
 {
   long unitId = getReferenceId(var);
-  writeTripleKdmType(unitId, KdmType::StorableUnit());
   std::string name = nodeName(var);
-  writeTripleName(unitId, name);
-
-  //determining type declaration
-  tree type = typedefTypeCheck(var);
-#if 1 //BBBB
-  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
-	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
-  }
-#endif
-  long ref = getReferenceId(type);
-  writeTriple(unitId, KdmPredicate::Type(), ref);
-  writeKdmSourceRef(unitId, var);
-
-  if (scopePolicy == GlobalStorableUnitScope) {
-    if (DECL_EXTERNAL(var)) {
+  if (DECL_EXTERNAL(var)) {
       writeTripleKind(unitId, KdmKind::External());
-    } else {
+  } else {
       writeTripleKind(unitId, KdmKind::Global());
 #if 1 //BBBB
       std::string linkSnkStr = linkVariablePrefix + gcckdm::getLinkId(var, name);
@@ -2431,23 +2390,35 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
       if (declInitial && declInitial != error_mark_node && TREE_CODE(declInitial) == CONSTRUCTOR) {
         writeHasValueRelationships(unitId, declInitial);
       }
-    }
-  } else if (scopePolicy == LocalStorableUnitScope) {
-#if 1 //BBBBB
-    if (boost::starts_with(name, "D.")) {
-      //local register variable...
-      writeTripleKind(unitId, KdmKind::Register());
-      // Also mark as hidden
-      writeTriple(unitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
-    } else {
-      //user define local variable
-      writeTripleKind(unitId, KdmKind::Local());
-    }
-#endif
-  } else {
-    std::string msg(str(boost::format("scopePolicy %1% in %2%") % scopePolicy % BOOST_CURRENT_FUNCTION));
-    writeUnsupportedComment(msg);
   }
+}
+
+
+long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
+{
+  long unitId = getReferenceId(var);
+  writeTripleKdmType(unitId, KdmType::StorableUnit());
+
+  std::string name = nodeName(var);
+  writeTripleName(unitId, name);
+
+  //determining type declaration
+  tree type = typedefTypeCheck(var);
+#if 1 //BBBB
+  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
+	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
+  }
+#endif
+  long ref = getReferenceId(type);
+
+  writeTriple(unitId, KdmPredicate::Type(), ref);
+
+  //For the moment we only want structures to have hasType relationship
+  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE) {
+    writeRelation(KdmType::HasType(), unitId, ref);
+  }
+
+  writeKdmSourceRef(unitId, var);
 
   if (containPolicy == WriteKdmContainsRelation) {
 #if 1 //BBBB
@@ -2459,13 +2430,9 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
     writeTripleContains(getSourceFileReferenceId(var), unitId);
   }
 
-  //For the moment we only want structures to have hasType relationship
-  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE) {
-    writeRelation(KdmType::HasType(), unitId, ref);
-  }
-
   return unitId;
 }
+
 
 /**
  * Write a hasValue Relation for each value contained in the constructor/initializer

@@ -71,13 +71,6 @@ public:
     SkipKdmContainsRelation = 1
   };
 
-  //Flag to determin the scope of a storable
-  enum StorableUnitScopePolicy
-  {
-    GlobalStorableUnitScope = 0,
-    LocalStorableUnitScope = 1
-  };
-
   //Flag to determine if the signature is to be written or not
   enum SignatureUnitPolicy
   {
@@ -273,7 +266,9 @@ public:
    * @param writeContains if true writes contains triple using the file var is found in as the parent
    * @return the refId of the StorableUnit
    */
-  long writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy, StorableUnitScopePolicy const scopePolicy = GlobalStorableUnitScope);
+  long writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy);
+
+  void writeKdmStorableUnitKindGlobal(tree const var);
 
 
   /**
@@ -423,6 +418,42 @@ public:
    */
   void writeTripleContains(long const parent, long const child, bool uid = true);
 
+  /**
+   * Enum of all constant subject id's
+   */
+  enum ReservedElementId
+  {
+    KdmElementId_Segment = 0,
+    KdmElementId_CodeModel,
+    KdmElementId_WorkbenchExtensionFamily,
+    KdmElementId_HiddenStereotype,
+    KdmElementId_CxxExtensionFamily,
+    KdmElementId_MutableStereotype,
+    KdmElementId_VolatileStereotype,
+    KdmElementId_ConstStereotype,
+    KdmElementId_StaticStereotype,
+    KdmElementId_InlineStereotype,
+    KdmElementId_RestrictStereotype,
+    KdmElementId_VirtualStereotype,
+    KdmElementId_PureVirtualStereotype,
+    KdmElementId_AbstractStereotype,
+    KdmElementId_FriendStereotype,
+    KdmElementId_IncompleteStereotype,
+    KdmElementId_PublicStereotype,
+    KdmElementId_PrivateStereotype,
+    KdmElementId_ProtectedStereotype,
+    KdmElementId_ExplicitStereotype,
+    KdmElementId_BuiltinStereotype,
+    KdmElementId_CodeAssembly,
+    KdmElementId_LanguageUnit,
+    KdmElementId_DerivedSharedUnit,
+    KdmElementId_ClassSharedUnit,
+    KdmElementId_InventoryModel,
+    KdmElementId_CompilationUnit,
+    KdmElementId_DefaultStart
+  };
+
+
 private:
 
   /**
@@ -465,43 +496,6 @@ private:
    */
   long getSharedUnitReferenceId(tree const identifier);
 
-
-  /**
-   * Enum of all constant subject id's
-   */
-  enum ReservedElementId
-  {
-    KdmElementId_Segment = 0,
-    KdmElementId_CodeModel,
-    KdmElementId_WorkbenchExtensionFamily,
-    KdmElementId_HiddenStereotype,
-    KdmElementId_CxxExtensionFamily,
-    KdmElementId_MutableStereotype,
-    KdmElementId_VolatileStereotype,
-    KdmElementId_ConstStereotype,
-    KdmElementId_StaticStereotype,
-    KdmElementId_InlineStereotype,
-    KdmElementId_RestrictStereotype,
-    KdmElementId_VirtualStereotype,
-    KdmElementId_PureVirtualStereotype,
-    KdmElementId_AbstractStereotype,
-    KdmElementId_FriendStereotype,
-    KdmElementId_IncompleteStereotype,
-    KdmElementId_PublicStereotype,
-    KdmElementId_PrivateStereotype,
-    KdmElementId_ProtectedStereotype,
-    KdmElementId_ExplicitStereotype,
-    KdmElementId_BuiltinStereotype,
-    KdmElementId_CodeAssembly,
-    KdmElementId_LanguageUnit,
-    KdmElementId_DerivedSharedUnit,
-    KdmElementId_ClassSharedUnit,
-    KdmElementId_InventoryModel,
-    KdmElementId_CompilationUnit,
-    KdmElementId_DefaultStart
-  };
-
-
   /**
    * Version of processAstNode to be used inside the triple writer.  Adds default variables
    *
@@ -512,7 +506,6 @@ private:
    * @return the id assigned to the node being processed, to be used to reference the processed node
    */
   long processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
-
 
   /**
    * Process the AST Constructor node

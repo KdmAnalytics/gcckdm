@@ -394,6 +394,40 @@ std::string getDemangledNodeName(tree node)
   return nameStr;
 }
 
+
+//If a AST node doesn't have a name use this name
+std::string const unnamedNode("<unnamed>");
+
+
+/**
+ * Returns the name of the given node or the value of unnamedNode
+ *
+ * @param node the node to query for it's name
+ *
+ * @return the name of the given node or the value of unnamedNode
+ */
+std::string nodeName(tree const node)
+{
+  std::string name;
+  if (node == NULL_TREE)
+  {
+    name = unnamedNode;
+  }
+  else
+  {
+    name = gcckdm::getAstNodeName(node);
+
+//DBG fprintf(stderr, "name.c_str()==\"%s\"\n", name.c_str());
+
+    if (name.empty())
+    {
+      name = unnamedNode;
+    }
+  }
+  return name;
+}
+
+
 /**
  *
  */

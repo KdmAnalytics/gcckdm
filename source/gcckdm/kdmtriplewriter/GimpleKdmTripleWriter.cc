@@ -147,6 +147,7 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
 
 //    mKdmWriter.writeComment("================PROCESS BODY START " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
     gimple_seq seq = gimple_body(mCurrentFunctionDeclarationNode);
+    mLastLocation = locationOf(functionDeclNode); //BBBB
     processGimpleSequence(seq);
 //    mKdmWriter.writeComment("================PROCESS BODY STOP " + gcckdm::getAstNodeName(mCurrentFunctionDeclarationNode) + "==========================");
   }
@@ -431,7 +432,7 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
   if (mLabelFlag && !gcckdm::locationIsUnknown(mLastLocation))
   {
     long blockId = getBlockReferenceId(mLastLocation);
-    ActionDataPtr prevData;
+    ActionDataPtr prevData = mLastData;
     ActionDataPtr currData;
 
     for (; !mLabelQueue.empty(); mLabelQueue.pop())
@@ -440,9 +441,12 @@ void GimpleKdmTripleWriter::processGimpleSequence(gimple_seq const seq)
       //Ensure every label/goto is contained
       mKdmWriter.writeTripleContains(blockId, currData->actionId());
 
-      if (prevData && (!prevData->isGotoAction() && !prevData->isReturnAction()))
-      {
-        writeKdmFlow(prevData->actionId(), currData->actionId());
+      if (prevData) {
+    	if(!prevData->isGotoAction() && !prevData->isReturnAction()) {
+          writeKdmFlow(prevData->actionId(), currData->actionId());
+    	}
+      } else {
+    	writeEntryFlow(currData);
       }
       mLastData = currData;
       prevData = currData;
@@ -1413,7 +1417,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleTernary
  * KDM supports Try/Catch/Finally with containment rather than flows so we have to do
  * facy settings of state variables to ensure proper handling.
  */
-#if 1
 void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
 {
   ActionDataPtr tryData(new ActionData(mKdmWriter.getNextElementId()));
@@ -1431,8 +1434,6 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
   long oldContextId = mBlockContextId;
   mBlockContextId = tryData->actionId();
 
-#if 1 //BBBB
-#if 1 //BBBB
   {
 	gimple_stmt_iterator i = gsi_start(gimple_try_eval(gs));
 	if (!gsi_end_p(i)) {
@@ -1444,16 +1445,6 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
       }
     }
   }
-#else
-  {
-    location_t const loc = gimple_location(gs);
-    if (loc != 0) {
-      expanded_location xloc = expand_location(loc);
-      mKdmWriter.writeKdmSourceRef(tryData->actionId(), xloc);
-    }
-  }
-#endif
-#endif
 
   // process try - gimple_try_eval (gs)
   processGimpleSequence(gimple_try_eval (gs));
@@ -1472,7 +1463,6 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
 
   if (gimple_try_kind (gs) == GIMPLE_TRY_CATCH) {
 	mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::CatchUnit());
-#if 1 //BBBB
 	{
 	  gimple_stmt_iterator i = gsi_start(gimple_try_cleanup(gs));
 	  if (!gsi_end_p(i)) {
@@ -1484,7 +1474,7 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
         }
 	  }
 	}
-#endif
+
 	writeKdmExceptionFlow(tryData->actionId(), finallyData->actionId());
 
 	ActionDataPtr afterCatchLabelData0(new ActionData(mKdmWriter.getNextElementId()));
@@ -1492,11 +1482,11 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
 	mKdmWriter.writeTripleKdmType(afterCatchLabelData->actionId(), KdmType::ActionElement());
 	mKdmWriter.writeTripleKind(afterCatchLabelData->actionId(), KdmKind::Nop());
 	mKdmWriter.writeTriple(afterCatchLabelData->actionId(), KdmPredicate::NoNaturalInFlow(), "true");
-
+	mKdmWriter.writeTripleContains(oldContextId, afterCatchLabelData->actionId());
   } else {
 	assert(gimple_try_kind (gs) == GIMPLE_TRY_FINALLY);
     mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::FinallyUnit());
-#if 1 //BBBB
+
 	{
 	  gimple_stmt_iterator i = gsi_start(gimple_try_cleanup(gs));
 	  if (!gsi_end_p(i)) {
@@ -1508,7 +1498,7 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
         }
 	  }
 	}
-#endif
+
     writeKdmExitFlow(tryData->actionId(), finallyData->actionId());
 #if 0 //BBBB
     //Also flow from the last ActionElement in the TryUnit to the FinallyUnit
@@ -1542,48 +1532,6 @@ void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
   mBlockContextId = oldContextId;
 }
 
-#if 0
-/* Dump a GIMPLE_CATCH tuple on the pretty_printer BUFFER, SPC spaces of
-   indent.  FLAGS specifies details to show in the dump (see TDF_* in
-   tree-pass.h).  */
-
-static void
-dump_gimple_catch (pretty_printer *buffer, gimple gs, int spc, int flags)
-{
-  if (flags & TDF_RAW)
-      dump_gimple_fmt (buffer, spc, flags, "%G <%T, %+CATCH <%S>%->", gs,
-                       gimple_catch_types (gs), gimple_catch_handler (gs));
-  else
-      dump_gimple_fmt (buffer, spc, flags, "catch (%T)%+{%S}",
-                       gimple_catch_types (gs), gimple_catch_handler (gs));
-}
-
-/* Return the types handled by GIMPLE_CATCH statement GS.  */
-static inline tree
-gimple_catch_types (const_gimple gs)
-{
-  GIMPLE_CHECK (gs, GIMPLE_CATCH);
-  return gs->gimple_catch.types;
-}
-
-/* Return a pointer to the types handled by GIMPLE_CATCH statement GS.  */
-static inline tree *
-gimple_catch_types_ptr (gimple gs)
-{
-  GIMPLE_CHECK (gs, GIMPLE_CATCH);
-  return &gs->gimple_catch.types;
-}
-
-/* Return the GIMPLE sequence representing the body of the handler of
-   GIMPLE_CATCH statement GS.  */
-static inline gimple_seq
-gimple_catch_handler (gimple gs)
-{
-  GIMPLE_CHECK (gs, GIMPLE_CATCH);
-  return gs->gimple_catch.handler;
-}
-
-#endif
 
 void GimpleKdmTripleWriter::processGimpleCatchStatement(gimple const gs)
 {
@@ -1595,7 +1543,7 @@ void GimpleKdmTripleWriter::processGimpleCatchStatement(gimple const gs)
   mLastData = tryData;
 
   mKdmWriter.writeTripleKdmType(tryData->actionId(), KdmType::CatchUnit());
-#if 1 //BBBB
+
 #if 0 //BBBB
   {
 	gimple_stmt_iterator i = gsi_start(gimple_catch_handler(gs));
@@ -1616,7 +1564,6 @@ void GimpleKdmTripleWriter::processGimpleCatchStatement(gimple const gs)
       mKdmWriter.writeKdmSourceRef(tryData->actionId(), xloc);
     }
   }
-#endif
 #endif
 
   tree type_or_list = gimple_catch_types(gs);
@@ -1664,59 +1611,6 @@ void GimpleKdmTripleWriter::processGimpleCatchStatement(gimple const gs)
   //Restore old context
   mBlockContextId = oldContextId;
 }
-
-#else
-
-void GimpleKdmTripleWriter::processGimpleTryStatement(gimple const gs)
-{
-  ActionDataPtr tryData(new ActionData(mKdmWriter.getNextElementId()));
-
-  writeEntryFlow(tryData);
-
-  //Simulate tryUnit being the last element we have processed
-  mLastData = tryData;
-
-  mKdmWriter.writeTripleKdmType(tryData->actionId(), KdmType::TryUnit());
-
-  //Block units have to be contained within the Try so we have set the context to the Try.  When the
-  //try is finished we have to reset the context to its old value so we remember it here while
-  //processing the TryUnit
-  long oldContextId = mBlockContextId;
-  mBlockContextId = tryData->actionId();
-
-  // process try - gimple_try_eval (gs)
-  processGimpleSequence(gimple_try_eval (gs));
-
-  //We contain the tryUnit in the oldContext ... most of the time this is just the callableUnitId but
-  //just in case GCC throws us a nested try we use oldContextId.  We would contain TryUnits in a block
-  //unit but the gimple doesn't seem to give us a location for try statements so we dump them in the
-  //oldContext
-  mKdmWriter.writeTripleContains(oldContextId, tryData->actionId());
-
-
-  ActionDataPtr finallyData(new ActionData(mKdmWriter.getNextElementId()));
-  mKdmWriter.writeTripleKdmType(finallyData->actionId(), KdmType::FinallyUnit());
-
-  //We flow from the last ActionElement in the tryUnit to the FinallyUnit
-  writeKdmFlow(mLastData->actionId(), finallyData->actionId());
-
-  //Set out context to the FinallyUnit
-  mBlockContextId = finallyData->actionId();
-
-  //Simulate finalUnit being the last unit we processed
-  mLastData = finallyData;
-
-  //Process finally - gimple_try_cleanup (gs)
-  processGimpleSequence(gimple_try_cleanup (gs));
-
-  //We contain the tryUnit in the oldContext ... most of the time this is just the callableUnitId but
-  //just in case GCC throws us a nested try we use oldContextId
-  mKdmWriter.writeTripleContains(oldContextId, finallyData->actionId());
-
-  //Restore old context
-  mBlockContextId = oldContextId;
-}
-#endif
 
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchStatement(gimple const gs)

@@ -174,6 +174,7 @@ public:
   static const KdmType TryUnit()          { return KdmType(KdmType_TryUnit, "action/TryUnit"); }
   static const KdmType CatchUnit()        { return KdmType(KdmType_CatchUnit, "action/CatchUnit"); }
   static const KdmType FinallyUnit()      { return KdmType(KdmType_FinallyUnit, "action/FinallyUnit"); }
+  static const KdmType Dispatches()       { return KdmType(KdmType_FinallyUnit, "action/Dispatches"); }
   //static const KdmType () { return KdmType(KdmType_, "action/");}
   //static const KdmType () { return KdmType(KdmType_, "action/");}
 

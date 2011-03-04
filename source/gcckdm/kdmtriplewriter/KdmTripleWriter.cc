@@ -26,7 +26,6 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/algorithm/string.hpp>
 #include <boost/current_function.hpp>
 #include <boost/format.hpp>
 #include <boost/algorithm/string.hpp>
@@ -190,6 +189,10 @@ tree typedefTypeCheck(tree const node)
   return type;
 }
 
+std::string getLinkIdForType(tree type)
+{
+  return gcckdm::locationString(gcckdm::locationOf(type));
+}
 
 
 } // namespace
@@ -1324,7 +1327,7 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
   writeTripleKdmType(enumId, KdmType::EnumeratedType());
 
   std::string enumName = nodeName(enumType);
-  std::string linkName = (enumName == unnamedNode) ? "U." + boost::lexical_cast<std::string>(TYPE_UID(enumType)) : enumName;
+  std::string linkName = (enumName == unnamedNode) ? getLinkIdForType(enumType) : enumName;
   writeTripleName(enumId, enumName);
   writeTripleLinkId(enumId, linkName);
 
@@ -1722,7 +1725,7 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
 long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
 {
   std::string name(nodeName(functionDecl));
-  long signatureId = ++mKdmElementId;
+  long signatureId = getNextElementId();
   writeTripleKdmType(signatureId, KdmType::Signature());
   writeTripleName(signatureId, name);
   //Determine return type id
@@ -2758,7 +2761,7 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
   writeTripleKdmType(pointerKdmElementId, KdmType::PointerType());
 
   if (!isTemplate)
-    writeTripleLinkId(pointerKdmElementId, "U." + boost::lexical_cast<std::string>(TYPE_UID(pointerType)));
+    writeTripleLinkId(pointerKdmElementId, getLinkIdForType(pointerType));
 
   tree treeType(TREE_TYPE(pointerType));
   tree t2(TYPE_MAIN_VARIANT(treeType));
@@ -2787,7 +2790,7 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   tree t2(TYPE_MAIN_VARIANT(treeType));
   long arrayTypeKdmElementId = getReferenceId(t2);
   writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
-  writeTripleLinkId(arrayKdmElementId, "U." + boost::lexical_cast<std::string>(TYPE_UID(arrayType)));
+  writeTripleLinkId(arrayKdmElementId, getLinkIdForType(arrayType));
 
   tree domain = TYPE_DOMAIN(arrayType);
   if (domain)
@@ -2864,7 +2867,7 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
 //        const char* name2 (IDENTIFIER_POINTER (id));
 //        std::cerr << name2 << std::endl;
       name = unnamedStructNode;
-      linkId = "U." + boost::lexical_cast<std::string>(TYPE_UID(mainRecordType));
+      linkId = getLinkIdForType(mainRecordType);
     }
     else
     {

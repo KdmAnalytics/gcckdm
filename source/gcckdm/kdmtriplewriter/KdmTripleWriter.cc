@@ -2401,48 +2401,55 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   writeTripleKdmType(unitId, KdmType::StorableUnit());
   std::string name = nodeName(var);
   writeTripleName(unitId, name);
-  // Mark D.XXXX as hidden
-  if (!name.empty() && name[0] == 'D' && name[1] == '.') {
-    writeTriple(unitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
-  }
 
   //determining type declaration
   tree type = typedefTypeCheck(var);
-
+#if 1 //BBBB
+  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
+	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
+  }
+#endif
   long ref = getReferenceId(type);
   writeTriple(unitId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(unitId, var);
 
-  if (scopePolicy == GlobalStorableUnitScope)
-  {
-    if (DECL_EXTERNAL(var))
-    {
+  if (scopePolicy == GlobalStorableUnitScope) {
+    if (DECL_EXTERNAL(var)) {
       writeTripleKind(unitId, KdmKind::External());
-    }
-    else
-    {
+    } else {
       writeTripleKind(unitId, KdmKind::Global());
-
 #if 1 //BBBB
       std::string linkSnkStr = linkVariablePrefix + gcckdm::getLinkId(var, name);
       writeTriple(unitId, KdmPredicate::LinkSnk(), linkSnkStr);
 #else
       writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
 #endif
-
       //We now check to see if this variable is initialized
       //  example int e[] = { 1, 2, 3 }
       //  MyFunctionPtrType  f[] = { foo, bar }
       tree declInitial = DECL_INITIAL(var);
-      if (declInitial && declInitial != error_mark_node && TREE_CODE(declInitial) == CONSTRUCTOR)
-      {
+      if (declInitial && declInitial != error_mark_node && TREE_CODE(declInitial) == CONSTRUCTOR) {
         writeHasValueRelationships(unitId, declInitial);
       }
     }
+  } else if (scopePolicy == LocalStorableUnitScope) {
+#if 1 //BBBBB
+    if (boost::starts_with(name, "D.")) {
+      //local register variable...
+      writeTripleKind(unitId, KdmKind::Register());
+      // Also mark as hidden
+      writeTriple(unitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
+    } else {
+      //user define local variable
+      writeTripleKind(unitId, KdmKind::Local());
+    }
+#endif
+  } else {
+    std::string msg(str(boost::format("scopePolicy %1% in %2%") % scopePolicy % BOOST_CURRENT_FUNCTION));
+    writeUnsupportedComment(msg);
   }
 
-  if (containPolicy == WriteKdmContainsRelation)
-  {
+  if (containPolicy == WriteKdmContainsRelation) {
 #if 1 //BBBB
     std::string linkIdStr = gcckdm::getLinkId(var, name);
     writeTripleLinkId(unitId, linkIdStr);
@@ -2453,8 +2460,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   }
 
   //For the moment we only want structures to have hasType relationship
-  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE)
-  {
+  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE) {
     writeRelation(KdmType::HasType(), unitId, ref);
   }
 

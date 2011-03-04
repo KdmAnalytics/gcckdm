@@ -617,6 +617,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
     else
     {
       long declId = mKdmWriter.writeKdmStorableUnit(var, KdmTripleWriter::SkipKdmContainsRelation, KdmTripleWriter::LocalStorableUnitScope);
+#if 0 //BBBB  (moved this into mKdmWriter.writeKdmStorableUnit())
       std::string name = gcckdm::getAstNodeName(var);
       //local register variable...
       if (boost::starts_with(name, "D."))
@@ -628,6 +629,7 @@ void GimpleKdmTripleWriter::processGimpleBindStatement(gimple const gs)
       {
         mKdmWriter.writeTripleKind(declId, KdmKind::Local());
       }
+#endif
       mKdmWriter.writeTripleContains(mCurrentCallableUnitId, declId);
       mKdmWriter.markNodeAsProcessed(var);
     }
@@ -1736,7 +1738,8 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
 
   //If the target is external then we replace the requested relationship with a CompliesTo and a LinkSrc
   //Bitfields are external however Nick wants them to have writes instead of compilesTo
-  if (target.node != NULL_TREE && DECL_P(target.node) && DECL_EXTERNAL(target.node) && !CONSTRUCTOR_BITFIELD_P(target.node))
+//  if (target.node != NULL_TREE && DECL_P(target.node) && DECL_EXTERNAL(target.node) && !CONSTRUCTOR_BITFIELD_P(target.node))
+	if (target.node != NULL_TREE && DECL_P(target.node) && DECL_EXTERNAL(target.node) && !DECL_BIT_FIELD(target.node))
   {
     std::string nodeName(gcckdm::getAstNodeName(target.node));
     if (type == KdmType::Addresses())
@@ -2496,7 +2499,6 @@ void GimpleKdmTripleWriter::writeKdmBinaryRelationships(long const actionId, Rel
   writeKdmActionRelation(KdmType::Writes(), actionId, lhsTarget);
 }
 
-} // namespace kdmtriplewriter
 /*
  * Set the current context to the given function declaration and
  * and reset any state variables
@@ -2530,8 +2532,6 @@ void GimpleKdmTripleWriter::resetContextState()
   mFunctionEntryData.reset();
   mLastData.reset();
 }
-
-
 
 } // namespace kdmtriplewriter
 

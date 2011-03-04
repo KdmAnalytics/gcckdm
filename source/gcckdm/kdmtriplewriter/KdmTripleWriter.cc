@@ -487,7 +487,6 @@ void KdmTripleWriter::finishKdmGimplePass()
   }
 }
 
-
 void KdmTripleWriter::processNodeQueue()
 {
   //Process any nodes that are still left on the queue
@@ -641,9 +640,13 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
         // I wish I really knew what that meant.  The gist is that for types we cannot
         // store the regular ast node in the processedNodes map we have to use the
         // TYPE_MAIN_VARIANT to get the proper mode
-        if (mProcessedNodes.find(TYPE_MAIN_VARIANT(ast)) == mProcessedNodes.end())
-        {
+    	tree const typeMainVariant = TYPE_MAIN_VARIANT(ast);
+        if (mProcessedNodes.find(typeMainVariant) == mProcessedNodes.end()) {
           id = processAstTypeNode(ast);
+        } else {
+          long typeMainVariantId = getReferenceId(typeMainVariant);
+          std::string msg(str(boost::format("FIXME: ERROR: TYPE_MAIN_VARIANT() was already processed separately with different id=<%1%>.") % typeMainVariantId));
+          writeComment(msg);
         }
       }
       else if (treeCode == INTEGER_CST || treeCode == REAL_CST || treeCode == STRING_CST)
@@ -1226,7 +1229,6 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
     }
     case TYPENAME_TYPE:
     case TEMPLATE_TYPE_PARM:
-#if 1  //BBBBB
    	{
    	  long compilationUnitId(getSourceFileReferenceId(typeNode));
    	  id = getReferenceId(typeNode);
@@ -1252,9 +1254,9 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
     	 assert(containedInId >= 0);
     	 writeTripleContains(containedInId, id);
       }
-   	}
-#endif
+
    	  break;
+   	}
 
     case UNION_TYPE:
       //Fall Through
@@ -2280,6 +2282,11 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
   tree type = typedefTypeCheck(param);
+#if 1 //BBBB
+  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
+	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
+  }
+#endif
   long ref = getReferenceId(type);
   long subjectId = ++mKdmElementId;
   writeTripleKdmType(subjectId, KdmType::ParameterUnit());
@@ -2557,7 +2564,6 @@ long KdmTripleWriter::getReferenceId(tree const node)
 //      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
       mNodeQueue.push(node);
     }
-
     retValue = ++mKdmElementId;
     tree treeType = TREE_TYPE(node);
     if (treeType)

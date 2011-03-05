@@ -1215,7 +1215,7 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
    	    if (identifierNode) {
           name = IDENTIFIER_POINTER(identifierNode);
    	    } else {
-  	      name = unnamedNode;
+  	      name = gcckdm::constants::getUnamedNodeString();
    	    }
         writeTripleName(id, name);
    	  }
@@ -1299,7 +1299,7 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
   writeTripleKdmType(enumId, KdmType::EnumeratedType());
 
   std::string enumName = nodeName(enumType);
-  std::string linkName = (enumName == unnamedNode) ? getLinkIdForType(enumType) : enumName;
+  std::string linkName = (enumName ==  gcckdm::constants::getUnamedNodeString()) ? getLinkIdForType(enumType) : enumName;
   writeTripleName(enumId, enumName);
   writeTripleLinkId(enumId, linkName);
 
@@ -2993,7 +2993,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
   writeTripleKdmType(classId, KdmType::ClassUnit());
   std::string name;
   //check to see if we are an anonymous class
-  name = (isAnonymousStruct(mainRecordType)) ? unnamedNode : nodeName(mainRecordType);
+  name = (isAnonymousStruct(mainRecordType)) ? gcckdm::constants::getUnamedNodeString() : nodeName(mainRecordType);
   writeTripleName(classId, name);
 
   if (!isTemplate) {

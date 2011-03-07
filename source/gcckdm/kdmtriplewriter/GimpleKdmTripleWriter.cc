@@ -820,20 +820,17 @@ void GimpleKdmTripleWriter::processGimpleReturnStatement(gimple const gs)
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::Return());
   tree t = gimple_return_retval(gs);
 
-  //If this statement is returning a value then we process it
-  //and write a reads
-  if (t)
-  {
+  //If this statement is returning a value then we process it and write a reads
+  if (t) {
     long id = getReferenceId(t);
-    if (TREE_CODE(t) == RESULT_DECL)
-    {
-      mKdmWriter.writeKdmStorableUnit(t, KdmTripleWriter::SkipKdmContainsRelation);
-      writeKdmStorableUnitKindLocal(t);
-      mKdmWriter.writeTripleContains(mCurrentCallableUnitId, id);
-      mKdmWriter.markNodeAsProcessed(t);
-    }
-    else
-    {
+    if (TREE_CODE(t) == RESULT_DECL) {
+      if (!mKdmWriter.nodeIsMarkedAsProcessed(t)) {
+        mKdmWriter.writeKdmStorableUnit(t, KdmTripleWriter::SkipKdmContainsRelation);
+        writeKdmStorableUnitKindLocal(t);
+        mKdmWriter.writeTripleContains(mCurrentCallableUnitId, id);
+        mKdmWriter.markNodeAsProcessed(t);
+      }
+    } else {
       mKdmWriter.processAstNode(t);
     }
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(t, id));
@@ -2243,6 +2240,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect(RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget)
 {
+#if 0 //BBBB TMP
+  if (readsTarget.id == 3872) {
+	int junk = 123;
+  }
+#endif
   return writeKdmActionElement(KdmKind::MemberSelect(), writesTarget, readsTarget, addressesTarget);
 }
 

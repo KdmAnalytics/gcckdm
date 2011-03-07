@@ -387,6 +387,9 @@ public:
    */
   void markNodeAsProcessed(tree node);
 
+  bool nodeIsMarkedAsProcessed(tree const ast);
+
+
   /**
    * Return an id for the given value node.  If a node
    * with the same name exists already in the language unit

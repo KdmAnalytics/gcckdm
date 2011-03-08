@@ -944,8 +944,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     //Since gimple can break-up a ptrCall in to multiple statements we have to check
     //our local pointer map to ensure the proper target of the following relationships
     long result = (i == mLocalFunctionPointerMap.end()) ? callableId : i->second;
-    mKdmWriter.writeComment("writing both Addresses and dispatches since the spec is unclear");
-    writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), result);
     writeKdmActionRelation(KdmType::Dispatches(), actionData->actionId(), result);
   }
   else

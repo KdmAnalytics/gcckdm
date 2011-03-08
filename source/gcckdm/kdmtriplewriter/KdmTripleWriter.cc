@@ -819,7 +819,7 @@ long KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   writeTripleKdmType(typedefKdmElementId, KdmType::TypeUnit());
 
   // Get the name for the typedef, if available
-  tree id(DECL_NAME (typeDecl));
+  tree id = DECL_NAME (typeDecl);
   std::string name = nodeName(id);
   writeTripleName(typedefKdmElementId, nodeName(id));
   writeTripleLinkId(typedefKdmElementId, name);
@@ -1402,6 +1402,7 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
     }
   }
   long compilationUnitId = getSourceFileReferenceId(enumType);
+  writeKdmSourceRef(enumId, enumType);
   writeTripleContains(compilationUnitId, enumId);
 }
 

@@ -1317,7 +1317,6 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
 long KdmTripleWriter::processAstRecordTypeNode(tree const typeNode)
 {
   long id = invalidId;
-  int treeCode(TREE_CODE(typeNode));
   if (isFrontendCxx())
   {
 #if 0 //BBBB

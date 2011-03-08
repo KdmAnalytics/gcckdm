@@ -40,8 +40,6 @@
 
 #include <fstream>
 
-
-
 namespace
 {
 
@@ -59,7 +57,6 @@ std::string const linkCallablePrefix("c.function/");
 
 std::string const linkVariablePrefix("c.variable/");
 
-
 /**
  * True if the given AST node is an annoymous struct
  *
@@ -74,7 +71,6 @@ bool isAnonymousStruct(tree const t)
   return !name || ANON_AGGRNAME_P (name);
 }
 
-
 void fixPathString(std::string & pathStr)
 {
   //Gcc likes to put double slashes at the start of the string... boost::filesystem
@@ -84,7 +80,6 @@ void fixPathString(std::string & pathStr)
   //Correct windows paths so boost::filesystem doesn't bork
   boost::replace_all(pathStr, "\\", "/");
 }
-
 
 /**
  * If the outputCompletePath setting is true, the given path is completed and normalized and tested for
@@ -130,7 +125,7 @@ tree typedefTypeCheck(tree const node)
         if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL && DECL_NAME (TYPE_NAME (type)))
         {
           //If we really have the orignal type just return it
-          if (TYPE_MAIN_VARIANT(type) == TREE_TYPE(TYPE_NAME (type)) || type == TYPE_MAIN_VARIANT(type) )
+          if (TYPE_MAIN_VARIANT(type) == TREE_TYPE(TYPE_NAME (type)) || type == TYPE_MAIN_VARIANT(type))
           {
             type = TYPE_MAIN_VARIANT(type);
           }
@@ -165,7 +160,6 @@ std::string getLinkIdForType(tree type)
   return gcckdm::locationString(gcckdm::locationOf(type));
 }
 
-
 } // namespace
 
 namespace gcckdm
@@ -184,14 +178,15 @@ class VertexPropertyWriter
 public:
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> Graph;
 
-  VertexPropertyWriter(Graph& graph) : mGraph(graph)
+  VertexPropertyWriter(Graph& graph) :
+    mGraph(graph)
   {
   }
 
   /**
    * Ensure that label is the elementId instead of a random number
    */
-  template <class Vertex>
+  template<class Vertex>
   void operator()(std::ostream& out, const Vertex v) const
   {
     out << "[label=\"" << mGraph[v].elementId << "\"]";
@@ -200,7 +195,6 @@ public:
 private:
   Graph & mGraph;
 };
-
 
 /**
  * Functor to write a comment to the kdm sink
@@ -235,7 +229,7 @@ struct CommentWriter
  *
  * For use with boost::depth_first_search
  */
-class KdmTripleWriter::UidVisitor : public boost::default_dfs_visitor
+class KdmTripleWriter::UidVisitor: public boost::default_dfs_visitor
 {
 public:
   /**
@@ -251,8 +245,8 @@ public:
    * @param the writer to use to write triples
    * @param graph the non-const instance of the graph to modify while visiting
    */
-  UidVisitor(KdmTripleWriter & writer, UidGraph & graph)
-  : mWriter(writer),
+  UidVisitor(KdmTripleWriter & writer, UidGraph & graph) :
+    mWriter(writer),
     mGraph(graph)
   {
   }
@@ -307,7 +301,6 @@ private:
   KdmTripleWriter::Vertex mLastVertex;
 };
 
-
 /**
  * Tokenizes the given string by looking for newline characters writes each token
  * as a seperate unsupported comment using the CommentWriter function object
@@ -322,12 +315,11 @@ void writeUnsupportedComment(KdmTripleWriter::KdmSinkPtr sink, std::string const
   std::for_each(strs.begin(), strs.end(), CommentWriter(sink, unsupportedPrefix));
 }
 
-
 /**
  * Constructs the triple writing dumping output to the given sink.
  */
-KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter::Settings const & settings)
-: mKdmSink(kdmSinkPtr),
+KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter::Settings const & settings) :
+  mKdmSink(kdmSinkPtr),
   mKdmElementId(KdmElementId_DefaultStart),
   mReferencedNodes(),
   mReferencedSharedUnits(),
@@ -335,8 +327,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mInventoryMap(),
   mProcessedNodes(),
   mNodeQueue(),
-  mValues(),
-  mUidGraph(),
+  mValues(), mUidGraph(),
   mUid(0),
   mUserTypes(),
   mContainment(),
@@ -349,14 +340,13 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mGimpleWriter.reset(new GimpleKdmTripleWriter(*this, settings));
 }
 
-
 /**
  * This constructor will dump it's output to the given filename,
  * we use the settings output directory to modify the location of the output filename
  *
  */
-KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings)
-: mKdmElementId(KdmElementId_DefaultStart),
+KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Settings const & settings) :
+  mKdmElementId(KdmElementId_DefaultStart),
   mReferencedNodes(),
   mReferencedSharedUnits(),
   mCompilationFile(),
@@ -394,7 +384,6 @@ KdmTripleWriter::~KdmTripleWriter()
   //Write out anything remaining in the stream
   mKdmSink->flush();
 }
-
 
 /**
  * yay, we are starting!  We are given the file being compiled
@@ -470,13 +459,14 @@ void KdmTripleWriter::processNodeQueue()
     tree node = mNodeQueue.front();
 
 #if 0 //BBBB TMP
-    if ((const unsigned long)node == 0xb7b653c8) {
-    	int junk = 123;
+    if ((const unsigned long)node == 0xb7b653c8)
+    {
+      int junk = 123;
     }
 #endif
 
-//Keeping this here for debugging
-//    fprintf(stderr,"mNodeQueue.front: %p <%ld>\n", node, getReferenceId(node));
+    //Keeping this here for debugging
+    //    fprintf(stderr,"mNodeQueue.front: %p <%ld>\n", node, getReferenceId(node));
     processAstNode(node);
   }
 }
@@ -496,7 +486,6 @@ void KdmTripleWriter::writeReferencedSharedUnits()
     std::cerr << boost::diagnostic_information(e);
   }
 }
-
 
 void KdmTripleWriter::writeUids()
 {
@@ -560,42 +549,45 @@ void KdmTripleWriter::processAstNode(tree const ast)
   processAstNodeInternal(ast);
 }
 
-
 long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPolicy const containPolicy, bool isTemplate)
 {
   long id = invalidId;
   try
   {
-//    good debug code
-//    if (hasReferenceId(ast))
-//    {
-//      int i = getReferenceId(ast);
-//      std::cerr << "refid: " << i << std::endl;
-//    }
+    //    good debug code
+    //    if (hasReferenceId(ast))
+    //    {
+    //      int i = getReferenceId(ast);
+    //      std::cerr << "refid: " << i << std::endl;
+    //    }
 
     //Ensure we haven't processed this node before
     if (mProcessedNodes.find(ast) == mProcessedNodes.end())
     {
 #if 0 //BBBB TMP
-      if ((const unsigned long)ast == 0xb7b653c8) {
-    	int junk = 123;
+      if ((const unsigned long)ast == 0xb7b653c8)
+      {
+        int junk = 123;
       }
 #endif
       int treeCode(TREE_CODE(ast));
 
       //All non built-in delcarations go here...
-      if (DECL_P(ast)) {
+      if (DECL_P(ast))
+      {
 
 #if 0 //BBBB
-    	  if (DECL_IS_BUILTIN(ast)) {
-    	    // SKIP all built-in declarations??
-    	  } else
+        if (DECL_IS_BUILTIN(ast))
+        {
+          // SKIP all built-in declarations??
+        }
+        else
 #endif
-    	  {
-            id = processAstDeclarationNode(ast, containPolicy, isTemplate);
-    	  }
+        {
+          id = processAstDeclarationNode(ast, containPolicy, isTemplate);
+        }
       }
-      else if(treeCode == NAMESPACE_DECL)
+      else if (treeCode == NAMESPACE_DECL)
       {
         processAstNamespaceNode(ast);
       }
@@ -607,11 +599,11 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
       {
         // FIXME: Is this the correct handling for the tree_list?
         tree l = ast;
-        while(l)
+        while (l)
         {
           //          tree treePurpose = TREE_PURPOSE(l);
           tree treeValue = TREE_VALUE(l);
-          if(treeValue)
+          if (treeValue)
           {
             processAstNodeInternal(treeValue);
           }
@@ -630,10 +622,13 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
         // I wish I really knew what that meant.  The gist is that for types we cannot
         // store the regular ast node in the processedNodes map we have to use the
         // TYPE_MAIN_VARIANT to get the proper mode
-    	tree const typeMainVariant = TYPE_MAIN_VARIANT(ast);
-        if (mProcessedNodes.find(typeMainVariant) == mProcessedNodes.end()) {
+        tree const typeMainVariant = TYPE_MAIN_VARIANT(ast);
+        if (mProcessedNodes.find(typeMainVariant) == mProcessedNodes.end())
+        {
           id = processAstTypeNode(ast);
-        } else {
+        }
+        else
+        {
           long typeMainVariantId = getReferenceId(typeMainVariant);
           std::string msg(str(boost::format("FIXME: ERROR: TYPE_MAIN_VARIANT() was already processed separately with different id=<%1%>.") % typeMainVariantId));
           writeComment(msg);
@@ -655,18 +650,24 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
       }
 
       /// for type we need the _actual_ type not just this tree node;
-      if (TYPE_P(ast)) {
+      if (TYPE_P(ast))
+      {
         markNodeAsProcessed(TYPE_MAIN_VARIANT(ast));
-//        mProcessedNodes.insert(TYPE_MAIN_VARIANT(ast));
-      } else {
-   	    markNodeAsProcessed(ast);
-//        mProcessedNodes.insert(ast);
+        //        mProcessedNodes.insert(TYPE_MAIN_VARIANT(ast));
       }
-    } else {
+      else
+      {
+        markNodeAsProcessed(ast);
+        //        mProcessedNodes.insert(ast);
+      }
+    }
+    else
+    {
       id = getReferenceId(ast);
     }
   }
-  catch (KdmTripleWriterException & e) {
+  catch (KdmTripleWriterException & e)
+  {
     std::cerr << boost::diagnostic_information(e);
   }
   return id;
@@ -722,17 +723,17 @@ long KdmTripleWriter::processAstDeclarationNode(tree const decl, ContainsRelatio
       processAstTemplateDecl(decl);
       break;
     }
-//    case RESULT_DECL:
-//    {
-//
-//      //Should this be moved to gimple?
-//      writeKdmStorableUnit(decl, WriteKdmContainsRelation, LocalStorableUnitScope);
-//      //Ignore for the moment.  In tree-pretty-print.c they simply print "<retval>"
-//      //It's possible that we should do something with this but for now.....
-//      //Found in gvariant-serialiser.tkdm - glib-2.24.2
-//      //Found in gtktext.kdm = gtk+-2.22.0
-//      break;
-//    }
+      //    case RESULT_DECL:
+      //    {
+      //
+      //      //Should this be moved to gimple?
+      //      writeKdmStorableUnit(decl, WriteKdmContainsRelation, LocalStorableUnitScope);
+      //      //Ignore for the moment.  In tree-pretty-print.c they simply print "<retval>"
+      //      //It's possible that we should do something with this but for now.....
+      //      //Found in gvariant-serialiser.tkdm - glib-2.24.2
+      //      //Found in gtktext.kdm = gtk+-2.22.0
+      //      break;
+      //    }
     case LABEL_DECL:
     {
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
@@ -759,7 +760,7 @@ void KdmTripleWriter::writeKdmTypeQualifiers(tree const decl)
 {
   long id = getReferenceId(decl);
   // FIXME: This code was intended to detect constant functions. It does not currently work
-  if(DECL_NONSTATIC_MEMBER_FUNCTION_P (decl))
+  if (DECL_NONSTATIC_MEMBER_FUNCTION_P (decl))
   {
     tree treeType = TREE_TYPE (decl);
     tree typeArgsType = TYPE_ARG_TYPES (treeType);
@@ -767,7 +768,7 @@ void KdmTripleWriter::writeKdmTypeQualifiers(tree const decl)
     tree treeValueType = TREE_TYPE (treeValue);
 
     int qualifiers = gcckdm::getTypeQualifiers(treeValueType);
-    if(qualifiers & TYPE_QUAL_CONST)
+    if (qualifiers & TYPE_QUAL_CONST)
     {
       writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereotype);
     }
@@ -775,15 +776,15 @@ void KdmTripleWriter::writeKdmTypeQualifiers(tree const decl)
 
   // Type qualifiers: Assemble any applicable Stereotypes that supply additional information
   int qualifiers = gcckdm::getTypeQualifiers(decl);
-  if(qualifiers & TYPE_QUAL_CONST)
+  if (qualifiers & TYPE_QUAL_CONST)
   {
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_ConstStereotype);
   }
-  if(qualifiers & TYPE_QUAL_VOLATILE)
+  if (qualifiers & TYPE_QUAL_VOLATILE)
   {
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_VolatileStereotype);
   }
-  if(qualifiers & TYPE_QUAL_RESTRICT)
+  if (qualifiers & TYPE_QUAL_RESTRICT)
   {
     writeTriple(id, KdmPredicate::Stereotype(), KdmElementId_RestrictStereotype);
   }
@@ -800,13 +801,13 @@ long KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   tree typeNode = TREE_TYPE (typeDecl);
   int treeCode = TREE_CODE (typeDecl);
 
-  if(typeNode)
+  if (typeNode)
   {
     int typeCode = TREE_CODE(typeNode);
-    if(treeCode == TYPE_DECL && typeCode == RECORD_TYPE)
+    if (treeCode == TYPE_DECL && typeCode == RECORD_TYPE)
     {
       // If this is artificial then it is a class declaration, otherwise a typedef.
-      if(DECL_ARTIFICIAL(typeDecl))
+      if (DECL_ARTIFICIAL(typeDecl))
       {
         return processAstNodeInternal(typeNode);
       }
@@ -818,7 +819,7 @@ long KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   writeTripleKdmType(typedefKdmElementId, KdmType::TypeUnit());
 
   // Get the name for the typedef, if available
-  tree id (DECL_NAME (typeDecl));
+  tree id(DECL_NAME (typeDecl));
   std::string name = nodeName(id);
   writeTripleName(typedefKdmElementId, nodeName(id));
   writeTripleLinkId(typedefKdmElementId, name);
@@ -826,127 +827,152 @@ long KdmTripleWriter::processAstTypeDecl(tree const typeDecl)
   long typeKdmElementId = getReferenceId(TYPE_MAIN_VARIANT(typeNode));
   writeTriple(typedefKdmElementId, KdmPredicate::Type(), typeKdmElementId);
 
+  //Write the location of this typedef
+  writeKdmSourceRef(typedefKdmElementId, typeDecl);
+
   // Write the containment information
   writeKdmCxxContains(typedefKdmElementId, typeDecl);
 
   return typedefKdmElementId;
 }
 
-
 /* Recursively search a type node for template parameters.  */
-int KdmTripleWriter::find_template_parm (tree t)
+int KdmTripleWriter::find_template_parm(tree t)
 {
-  if(!t)
-    {
+  if (!t)
+  {
     return 0;
-    }
+  }
 
   switch (TREE_CODE (t))
-    {
+  {
     /* A vector of template arguments on an instantiation.  */
     case TREE_VEC:
-      {
+    {
       int i;
-      for(i=0; i < TREE_VEC_LENGTH (t); ++i)
-        {
-        if(find_template_parm (TREE_VEC_ELT (t, i)))
-          {
-          return 1;
-          }
-        }
-      } break;
-
-    /* A type list has nested types.  */
-    case TREE_LIST:
+      for (i = 0; i < TREE_VEC_LENGTH (t); ++i)
       {
-      if(find_template_parm (TREE_PURPOSE (t)))
+        if (find_template_parm(TREE_VEC_ELT (t, i)))
         {
-        return 1;
+          return 1;
         }
-      return find_template_parm (TREE_VALUE (t));
-      } break;
+      }
+    }
+      break;
 
-    /* Template parameter types.  */
-    case TEMPLATE_TYPE_PARM: return 1;
-    case TEMPLATE_TEMPLATE_PARM: return 1;
-    case TEMPLATE_PARM_INDEX: return 1;
-    case TYPENAME_TYPE: return 1;
-    case BOUND_TEMPLATE_TEMPLATE_PARM: return 1;
+      /* A type list has nested types.  */
+    case TREE_LIST:
+    {
+      if (find_template_parm(TREE_PURPOSE (t)))
+      {
+        return 1;
+      }
+      return find_template_parm(TREE_VALUE (t));
+    }
+      break;
 
-    /* A constant or variable declaration is encountered when a
+      /* Template parameter types.  */
+    case TEMPLATE_TYPE_PARM:
+      return 1;
+    case TEMPLATE_TEMPLATE_PARM:
+      return 1;
+    case TEMPLATE_PARM_INDEX:
+      return 1;
+    case TYPENAME_TYPE:
+      return 1;
+    case BOUND_TEMPLATE_TEMPLATE_PARM:
+      return 1;
+
+      /* A constant or variable declaration is encountered when a
        template instantiates another template using an enum or static
        const value that is not known until the outer template is
        instantiated.  */
-    case CONST_DECL: return 1;
-    case VAR_DECL: return 1;
-    case FUNCTION_DECL: return 1;
-    case FIELD_DECL: return 1;
+    case CONST_DECL:
+      return 1;
+    case VAR_DECL:
+      return 1;
+    case FUNCTION_DECL:
+      return 1;
+    case FIELD_DECL:
+      return 1;
 
-    /* A template deferred scoped lookup.  */
-    case SCOPE_REF: return 1;
+      /* A template deferred scoped lookup.  */
+    case SCOPE_REF:
+      return 1;
 
-    /* A cast of a dependent expression.  */
-    case CAST_EXPR: return 1;
+      /* A cast of a dependent expression.  */
+    case CAST_EXPR:
+      return 1;
 
-    /* Types with nested types.  */
+      /* Types with nested types.  */
     case METHOD_TYPE:
     case FUNCTION_TYPE:
-      {
+    {
       tree arg_type = TYPE_ARG_TYPES (t);
-      if(find_template_parm (TREE_TYPE (t)))
-        {
+      if (find_template_parm(TREE_TYPE (t)))
+      {
         return 1;
-        }
+      }
       while (arg_type && (arg_type != void_list_node))
+      {
+        if (find_template_parm(arg_type))
         {
-        if(find_template_parm (arg_type))
-          {
           return 1;
-          }
-        arg_type = TREE_CHAIN (arg_type);
         }
-      } break;
+        arg_type = TREE_CHAIN (arg_type);
+      }
+    }
+      break;
     case UNION_TYPE:
     case QUAL_UNION_TYPE:
     case RECORD_TYPE:
-      {
+    {
       if ((TREE_CODE (t) == RECORD_TYPE) && TYPE_PTRMEMFUNC_P (t))
-        {
+      {
         return find_template_parm(TYPE_PTRMEMFUNC_FN_TYPE (t));
-        }
+      }
       if (CLASSTYPE_TEMPLATE_INFO (t))
-        {
-        return find_template_parm (CLASSTYPE_TI_ARGS (t));
-        }
+      {
+        return find_template_parm(CLASSTYPE_TI_ARGS (t));
       }
-    case REFERENCE_TYPE: return find_template_parm (TREE_TYPE (t));
-    case POINTER_TYPE: return find_template_parm (TREE_TYPE (t));
-    case ARRAY_TYPE: return find_template_parm (TREE_TYPE (t));
+    }
+    case REFERENCE_TYPE:
+      return find_template_parm(TREE_TYPE (t));
+    case POINTER_TYPE:
+      return find_template_parm(TREE_TYPE (t));
+    case ARRAY_TYPE:
+      return find_template_parm(TREE_TYPE (t));
     case OFFSET_TYPE:
-      {
-      return (find_template_parm(TYPE_OFFSET_BASETYPE (t)) ||
-              find_template_parm (TREE_TYPE (t)));
-      }
+    {
+      return (find_template_parm(TYPE_OFFSET_BASETYPE (t)) || find_template_parm(TREE_TYPE (t)));
+    }
     case PTRMEM_CST:
-      {
-      return (find_template_parm(PTRMEM_CST_CLASS (t)) ||
-              find_template_parm(PTRMEM_CST_MEMBER(t)));
-      }
+    {
+      return (find_template_parm(PTRMEM_CST_CLASS (t)) || find_template_parm(PTRMEM_CST_MEMBER(t)));
+    }
 
-    /* Fundamental types have no nested types.  */
-    case BOOLEAN_TYPE: return 0;
-    case COMPLEX_TYPE: return 0;
-    case ENUMERAL_TYPE: return 0;
-    case INTEGER_TYPE: return 0;
-    case LANG_TYPE: return 0;
-    case REAL_TYPE: return 0;
-    case VOID_TYPE: return 0;
+      /* Fundamental types have no nested types.  */
+    case BOOLEAN_TYPE:
+      return 0;
+    case COMPLEX_TYPE:
+      return 0;
+    case ENUMERAL_TYPE:
+      return 0;
+    case INTEGER_TYPE:
+      return 0;
+    case LANG_TYPE:
+      return 0;
+    case REAL_TYPE:
+      return 0;
+    case VOID_TYPE:
+      return 0;
 
-    /* Template declarations are part of instantiations of template
+      /* Template declarations are part of instantiations of template
        template parameters.  */
-    case TEMPLATE_DECL: return 0;
+    case TEMPLATE_DECL:
+      return 0;
 
-    /* Unary expressions.  */
+      /* Unary expressions.  */
     case ALIGNOF_EXPR:
     case SIZEOF_EXPR:
     case ADDR_EXPR:
@@ -959,9 +985,9 @@ int KdmTripleWriter::find_template_parm (tree t)
     case PREINCREMENT_EXPR:
     case POSTDECREMENT_EXPR:
     case POSTINCREMENT_EXPR:
-      return find_template_parm (TREE_OPERAND (t, 0));
+      return find_template_parm(TREE_OPERAND (t, 0));
 
-    /* Binary expressions.  */
+      /* Binary expressions.  */
     case COMPOUND_EXPR:
     case INIT_EXPR:
     case MODIFY_EXPR:
@@ -986,25 +1012,26 @@ int KdmTripleWriter::find_template_parm (tree t)
     case EQ_EXPR:
     case NE_EXPR:
     case EXACT_DIV_EXPR:
-      return (find_template_parm (TREE_OPERAND (t, 0))
-              || find_template_parm (TREE_OPERAND (t, 1)));
+      return (find_template_parm(TREE_OPERAND (t, 0)) ||
+              find_template_parm(TREE_OPERAND (t, 1)));
 
-    /* Ternary expressions.  */
+      /* Ternary expressions.  */
     case COND_EXPR:
-      return (find_template_parm (TREE_OPERAND (t, 0))
-              || find_template_parm (TREE_OPERAND (t, 1))
-              || find_template_parm (TREE_OPERAND (t, 2)));
+      return (find_template_parm(TREE_OPERAND (t, 0)) ||
+              find_template_parm(TREE_OPERAND (t, 1)) ||
+              find_template_parm(TREE_OPERAND (t, 2)));
 
-    /* Other types that have no nested types.  */
-    case INTEGER_CST: return 0;
-    case STATIC_CAST_EXPR: return 0;
+      /* Other types that have no nested types.  */
+    case INTEGER_CST:
+      return 0;
+    case STATIC_CAST_EXPR:
+      return 0;
     default:
       std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[TREE_CODE (t)] % BOOST_CURRENT_FUNCTION));
       writeUnsupportedComment(msg);
-    }
+  }
   return 0;
 }
-
 
 /**
  *
@@ -1018,7 +1045,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
     long templateUnitId = getReferenceId(templateDecl);
 
     // Dump the template specializations.
-    for (tree tl = DECL_TEMPLATE_SPECIALIZATIONS (templateDecl); tl ; tl = TREE_CHAIN (tl))
+    for (tree tl = DECL_TEMPLATE_SPECIALIZATIONS (templateDecl); tl; tl = TREE_CHAIN (tl))
     {
       tree ts = TREE_VALUE (tl);
       int treeCode = TREE_CODE (ts);
@@ -1045,7 +1072,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
     }
 
     /* Dump the template instantiations.  */
-    for (tree tl = DECL_TEMPLATE_INSTANTIATIONS (templateDecl); tl ; tl = TREE_CHAIN (tl))
+    for (tree tl = DECL_TEMPLATE_INSTANTIATIONS (templateDecl); tl; tl = TREE_CHAIN (tl))
     {
       tree ts = TYPE_NAME (TREE_VALUE (tl));
       int treeCode = TREE_CODE (ts);
@@ -1054,9 +1081,10 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         case TYPE_DECL:
         {
           /* Add the instantiation only if it is real.  */
-          if (!find_template_parm (TYPE_TI_ARGS(TREE_TYPE(ts)))) {
+          if (!find_template_parm(TYPE_TI_ARGS(TREE_TYPE(ts))))
+          {
             long instantiationTypeId = processAstNodeInternal(ts);
-    	    writeRelation(KdmType::InstanceOf(), instantiationTypeId /*fromId*/, templateUnitId /*toId*/);
+            writeRelation(KdmType::InstanceOf(), instantiationTypeId /*fromId*/, templateUnitId /*toId*/);
           }
           break;
         }
@@ -1070,20 +1098,19 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
     }
 
     /* Dump any member template instantiations.  */
-    if(TREE_CODE (TREE_TYPE (templateDecl)) == RECORD_TYPE ||
-       TREE_CODE (TREE_TYPE (templateDecl)) == UNION_TYPE ||
-       TREE_CODE (TREE_TYPE (templateDecl)) == QUAL_UNION_TYPE)
+    if (TREE_CODE (TREE_TYPE (templateDecl)) == RECORD_TYPE || TREE_CODE (TREE_TYPE (templateDecl)) == UNION_TYPE
+        || TREE_CODE (TREE_TYPE (templateDecl)) == QUAL_UNION_TYPE)
     {
       for (tree tl = TYPE_FIELDS (TREE_TYPE (templateDecl)); tl; tl = TREE_CHAIN (tl))
       {
         int treeCode = TREE_CODE (tl);
         if (treeCode == TEMPLATE_DECL)
         {
-//        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-//        writeUnsupportedComment(msg);
-//        //        processAstNodeInternal(tl);
+          //        std::string msg(str(boost::format("AST Template Instantiation Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+          //        writeUnsupportedComment(msg);
+          //        //        processAstNodeInternal(tl);
 
-//        processAstTemplateDecl(tl);
+          //        processAstTemplateDecl(tl);
 
         }
       }
@@ -1093,42 +1120,45 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
     tree templateDeclType = TREE_TYPE (templateDecl);
     if (mProcessedNodes.find(templateDeclType) == mProcessedNodes.end())
     {
-//    long templateDeclTypeId = getReferenceId(templateDeclType);
+      //    long templateDeclTypeId = getReferenceId(templateDeclType);
 
-	  // Write TemplateUnit
-	  std::string name(nodeName(templateDecl));
-	  writeTripleKdmType(templateUnitId, KdmType::TemplateUnit());
-	  writeTripleName(templateUnitId, name);
-	  writeKdmSourceRef(templateUnitId, templateDecl);
-	  writeKdmCxxContains(templateUnitId, templateDecl);
+      // Write TemplateUnit
+      std::string name(nodeName(templateDecl));
+      writeTripleKdmType(templateUnitId, KdmType::TemplateUnit());
+      writeTripleName(templateUnitId, name);
+      writeKdmSourceRef(templateUnitId, templateDecl);
+      writeKdmCxxContains(templateUnitId, templateDecl);
 
-	  // Write TemplateParameters
+      // Write TemplateParameters
       tree parms = DECL_TEMPLATE_PARMS (templateDecl);
 #if 1  // We only want the first "layer" of parameters here, other layers are handled with their respective templates.
       tree t = parms;
-      if (t) {
+      if (t)
+      {
 #else
-      for (tree t = parms; t; t = TREE_CHAIN (t)) {
+        for (tree t = parms; t; t = TREE_CHAIN (t))
+        {
 #endif
         tree vparms = TREE_VALUE (t);
         int nparms = TREE_VEC_LENGTH (vparms);
-        for (int parm_idx = 0; parm_idx < nparms; ++parm_idx) {
+        for (int parm_idx = 0; parm_idx < nparms; ++parm_idx)
+        {
           tree tparm = TREE_VALUE (TREE_VEC_ELT (vparms, parm_idx));
           tree typeDecl = tparm;
           tree typeNode = TREE_TYPE (typeDecl);
-          tree id (DECL_NAME (typeDecl));
-//          if (!id) {
-//            std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[TREE_CODE(tparm)] % BOOST_CURRENT_FUNCTION));
-//            writeUnsupportedComment(msg);
-//          }
+          tree id(DECL_NAME (typeDecl));
+          //          if (!id) {
+          //            std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[TREE_CODE(tparm)] % BOOST_CURRENT_FUNCTION));
+          //            writeUnsupportedComment(msg);
+          //          }
           std::string typeDeclName = nodeName(id);
           long typeDeclId = getReferenceId(typeDecl);
           long typeId = getReferenceId(typeNode);
           markNodeAsProcessed(typeDecl);
           writeTripleKdmType(typeDeclId, KdmType::TemplateParameter());
-	      writeTripleName(typeDeclId, typeDeclName);
-	      writeTriple(typeDeclId, KdmPredicate::Type(), typeId);
-	      writeKdmSourceRef(typeDeclId, typeNode);
+          writeTripleName(typeDeclId, typeDeclName);
+          writeTriple(typeDeclId, KdmPredicate::Type(), typeId);
+          writeKdmSourceRef(typeDeclId, typeNode);
           writeTripleContains(templateUnitId, typeDeclId);
         }
       }
@@ -1137,7 +1167,8 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
       tree templateResultDecl = DECL_TEMPLATE_RESULT(templateDecl);
       int treeCode = TREE_CODE(templateResultDecl);
 
-      if (!DECL_P(templateResultDecl)) {
+      if (!DECL_P(templateResultDecl))
+      {
         std::string msg(str(boost::format("AST Node (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
         writeUnsupportedComment(msg);
       }
@@ -1147,7 +1178,8 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         case FUNCTION_DECL:
         {
           // Write CallableUnit
-    	  long callableUnitId = writeKdmCallableUnit(templateResultDecl /*tree const functionDecl*/, SkipKdmContainsRelation, true /*bool isTemplate*/);
+          long callableUnitId =
+              writeKdmCallableUnit(templateResultDecl /*tree const functionDecl*/, SkipKdmContainsRelation, true /*bool isTemplate*/);
           writeTripleContains(templateUnitId, callableUnitId);
           break;
         }
@@ -1171,12 +1203,11 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
           return;
         }
       }
-	  markNodeAsProcessed(templateDeclType);
+      markNodeAsProcessed(templateDeclType);
     }
-	markNodeAsProcessed(templateParms);
+    markNodeAsProcessed(templateParms);
   }
 }
-
 
 long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPolicy const containPolicy, bool isTemplate, const long containedInId)
 {
@@ -1226,34 +1257,38 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
     }
     case TYPENAME_TYPE:
     case TEMPLATE_TYPE_PARM:
-   	{
-   	  long compilationUnitId(getSourceFileReferenceId(typeNode));
-   	  id = getReferenceId(typeNode);
-   	  writeTripleKdmType(id, KdmType::TemplateType());
+    {
+      long compilationUnitId(getSourceFileReferenceId(typeNode));
+      id = getReferenceId(typeNode);
+      writeTripleKdmType(id, KdmType::TemplateType());
 
-   	  {
-   	    tree identifierNode = TYPE_IDENTIFIER (typeNode);
-   	    std::string name;
-   	    if (identifierNode) {
+      {
+        tree identifierNode = TYPE_IDENTIFIER (typeNode);
+        std::string name;
+        if (identifierNode)
+        {
           name = IDENTIFIER_POINTER(identifierNode);
-   	    } else {
-  	      name = gcckdm::constants::getUnamedNodeString();
-   	    }
+        }
+        else
+        {
+          name = gcckdm::constants::getUnamedNodeString();
+        }
         writeTripleName(id, name);
-   	  }
+      }
 
       writeKdmSourceRef(id, typeNode);
 
       if (containPolicy == WriteKdmContainsRelation)
         writeTripleContains(compilationUnitId, id);
 
-      if (containedInId != invalidId) {
-    	 assert(containedInId >= 0);
-    	 writeTripleContains(containedInId, id);
+      if (containedInId != invalidId)
+      {
+        assert(containedInId >= 0);
+        writeTripleContains(containedInId, id);
       }
 
-   	  break;
-   	}
+      break;
+    }
 
     case UNION_TYPE:
       //Fall Through
@@ -1265,7 +1300,7 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
 
     case TYPEOF_TYPE:
     {
-//      id = processAstTypeNode(TYPEOF_TYPE_EXPR(typeNode), containPolicy, isTemplate, containedInId);
+      //      id = processAstTypeNode(TYPEOF_TYPE_EXPR(typeNode), containPolicy, isTemplate, containedInId);
       break;
     }
 
@@ -1304,10 +1339,10 @@ long KdmTripleWriter::processAstRecordTypeNode(tree const typeNode)
     {
       // This is a class template.  We don't want to dump it.
 
- /* We do not output anything (at the moment at least) for templates themselves, only when they are instantiated.
-  *   std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-  *   writeUnsupportedComment(msg);
-  */
+      /* We do not output anything (at the moment at least) for templates themselves, only when they are instantiated.
+       *   std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+       *   writeUnsupportedComment(msg);
+       */
     }
   }
   else
@@ -1324,26 +1359,26 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
   writeTripleKdmType(enumId, KdmType::EnumeratedType());
 
   std::string enumName = nodeName(enumType);
-  std::string linkName = (enumName ==  gcckdm::constants::getUnamedNodeString()) ? getLinkIdForType(enumType) : enumName;
+  std::string linkName = (enumName == gcckdm::constants::getUnamedNodeString()) ? getLinkIdForType(enumType) : enumName;
   writeTripleName(enumId, enumName);
   writeTripleLinkId(enumId, linkName);
 
-  for (tree tv = TYPE_VALUES (enumType); tv ; tv = TREE_CHAIN (tv))
+  for (tree tv = TYPE_VALUES (enumType); tv; tv = TREE_CHAIN (tv))
   {
-	//
-	// The following source code
-	// triggers INTEGER_CST handling branch when compiled with cc1,
-	// and CONST_DECL handling branch when compiled with cc1plus:
-	//
-	//   enum E {
-	//     a,
-	//     b,
-	//     c,
-	//   };
-	//   enum E e;
-	//   int main() { return 0; }
     //
-	if(TREE_CODE (TREE_VALUE (tv)) == INTEGER_CST)
+    // The following source code
+    // triggers INTEGER_CST handling branch when compiled with cc1,
+    // and CONST_DECL handling branch when compiled with cc1plus:
+    //
+    //   enum E {
+    //     a,
+    //     b,
+    //     c,
+    //   };
+    //   enum E e;
+    //   int main() { return 0; }
+    //
+    if (TREE_CODE (TREE_VALUE (tv)) == INTEGER_CST)
     {
       long valueId = getReferenceId(tv);
       int value = TREE_INT_CST_LOW (TREE_VALUE (tv));
@@ -1357,19 +1392,18 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
     }
     else if (TREE_CODE (TREE_VALUE (tv)) == CONST_DECL)
     {
-    	processAstNodeInternal(tv);
+      processAstNodeInternal(tv);
     }
     else
     {
-        int treeCode(TREE_CODE(TREE_VALUE (tv)));
-        std::string msg(str(boost::format("AST Type Node Enum (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-        writeUnsupportedComment(msg);
+      int treeCode(TREE_CODE(TREE_VALUE (tv)));
+      std::string msg(str(boost::format("AST Type Node Enum (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+      writeUnsupportedComment(msg);
     }
   }
   long compilationUnitId = getSourceFileReferenceId(enumType);
   writeTripleContains(compilationUnitId, enumId);
 }
-
 
 void KdmTripleWriter::processAstVariableDeclarationNode(tree const varDeclaration)
 {
@@ -1388,34 +1422,43 @@ void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl,
  */
 void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
 {
-  if (isFrontendCxx()) {
+  if (isFrontendCxx())
+  {
     tree context = CP_DECL_CONTEXT (fieldDecl);
     // If the context is a type, then get the visibility
-    if (context) {
+    if (context)
+    {
       // If the item belongs to a class, then the class is the parent
       int treeCode(TREE_CODE(context));
-      if (treeCode == RECORD_TYPE) {
+      if (treeCode == RECORD_TYPE)
+      {
         writeKdmMemberUnit(fieldDecl);
-      } else if (treeCode == UNION_TYPE) {
-   	    writeKdmItemUnit(fieldDecl);
-      } else {
-        std::string msg(str(boost::format("FIXME: %1% : Expected RECORD_TYPE or UNION_TYPE. %2%:%3%") % mCompilationFile % BOOST_CURRENT_FUNCTION % __LINE__ ));
+      }
+      else if (treeCode == UNION_TYPE)
+      {
+        writeKdmItemUnit(fieldDecl);
+      }
+      else
+      {
+        std::string msg(
+            str(boost::format("FIXME: %1% : Expected RECORD_TYPE or UNION_TYPE. %2%:%3%") % mCompilationFile % BOOST_CURRENT_FUNCTION % __LINE__));
         writeComment(msg);
       }
     }
-  } else {
+  }
+  else
+  {
     writeKdmItemUnit(fieldDecl);
   }
 }
 
 void KdmTripleWriter::processAstValueNode(tree const val)
 {
-//  if (mValues.find(nodeName(val)) == mValues.end())
-//  {
-    writeKdmValue(val);
-//  }
+  //  if (mValues.find(nodeName(val)) == mValues.end())
+  //  {
+  writeKdmValue(val);
+  //  }
 }
-
 
 /**
  *
@@ -1423,13 +1466,11 @@ void KdmTripleWriter::processAstValueNode(tree const val)
 void KdmTripleWriter::processAstNamespaceNode(tree const namespaceDecl)
 {
   tree decl;
-  cp_binding_level* level (NAMESPACE_LEVEL (namespaceDecl));
+  cp_binding_level* level(NAMESPACE_LEVEL (namespaceDecl));
 
   // Traverse declarations.
   //
-  for (decl = level->names;
-      decl != 0;
-      decl = TREE_CHAIN (decl))
+  for (decl = level->names; decl != 0; decl = TREE_CHAIN (decl))
   {
     if (DECL_IS_BUILTIN (decl))
       continue;
@@ -1442,9 +1483,7 @@ void KdmTripleWriter::processAstNamespaceNode(tree const namespaceDecl)
 
   // Traverse namespaces.
   //
-  for(decl = level->namespaces;
-      decl != 0;
-      decl = TREE_CHAIN (decl))
+  for (decl = level->namespaces; decl != 0; decl = TREE_CHAIN (decl))
   {
     if (DECL_IS_BUILTIN (decl))
       continue;
@@ -1471,15 +1510,15 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
-
-long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate, SignatureUnitPolicy signaturePolicy)
+long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate,
+    SignatureUnitPolicy signaturePolicy)
 {
   std::string name = nodeName(functionDecl);
   std::string linkSnkStr = linkCallablePrefix + gcckdm::getLinkId(functionDecl, name);
 
   if (isFrontendCxx())
   {
-    if(DECL_CONSTRUCTOR_P(functionDecl))
+    if (DECL_CONSTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Constructor());
@@ -1487,7 +1526,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       if (!isTemplate)
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
-    else if(DECL_DESTRUCTOR_P(functionDecl))
+    else if (DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Destructor());
@@ -1495,7 +1534,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       if (!isTemplate)
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
-    else if(DECL_OVERLOADED_OPERATOR_P(functionDecl))
+    else if (DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Operator());
@@ -1503,7 +1542,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       if (!isTemplate)
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
-    else if(DECL_FUNCTION_MEMBER_P(functionDecl))
+    else if (DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
       writeTripleKind(callableUnitId, KdmKind::Method());
@@ -1514,7 +1553,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     else
     {
       writeTripleKdmType(callableUnitId, KdmType::CallableUnit());
-      if(DECL_REALLY_EXTERN(functionDecl))
+      if (DECL_REALLY_EXTERN(functionDecl))
       {
         writeTripleKind(callableUnitId, KdmKind::External());
       }
@@ -1583,13 +1622,16 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
   {
     tree context = CP_DECL_CONTEXT (functionDecl);
     // If the context is a type, then get the visibility
-    if(context)
+    if (context)
     {
       if (TYPE_P(context))
       {
-        if (TREE_PRIVATE (functionDecl)) writeTripleExport(callableUnitId, "private");
-        else if (TREE_PROTECTED (functionDecl)) writeTripleExport(callableUnitId, "protected");
-        else writeTripleExport(callableUnitId, "public");
+        if (TREE_PRIVATE (functionDecl))
+          writeTripleExport(callableUnitId, "private");
+        else if (TREE_PROTECTED (functionDecl))
+          writeTripleExport(callableUnitId, "protected");
+        else
+          writeTripleExport(callableUnitId, "public");
       }
     }
 
@@ -1645,9 +1687,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
 
   return callableUnitId;
 
-
 }
-
 
 /**
  * Just get the reference of the functionDecl and pass it along
@@ -1656,7 +1696,6 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
 {
   return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, containPolicy, isTemplate, WriteSignatureUnit);
 }
-
 
 void KdmTripleWriter::lockUid(bool val)
 {
@@ -1682,11 +1721,11 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
   {
     tree context = CP_DECL_CONTEXT (decl);
     // If the context is a type, then get the visibility
-    if(context)
+    if (context)
     {
       // If the item belongs to a class, then the class is the parent
       int treeCode(TREE_CODE(context));
-      if(treeCode == RECORD_TYPE)
+      if (treeCode == RECORD_TYPE)
       {
         long classUnitId = getReferenceId(context);
         if (TREE_CODE(decl) == FUNCTION_DECL)
@@ -1758,22 +1797,22 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
     }
     if (argType)
     {
-//      long ref = getReferenceId(TREE_VALUE(argType));
-//      writeRelation(KdmType::HasType(), signatureId, ref);
+      //      long ref = getReferenceId(TREE_VALUE(argType));
+      //      writeRelation(KdmType::HasType(), signatureId, ref);
       argType = TREE_CHAIN (argType);
     }
   }
 
   // Throws
-  if(gcckdm::isFrontendCxx())
+  if (gcckdm::isFrontendCxx())
   {
     tree ft = TREE_TYPE (functionDecl);
     tree raises = TYPE_RAISES_EXCEPTIONS (ft);
-    if(raises)
+    if (raises)
     {
-      if(TREE_VALUE (raises))
+      if (TREE_VALUE (raises))
       {
-        for (;raises != NULL_TREE; raises = TREE_CHAIN (raises))
+        for (; raises != NULL_TREE; raises = TREE_CHAIN (raises))
         {
           long raisesId = getReferenceId(TREE_VALUE (raises));
           long throwId = writeKdmThrows(raisesId);
@@ -1800,7 +1839,7 @@ void KdmTripleWriter::writeTriplePosition(long const id, int pos)
 long KdmTripleWriter::writeKdmThrows(long const id)
 {
   writeTripleKdmType(++mKdmElementId, KdmType::ParameterUnit());
-//  writeTripleName(mKdmElementId, "__RESULT__");
+  //  writeTripleName(mKdmElementId, "__RESULT__");
   writeTriple(mKdmElementId, KdmPredicate::Type(), id);
   writeTripleKind(mKdmElementId, KdmKind::Throw());
   return mKdmElementId;
@@ -1828,17 +1867,17 @@ long KdmTripleWriter::writeKdmSignatureType(tree const functionType)
     writeTripleContains(signatureId, refId);
 
     //To ensure that
-//    tree type = NULL_TREE;
-//    if (TREE_TYPE(argType))
-//    {
-//      type = typedefTypeCheck(param);
-//    }
-//    else
-//    {
-//      type = TYPE_MAIN_VARIANT(TREE_VALUE (param));
-//    }
-//    long ref = getReferenceId(TREE_VALUE(argType));
-//    writeRelation(KdmType::HasType(), signatureId, ref);
+    //    tree type = NULL_TREE;
+    //    if (TREE_TYPE(argType))
+    //    {
+    //      type = typedefTypeCheck(param);
+    //    }
+    //    else
+    //    {
+    //      type = TYPE_MAIN_VARIANT(TREE_VALUE (param));
+    //    }
+    //    long ref = getReferenceId(TREE_VALUE(argType));
+    //    writeRelation(KdmType::HasType(), signatureId, ref);
 
     argType = TREE_CHAIN (argType);
   }
@@ -2029,8 +2068,7 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::KdmType(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::LinkId(), KdmType::InventoryModel());
-  writeTripleContains(KdmElementId_Segment,KdmElementId_InventoryModel);
-
+  writeTripleContains(KdmElementId_Segment, KdmElementId_InventoryModel);
 
   writeKdmCompilationUnit(mCompilationFile);
   //include the compilation file in the inventory model
@@ -2051,7 +2089,6 @@ void KdmTripleWriter::writeKdmBuiltinStereotype(long const subject)
 {
   writeTriple(subject, KdmPredicate::Stereotype(), KdmElementId_BuiltinStereotype);
 }
-
 
 void KdmTripleWriter::writeTripleContains(long const parent, long const child, bool uid)
 {
@@ -2151,7 +2188,10 @@ bool KdmTripleWriter::updateUidGraph(long const parent, long const child)
     ContainmentMap::const_iterator ci = mContainment.find(child);
     if (ci != mContainment.end())
     {
-      std::string msg(str(boost::format("FIXME: %1% : Double containment element <%2%> is contained in <%3%> and <%4%>. %5%:%6%") % mCompilationFile % child % ci->second % parent % BOOST_CURRENT_FUNCTION % __LINE__ ));
+      std::string msg(
+          str(
+              boost::format("FIXME: %1% : Double containment element <%2%> is contained in <%3%> and <%4%>. %5%:%6%") % mCompilationFile % child
+                  % ci->second % parent % BOOST_CURRENT_FUNCTION % __LINE__));
       writeComment(msg);
       retVal = false;
     }
@@ -2192,7 +2232,6 @@ KdmTripleWriter::FileMap::iterator KdmTripleWriter::writeKdmSourceFile(Path cons
   writeTriple(id, KdmPredicate::Path(), sourceFile.string());
   writeTripleLinkId(id, sourceFile.string());
 
-
   writeTripleContains(getDirectoryId(sourceFile.parent_path()), id, false);
 
   //Keep track of all files inserted into the inventory model
@@ -2209,7 +2248,6 @@ void KdmTripleWriter::writeKdmCompilationUnit(Path const & file)
   writeTripleLinkId(KdmElementId_CompilationUnit, tmp.string());
   writeTripleContains(getPackageId(tmp.parent_path()), KdmElementId_CompilationUnit);
 }
-
 
 long KdmTripleWriter::getDirectoryId(Path const & directoryDir)
 {
@@ -2241,11 +2279,11 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
       for (Path::iterator pIter = normalizedContextDir.begin(); pIter != normalizedContextDir.end(); ++pIter)
       {
         builtPath = builtPath / *pIter;
-        std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId+1));
+        std::pair<FileMap::iterator, bool> result = fMap.insert(std::make_pair(builtPath, mKdmElementId + 1));
         if (result.second)
         {
           contextId = getNextElementId();
-          writeTripleKdmType(contextId,type);
+          writeTripleKdmType(contextId, type);
           writeTripleLinkId(contextId, *pIter);
           writeTripleName(contextId, *pIter);
           //We have encountered a completely new path....add to the root
@@ -2284,8 +2322,9 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
   tree type = typedefTypeCheck(param);
 #if 1 //BBBB
-  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
-	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
+  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type)))
+  {
+    type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
   }
 #endif
   long ref = getReferenceId(type);
@@ -2329,7 +2368,6 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewEleme
     type = TYPE_MAIN_VARIANT(TREE_VALUE (param));
   }
 
-
   long ref = getReferenceId(type);
 
   std::string name(nodeName(param));
@@ -2362,17 +2400,18 @@ long KdmTripleWriter::writeKdmMemberUnit(tree const member)
   tree context = CP_DECL_CONTEXT (member);
   if (TYPE_P(context))
   {
-    if (TREE_PRIVATE (member)) writeTripleExport(memberId, "private");
-    else if (TREE_PROTECTED (member)) writeTripleExport(memberId, "protected");
-    else writeTripleExport(memberId, "public");
+    if (TREE_PRIVATE (member))
+      writeTripleExport(memberId, "private");
+    else if (TREE_PROTECTED (member))
+      writeTripleExport(memberId, "protected");
+    else
+      writeTripleExport(memberId, "public");
   }
 
   writeTripleContains(getReferenceId(context), memberId);
 
   return memberId;
 }
-
-
 
 long KdmTripleWriter::writeKdmItemUnit(tree const item)
 {
@@ -2393,31 +2432,33 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   return itemId;
 }
 
-
 void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
 {
   long unitId = getReferenceId(var);
   std::string name = nodeName(var);
-  if (DECL_EXTERNAL(var)) {
-      writeTripleKind(unitId, KdmKind::External());
-  } else {
-      writeTripleKind(unitId, KdmKind::Global());
+  if (DECL_EXTERNAL(var))
+  {
+    writeTripleKind(unitId, KdmKind::External());
+  }
+  else
+  {
+    writeTripleKind(unitId, KdmKind::Global());
 #if 1 //BBBB
-      std::string linkSnkStr = linkVariablePrefix + gcckdm::getLinkId(var, name);
-      writeTriple(unitId, KdmPredicate::LinkSnk(), linkSnkStr);
+    std::string linkSnkStr = linkVariablePrefix + gcckdm::getLinkId(var, name);
+    writeTriple(unitId, KdmPredicate::LinkSnk(), linkSnkStr);
 #else
-      writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
+    writeTriple(unitId, KdmPredicate::LinkSnk(), linkVariablePrefix + name);
 #endif
-      //We now check to see if this variable is initialized
-      //  example int e[] = { 1, 2, 3 }
-      //  MyFunctionPtrType  f[] = { foo, bar }
-      tree declInitial = DECL_INITIAL(var);
-      if (declInitial && declInitial != error_mark_node && TREE_CODE(declInitial) == CONSTRUCTOR) {
-        writeHasValueRelationships(unitId, declInitial);
-      }
+    //We now check to see if this variable is initialized
+    //  example int e[] = { 1, 2, 3 }
+    //  MyFunctionPtrType  f[] = { foo, bar }
+    tree declInitial = DECL_INITIAL(var);
+    if (declInitial && declInitial != error_mark_node && TREE_CODE(declInitial) == CONSTRUCTOR)
+    {
+      writeHasValueRelationships(unitId, declInitial);
+    }
   }
 }
-
 
 long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
 {
@@ -2430,8 +2471,9 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   //determining type declaration
   tree type = typedefTypeCheck(var);
 #if 1 //BBBB
-  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
-	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
+  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type)))
+  {
+    type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
   }
 #endif
   long ref = getReferenceId(type);
@@ -2439,13 +2481,15 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   writeTriple(unitId, KdmPredicate::Type(), ref);
 
   //For the moment we only want structures to have hasType relationship
-  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE) {
+  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE)
+  {
     writeRelation(KdmType::HasType(), unitId, ref);
   }
 
   writeKdmSourceRef(unitId, var);
 
-  if (containPolicy == WriteKdmContainsRelation) {
+  if (containPolicy == WriteKdmContainsRelation)
+  {
 #if 1 //BBBB
     std::string linkIdStr = gcckdm::getLinkId(var, name);
     writeTripleLinkId(unitId, linkIdStr);
@@ -2457,7 +2501,6 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
 
   return unitId;
 }
-
 
 /**
  * Write a hasValue Relation for each value contained in the constructor/initializer
@@ -2471,7 +2514,7 @@ void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree
   VEC_length (constructor_elt, CONSTRUCTOR_ELTS (constructor));
   FOR_EACH_CONSTRUCTOR_ELT (CONSTRUCTOR_ELTS (constructor), cnt, index, value)
   {
-    switch(TREE_CODE(value))
+    switch (TREE_CODE(value))
     {
       case ADDR_EXPR:
       {
@@ -2501,7 +2544,6 @@ void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree
   }
 
 }
-
 
 //void KdmTripleWriter::writeKdmPtr(tree const addrExpr)
 //{
@@ -2557,17 +2599,18 @@ long KdmTripleWriter::getReferenceId(tree const node)
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
 #if 0 //BBBB - TMP
-	if (mKdmElementId + 1 == 3872) {
-		int junk = 123;
-	}
+  if (mKdmElementId + 1 == 3872)
+  {
+    int junk = 123;
+  }
 #endif
   if (result.second)
   {
     //if we haven't processed this node before new node....queue it node for later processing
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
-//Keeping this here for debugging
-//      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
+      //Keeping this here for debugging
+      //      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
       mNodeQueue.push(node);
     }
     retValue = ++mKdmElementId;
@@ -2607,7 +2650,6 @@ long KdmTripleWriter::getValueId(tree const node)
   return valueId;
 }
 
-
 long KdmTripleWriter::getSourceFileReferenceId(tree const node)
 {
   //The shared or compliation unit id
@@ -2626,24 +2668,24 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
   }
   else
   {
-//    the node is located in the translation unit; return the id for the translation unit
-//    unless it's external in which case we don't know where it is
-//    in which case we put it in the derivedSharedUnit by default
-//    if (DECL_P(node))
-//    {
-//      if (!DECL_EXTERNAL(node))
-//      {
-//        unitId = KdmElementId_CompilationUnit;
-//      }
-//      else
-//      {
-//        unitId = KdmElementId_DerivedSharedUnit;
-//      }
-//    }
-//    else
-//    {
-//      unitId = KdmElementId_CompilationUnit;
-//    }
+    //    the node is located in the translation unit; return the id for the translation unit
+    //    unless it's external in which case we don't know where it is
+    //    in which case we put it in the derivedSharedUnit by default
+    //    if (DECL_P(node))
+    //    {
+    //      if (!DECL_EXTERNAL(node))
+    //      {
+    //        unitId = KdmElementId_CompilationUnit;
+    //      }
+    //      else
+    //      {
+    //        unitId = KdmElementId_DerivedSharedUnit;
+    //      }
+    //    }
+    //    else
+    //    {
+    //      unitId = KdmElementId_CompilationUnit;
+    //    }
 
     if (DECL_P(node) && DECL_EXTERNAL(node))
     {
@@ -2654,7 +2696,6 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
   return unitId;
 }
 
-
 long KdmTripleWriter::getUserTypeId(KdmType const & type)
 {
   TypeMap::const_iterator i = mUserTypes.find(type);
@@ -2662,7 +2703,7 @@ long KdmTripleWriter::getUserTypeId(KdmType const & type)
   if (i == mUserTypes.end())
   {
     long typeId = getNextElementId();
-    mUserTypes.insert(std::make_pair(type,typeId));
+    mUserTypes.insert(std::make_pair(type, typeId));
 
     writeTripleKdmType(typeId, type);
     writeTripleName(typeId, type.name());
@@ -2680,19 +2721,19 @@ long KdmTripleWriter::getUserTypeId(KdmType const & type)
 
 bool KdmTripleWriter::nodeIsMarkedAsProcessed(tree const ast)
 {
-	return (mProcessedNodes.find(ast) != mProcessedNodes.end());
+  return (mProcessedNodes.find(ast) != mProcessedNodes.end());
 }
 
 void KdmTripleWriter::markNodeAsProcessed(tree const ast)
 {
 #if 0 //BBBB TMP
-  if ((const unsigned long)ast == 0xb7b653c8) {
-  	int junk = 123;
+  if ((const unsigned long)ast == 0xb7b653c8)
+  {
+    int junk = 123;
   }
 #endif
   mProcessedNodes.insert(ast);
 }
-
 
 long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 {
@@ -2715,8 +2756,6 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
   return retValue;
 }
 
-
-
 long KdmTripleWriter::getNextElementId()
 {
   return ++mKdmElementId;
@@ -2731,8 +2770,8 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   KdmType kdmType = KdmType::PrimitiveType();
   if (name.find("int") != std::string::npos ||
       name.find("long") != std::string::npos ||
-      name.find("unnamed-unsigned")!= std::string::npos ||
-      name.find("unnamed-signed")!= std::string::npos)
+      name.find("unnamed-unsigned") != std::string::npos ||
+      name.find("unnamed-signed") != std::string::npos)
   {
     kdmType = KdmType::IntegerType();
   }
@@ -2756,10 +2795,10 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   {
     kdmType = KdmType::BooleanType();
   }
-//  else
-//  {
-//    writeComment(name);
-//  }
+  //  else
+  //  {
+  //    writeComment(name);
+  //  }
 
   writeTripleKdmType(typeKdmElementId, kdmType);
   writeTripleName(typeKdmElementId, name);
@@ -2767,7 +2806,8 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   writeLanguageUnitContains(typeKdmElementId);
 }
 
-long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelationPolicy const containPolicy, bool isTemplate, const long containedInId)
+long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelationPolicy const containPolicy, bool isTemplate,
+    const long containedInId)
 {
   long pointerKdmElementId = getReferenceId(pointerType);
 
@@ -2784,11 +2824,14 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
   writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
 
   if (containPolicy == WriteKdmContainsRelation)
+  {
     writeLanguageUnitContains(pointerKdmElementId);
+  }
 
-  if (containedInId != invalidId) {
-	 assert(containedInId >= 0);
-	 writeTripleContains(containedInId, pointerKdmElementId);
+  if (containedInId != invalidId)
+  {
+    assert(containedInId >= 0);
+    writeTripleContains(containedInId, pointerKdmElementId);
   }
 
   return pointerKdmElementId;
@@ -2810,7 +2853,7 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   {
     tree min = TYPE_MIN_VALUE (domain);
     tree max = TYPE_MAX_VALUE (domain);
-    if (min && max && integer_zerop (min) && host_integerp (max, 0))
+    if (min && max && integer_zerop(min) && host_integerp(max, 0))
     {
       std::string nameStr = boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % (TREE_INT_CST_LOW (max) + 1));
       writeTriple(arrayKdmElementId, KdmPredicate::Size(), nameStr);
@@ -2873,12 +2916,12 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
     std::string linkId;
     if (isAnonymousStruct(mainRecordType))
     {
-//        //tree type = TYPE_MAIN_VARIANT (mainRecordType);
-//
-//        //tree decl (TYPE_NAME (type));
-//        tree id (DECL_NAME (mainRecordType));
-//        const char* name2 (IDENTIFIER_POINTER (id));
-//        std::cerr << name2 << std::endl;
+      //        //tree type = TYPE_MAIN_VARIANT (mainRecordType);
+      //
+      //        //tree decl (TYPE_NAME (type));
+      //        tree id (DECL_NAME (mainRecordType));
+      //        const char* name2 (IDENTIFIER_POINTER (id));
+      //        std::cerr << name2 << std::endl;
       name = unnamedStructNode;
       linkId = getLinkIdForType(mainRecordType);
     }
@@ -2904,8 +2947,8 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
             if (!DECL_SELF_REFERENCE_P(d))
             {
               processAstNodeInternal(d);
-//              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
-//              writeUnsupportedComment(msg);
+              //              std::string msg(str(boost::format("RecordType (%1%) in %2%") % tree_code_name[TREE_CODE(d)] % BOOST_CURRENT_FUNCTION));
+              //              writeUnsupportedComment(msg);
             }
             break;
           }
@@ -2924,7 +2967,7 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
           }
           case TEMPLATE_DECL:
           {
-        	processAstTemplateDecl(d);
+            processAstTemplateDecl(d);
             break;
           }
           default:
@@ -2937,65 +2980,66 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
       }
     }
 
-//    if (DECL_ARTIFICIAL(mainRecordType))
-//    {
-//      std::cerr << "ARTIFICIAL" << std::endl;
-//    }
-//    else
-//    {
-//      std::cerr << " NOT ARTIFICIAL" << std::endl;
-//    }
+    //    if (DECL_ARTIFICIAL(mainRecordType))
+    //    {
+    //      std::cerr << "ARTIFICIAL" << std::endl;
+    //    }
+    //    else
+    //    {
+    //      std::cerr << " NOT ARTIFICIAL" << std::endl;
+    //    }
 
 
     writeKdmSourceRef(structId, mainRecordType);
 
-  	if (containPolicy == WriteKdmContainsRelation)
+    if (containPolicy == WriteKdmContainsRelation)
       writeTripleContains(compilationUnitId, structId);
 
     return structId;
   }
 }
 
-
 #if 1 //BBBB
-
 void KdmTripleWriter::writeKdmFriends(long const id, tree const scope)
 {
-//	static int
-//	friend_accessible_p (tree scope, tree decl, tree binfo)
+  //	static int
+  //	friend_accessible_p (tree scope, tree decl, tree binfo)
 
-	  tree befriending_classes;
+  tree befriending_classes;
 
-	  if (!scope)
-	    return;
+  if (!scope)
+    return;
 
-	  if (TREE_CODE (scope) == FUNCTION_DECL
-	      || DECL_FUNCTION_TEMPLATE_P (scope))
-	    befriending_classes = DECL_BEFRIENDING_CLASSES (scope);
-	  else if (TYPE_P (scope))
-	    befriending_classes = CLASSTYPE_BEFRIENDING_CLASSES (scope);
-	  else
-	    return;
+  if (TREE_CODE (scope) == FUNCTION_DECL || DECL_FUNCTION_TEMPLATE_P (scope))
+    befriending_classes = DECL_BEFRIENDING_CLASSES (scope);
+  else if (TYPE_P (scope))
+    befriending_classes = CLASSTYPE_BEFRIENDING_CLASSES (scope);
+  else
+    return;
 
-      for (tree frnd = befriending_classes; frnd; frnd = TREE_CHAIN (frnd)) {
-    	if (TREE_CODE (frnd) != FUNCTION_DECL) {
-		  tree tv = TREE_VALUE (frnd);
-	      if (tv != NULL && TREE_CODE (tv) != TEMPLATE_DECL) {
-	        tree friendType = TREE_VALUE (frnd);
-	        long friendId = getReferenceId(friendType);
-	        long relId = writeKdmFriend(id, friendId);
-	        writeTripleContains(id, relId);
-	      }
-    	}
-	  }
-
-      if (TREE_CODE (scope) == FUNCTION_DECL
-	      || DECL_FUNCTION_TEMPLATE_P (scope)) {
-	      /* Perhaps this SCOPE is a member of a class which is a friend.  */
-	      if (DECL_CLASS_SCOPE_P (scope)) {
-	        writeKdmFriends(id, DECL_CONTEXT (scope));
-	      }
+  for (tree frnd = befriending_classes; frnd; frnd = TREE_CHAIN (frnd))
+  {
+    if (TREE_CODE (frnd) != FUNCTION_DECL)
+    {
+      tree tv = TREE_VALUE (frnd);
+      if (tv != NULL && TREE_CODE (tv) != TEMPLATE_DECL)
+      {
+        tree friendType = TREE_VALUE (frnd);
+        long friendId = getReferenceId(friendType);
+        long relId = writeKdmFriend(id, friendId);
+        writeTripleContains(id, relId);
       }
+    }
+  }
+
+  if (TREE_CODE (scope) == FUNCTION_DECL || DECL_FUNCTION_TEMPLATE_P (scope))
+  {
+    /* Perhaps this SCOPE is a member of a class which is a friend.  */
+    if (DECL_CLASS_SCOPE_P (scope))
+    {
+      writeKdmFriends(id, DECL_CONTEXT (scope));
+    }
+  }
 }
 
 #else
@@ -3004,21 +3048,22 @@ void KdmTripleWriter::writeKdmFriends(long const id, tree const befriending)
 {
 
 #if 1
-    for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd)) {
-	  tree tv = TREE_VALUE (frnd);
-      if (tv != NULL && TREE_CODE (tv) != TEMPLATE_DECL) {
-        tree friendType = TREE_VALUE (frnd);
-        long friendId = getReferenceId(friendType);
-        long relId = writeKdmFriend(id, friendId);
-        writeTripleContains(id, relId);
-      }
+  for (tree frnd = befriending; frnd; frnd = TREE_CHAIN (frnd))
+  {
+    tree tv = TREE_VALUE (frnd);
+    if (tv != NULL && TREE_CODE (tv) != TEMPLATE_DECL)
+    {
+      tree friendType = TREE_VALUE (frnd);
+      long friendId = getReferenceId(friendType);
+      long relId = writeKdmFriend(id, friendId);
+      writeTripleContains(id, relId);
     }
+  }
 #endif
 
 }
 
 #endif
-
 
 /**
  *
@@ -3036,32 +3081,36 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
   name = (isAnonymousStruct(mainRecordType)) ? gcckdm::constants::getUnamedNodeString() : nodeName(mainRecordType);
   writeTripleName(classId, name);
 
-  if (!isTemplate) {
+  if (!isTemplate)
+  {
     // link:id is the mangled name, hopefully
     writeTripleLinkId(classId, gcckdm::getLinkId(TYPE_NAME(recordType), name));
   }
 
   // Is this an abstract class?
   if (CLASSTYPE_PURE_VIRTUALS (recordType) != 0)
+  {
     writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_AbstractStereotype);
+  }
 
   if (!COMPLETE_TYPE_P (recordType))
+  {
     writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereotype);
-
+  }
   // Hide artificial classes
-//  if (DECL_ARTIFICIAL (recordType))
-//    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
+  //  if (DECL_ARTIFICIAL (recordType))
+  //    writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
 
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
-  tree biv (TYPE_BINFO (recordType));
-  size_t n (biv ? BINFO_N_BASE_BINFOS (biv) : 0);
+  tree biv(TYPE_BINFO (recordType));
+  size_t n(biv ? BINFO_N_BASE_BINFOS (biv) : 0);
 
-  for (size_t i (0); i < n; i++)
+  for (size_t i(0); i < n; i++)
   {
-    tree bi (BINFO_BASE_BINFO (biv, i));
+    tree bi(BINFO_BASE_BINFO (biv, i));
 
-    tree b_type (TYPE_MAIN_VARIANT (BINFO_TYPE (bi)));
+    tree b_type(TYPE_MAIN_VARIANT (BINFO_TYPE (bi)));
     //    tree b_decl (TYPE_NAME (b_type));
     //    tree b_id (DECL_NAME (b_decl));
 
@@ -3071,8 +3120,8 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
 
     // Add some Stereotypes to the relationship
     // Virtual subclass?
-    bool virt (BINFO_VIRTUAL_P (bi));
-    if(virt)
+    bool virt(BINFO_VIRTUAL_P (bi));
+    if (virt)
     {
       writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereotype);
     }
@@ -3080,7 +3129,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
     // Access specifier.
     if (BINFO_BASE_ACCESSES (biv))
     {
-      tree ac (BINFO_BASE_ACCESS (biv, i));
+      tree ac(BINFO_BASE_ACCESS (biv, i));
 
       if (ac == 0 || ac == access_public_node)
         writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereotype);
@@ -3090,8 +3139,10 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
         writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PrivateStereotype);
 
     }
-    else writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereotype);
-
+    else
+    {
+      writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereotype);
+    }
     // Write the containment
     writeTripleContains(classId, extendsId);
   }
@@ -3104,7 +3155,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
 #endif
 
   // Traverse members.
-  for (tree d (TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
+  for (tree d(TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
   {
     switch (TREE_CODE (d))
     {
@@ -3122,7 +3173,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
         {
           getReferenceId(d);
           processAstNode(d);
-//BBBB          writeTripleContains(classId, itemId);
+          //BBBB          writeTripleContains(classId, itemId);
         }
         break;
       }
@@ -3134,7 +3185,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
     }
   }
 
-  for (tree d (TYPE_METHODS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
+  for (tree d(TYPE_METHODS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
   {
     if (!DECL_ARTIFICIAL (d))
     {
@@ -3145,7 +3196,9 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
   writeKdmSourceRef(classId, mainRecordType);
 
   if (containPolicy == WriteKdmContainsRelation)
+  {
     writeTripleContains(compilationUnitId, classId);
+  }
 
   return classId;
 }
@@ -3174,7 +3227,7 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const tree node)
 
 long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
 {
-  if(!eloc.file)
+  if (!eloc.file)
   {
     return id;
   }
@@ -3195,7 +3248,6 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
   return id;
 }
 
-
 void KdmTripleWriter::writeLanguageUnitContains(long const child, bool uid)
 {
   //Additions to the language unit are always unlocked.  Additions to the
@@ -3207,7 +3259,6 @@ void KdmTripleWriter::writeLanguageUnitContains(long const child, bool uid)
   lockUid(val);
 }
 
-
 long KdmTripleWriter::writeRelation(KdmType const & type, long const fromId, long const toId)
 {
   long relId = getNextElementId();
@@ -3217,7 +3268,6 @@ long KdmTripleWriter::writeRelation(KdmType const & type, long const fromId, lon
   writeTripleContains(fromId, relId, false); //relations don't have uid's
   return relId;
 }
-
 
 } // namespace kdmtriplewriter
 

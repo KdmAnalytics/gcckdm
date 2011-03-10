@@ -28,9 +28,13 @@
 
 namespace gcckdm
 {
+  namespace constants
+  {
+    std::string getUnamedNodeString();
+  }
 
-//If a AST node doesn't have a name use this name
-extern std::string const unnamedNode;
+////If a AST node doesn't have a name use this name
+//extern std::string const unnamedNode;
 
 /**
  * Return the name of the given node

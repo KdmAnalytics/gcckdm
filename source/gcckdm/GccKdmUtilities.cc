@@ -394,9 +394,17 @@ std::string getDemangledNodeName(tree node)
   return nameStr;
 }
 
+namespace constants
+{
 
-//If a AST node doesn't have a name use this name
-std::string const unnamedNode("<unnamed>");
+std::string getUnamedNodeString()
+{
+  return std::string("<unnamed>");
+}
+
+}
+////If a AST node doesn't have a name use this name
+//std::string const unnamedNode("<unnamed>");
 
 
 /**
@@ -411,7 +419,7 @@ std::string nodeName(tree const node)
   std::string name;
   if (node == NULL_TREE)
   {
-    name = unnamedNode;
+    name = constants::getUnamedNodeString();
   }
   else
   {
@@ -421,7 +429,7 @@ std::string nodeName(tree const node)
 
     if (name.empty())
     {
-      name = unnamedNode;
+      name = constants::getUnamedNodeString();
     }
   }
   return name;

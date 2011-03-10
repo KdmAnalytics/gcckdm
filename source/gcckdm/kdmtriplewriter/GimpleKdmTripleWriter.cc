@@ -58,6 +58,14 @@ BinaryOperationKindMap treeCodeToKind =
                               (LT_EXPR, gcckdm::KdmKind::LessThan())
                               (EQ_EXPR, gcckdm::KdmKind::Equals())
                               (NE_EXPR, gcckdm::KdmKind::NotEqual())
+#if 1 //BBBB
+                              (UNGT_EXPR, gcckdm::KdmKind::GreaterThan())
+                              (UNGE_EXPR, gcckdm::KdmKind::GreaterThanOrEqual())
+                              (UNLE_EXPR, gcckdm::KdmKind::LessThanOrEqual())
+                              (UNLT_EXPR, gcckdm::KdmKind::LessThan())
+                              (UNEQ_EXPR, gcckdm::KdmKind::Equals())
+                              (LTGT_EXPR, gcckdm::KdmKind::NotEqual())
+#endif
                               (TRUTH_AND_EXPR, gcckdm::KdmKind::And())
                               (TRUNC_MOD_EXPR, gcckdm::KdmKind::Remainder())
                               (TRUTH_OR_EXPR, gcckdm::KdmKind::Or())
@@ -1381,6 +1389,14 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleBinaryA
           case GE_EXPR:
           case EQ_EXPR:
           case NE_EXPR:
+#if 1 //BBBB
+          case UNGT_EXPR:
+          case UNGE_EXPR:
+          case UNLT_EXPR:
+          case UNLE_EXPR:
+          case UNEQ_EXPR:
+          case LTGT_EXPR:
+#endif
           case LSHIFT_EXPR:
           case RSHIFT_EXPR:
           case BIT_XOR_EXPR:

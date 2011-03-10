@@ -470,7 +470,7 @@ void KdmTripleWriter::processNodeQueue()
     tree node = mNodeQueue.front();
 
 #if 0 //BBBB TMP
-    if ((const unsigned long)node == 0xb7b653c8) {
+    if ((const unsigned long)node == 0xb703e480) {
     	int junk = 123;
     }
 #endif
@@ -985,6 +985,14 @@ int KdmTripleWriter::find_template_parm (tree t)
     case GE_EXPR:
     case EQ_EXPR:
     case NE_EXPR:
+#if 1 //BBBB
+          case UNGT_EXPR:
+          case UNGE_EXPR:
+          case UNLT_EXPR:
+          case UNLE_EXPR:
+          case UNEQ_EXPR:
+          case LTGT_EXPR:
+#endif
     case EXACT_DIV_EXPR:
       return (find_template_parm (TREE_OPERAND (t, 0))
               || find_template_parm (TREE_OPERAND (t, 1)));
@@ -2355,6 +2363,9 @@ long KdmTripleWriter::writeKdmMemberUnit(tree const member)
   std::string name(nodeName(member));
 
   writeTripleName(memberId, name);
+#if 1 //BBBB
+  writeTripleLinkId(memberId, name);
+#endif
   writeTriple(memberId, KdmPredicate::Type(), ref);
   writeKdmSourceRef(memberId, member);
 
@@ -2371,7 +2382,6 @@ long KdmTripleWriter::writeKdmMemberUnit(tree const member)
 
   return memberId;
 }
-
 
 
 long KdmTripleWriter::writeKdmItemUnit(tree const item)
@@ -2422,6 +2432,11 @@ void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
 long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
 {
   long unitId = getReferenceId(var);
+#if 1 //BBBB
+  if (unitId >= 805) {
+	  int junk = 123;
+  }
+#endif
   writeTripleKdmType(unitId, KdmType::StorableUnit());
 
   std::string name = nodeName(var);
@@ -2430,8 +2445,15 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   //determining type declaration
   tree type = typedefTypeCheck(var);
 #if 1 //BBBB
-  if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
-	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
+  if (type) {
+    tree tree_type = TREE_TYPE(type);
+	if (tree_type) {
+	  if (TYPE_P(tree_type)) {
+	    type = TYPE_MAIN_VARIANT(tree_type);
+	  }
+	} else if (TYPE_P(type)) {
+	  type = TYPE_MAIN_VARIANT(type);
+	}
   }
 #endif
   long ref = getReferenceId(type);
@@ -2556,8 +2578,8 @@ long KdmTripleWriter::getReferenceId(tree const node)
 {
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
-#if 0 //BBBB - TMP
-	if (mKdmElementId + 1 == 3872) {
+#if 1 //BBBB - TMP
+	if (mKdmElementId + 1 == 387) {
 		int junk = 123;
 	}
 #endif
@@ -2680,13 +2702,18 @@ long KdmTripleWriter::getUserTypeId(KdmType const & type)
 
 bool KdmTripleWriter::nodeIsMarkedAsProcessed(tree const ast)
 {
+#if 0 //BBBB TMP
+  if ((const unsigned long)ast == 0xb703e480) {
+  	int junk = 123;
+  }
+#endif
 	return (mProcessedNodes.find(ast) != mProcessedNodes.end());
 }
 
 void KdmTripleWriter::markNodeAsProcessed(tree const ast)
 {
 #if 0 //BBBB TMP
-  if ((const unsigned long)ast == 0xb7b653c8) {
+  if ((const unsigned long)ast == 0xb703e480) {
   	int junk = 123;
   }
 #endif

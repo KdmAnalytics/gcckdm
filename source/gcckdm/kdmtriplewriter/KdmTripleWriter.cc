@@ -105,60 +105,6 @@ ktw::KdmTripleWriter::Path checkPathType(ktw::KdmTripleWriter::Settings const & 
   return boost::filesystem::exists(tmp) ? tmp : p;
 }
 
-/**
- * Utility function which determines the type of the given node
- * if the node is a typedef returns the type of the typedef otherwise
- * it returns the real type via TYPE_MAIN_VARIANT
- *
- * @param node a type node
- */
-tree typedefTypeCheck(tree const node)
-{
-  //determining type declaration
-  tree type = TREE_TYPE(node);
-
-  if (type)
-  {
-    //TODO: could put const/volatile/restrict qualifiers here....
-    enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
-    if (tclass == tcc_type)
-    {
-      //does this type have a name
-      if (TYPE_NAME (type))
-      {
-        //ensure we are declaring a type and that is has a name
-        if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL && DECL_NAME (TYPE_NAME (type)))
-        {
-          //If we really have the orignal type just return it
-          if (TYPE_MAIN_VARIANT(type) == TREE_TYPE(TYPE_NAME (type)) || type == TYPE_MAIN_VARIANT(type) )
-          {
-            type = TYPE_MAIN_VARIANT(type);
-          }
-          //otherwise we have a typedef and return that instead
-          else
-          {
-            type = TYPE_NAME (type);
-          }
-        }
-      }
-      else
-      {
-        type = TYPE_MAIN_VARIANT(type);
-      }
-    }
-    //return the real type
-    else
-    {
-      type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
-    }
-  }
-  //This node is a primitive type
-  else
-  {
-    type = TYPE_MAIN_VARIANT(node);
-  }
-  return type;
-}
 
 std::string getLinkIdForType(tree type)
 {
@@ -470,7 +416,7 @@ void KdmTripleWriter::processNodeQueue()
     tree node = mNodeQueue.front();
 
 #if 0 //BBBB TMP
-    if ((const unsigned long)node == 0xb703e480) {
+    if ((const unsigned long)node == 0xb7a38c60) {
     	int junk = 123;
     }
 #endif
@@ -654,14 +600,13 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
         writeUnsupportedComment(msg);
       }
 
-      /// for type we need the _actual_ type not just this tree node;
       if (TYPE_P(ast)) {
+        // for type we need the _actual_ type not just this tree node;
         markNodeAsProcessed(TYPE_MAIN_VARIANT(ast));
-//        mProcessedNodes.insert(TYPE_MAIN_VARIANT(ast));
       } else {
    	    markNodeAsProcessed(ast);
-//        mProcessedNodes.insert(ast);
       }
+
     } else {
       id = getReferenceId(ast);
     }
@@ -671,6 +616,7 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
   }
   return id;
 }
+
 
 long KdmTripleWriter::processAstDeclarationNode(tree const decl, ContainsRelationPolicy const containPolicy, bool isTemplate)
 {
@@ -713,8 +659,7 @@ long KdmTripleWriter::processAstDeclarationNode(tree const decl, ContainsRelatio
     }
     case CONST_DECL:
     {
-      //For the moment we ignore these.  Gimple seems to sub in the
-      //actual value anyways
+      // For the moment we ignore these. Gimple seems to sub in the actual value anyway.
       break;
     }
     case TEMPLATE_DECL:
@@ -1206,6 +1151,9 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
     case METHOD_TYPE:
     {
       //writeKdmSignature(typeNode);
+#if 1 //BBBB
+      writeKdmSignatureType(typeNode);
+#endif
       break;
     }
     case REFERENCE_TYPE:
@@ -1290,36 +1238,30 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
 long KdmTripleWriter::processAstRecordTypeNode(tree const typeNode)
 {
   long id = invalidId;
-  int treeCode(TREE_CODE(typeNode));
-  if (isFrontendCxx())
-  {
+  if (isFrontendCxx()) {
 #if 0 //BBBB
     // The contained code taken from GCCXML
     if (TYPE_PTRMEMFUNC_P (typeNode))
     {
       // Pointer-to-member-functions are stored in a RECORD_TYPE.
+   	  int treeCode(TREE_CODE(typeNode));
       std::string msg(str(boost::format("AST Type Node pointer to member-function (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
       writeUnsupportedComment(msg);
     }
     else
 #endif
-    if (!CLASSTYPE_IS_TEMPLATE (typeNode))
-    {
+    if (!CLASSTYPE_IS_TEMPLATE(typeNode)) {
       // This is a struct or class type.
       id = writeKdmRecordType(typeNode);
-    }
-    else
-    {
+    } else {
       // This is a class template.  We don't want to dump it.
 
- /* We do not output anything (at the moment at least) for templates themselves, only when they are instantiated.
-  *   std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
-  *   writeUnsupportedComment(msg);
-  */
+      /* We do not output anything (at the moment at least) for templates themselves, only when they are instantiated.
+       *   std::string msg(str(boost::format("AST Type Node Class Template (%1%) in %2%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION));
+       *   writeUnsupportedComment(msg);
+       */
     }
-  }
-  else
-  {
+  } else {
     // This is a struct or class type.
     id = writeKdmRecordType(typeNode);
   }
@@ -2291,7 +2233,7 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
   tree type = typedefTypeCheck(param);
-#if 1 //BBBB
+#if 0 //BBBB
   if (type && TREE_TYPE(type) && TYPE_P(TREE_TYPE(type))) {
 	  type = TYPE_MAIN_VARIANT(TREE_TYPE(type));
   }
@@ -2429,21 +2371,58 @@ void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
 }
 
 
-long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
+/**
+ * Utility function which determines the type of the given node
+ * if the node is a typedef returns the type of the typedef otherwise
+ * it returns the real type via TYPE_MAIN_VARIANT
+ *
+ * @param node a type node
+ */
+tree KdmTripleWriter::typedefTypeCheck(tree const node)
 {
-  long unitId = getReferenceId(var);
-#if 1 //BBBB
-  if (unitId >= 805) {
-	  int junk = 123;
-  }
-#endif
-  writeTripleKdmType(unitId, KdmType::StorableUnit());
-
-  std::string name = nodeName(var);
-  writeTripleName(unitId, name);
-
   //determining type declaration
-  tree type = typedefTypeCheck(var);
+  tree type = TREE_TYPE(node);
+
+  if (type)
+  {
+    //TODO: could put const/volatile/restrict qualifiers here....
+    enum tree_code_class tclass = TREE_CODE_CLASS (TREE_CODE (type));
+    if (tclass == tcc_type)
+    {
+      //does this type have a name
+      if (TYPE_NAME (type))
+      {
+        //ensure we are declaring a type and that is has a name
+        if (TREE_CODE (TYPE_NAME (type)) == TYPE_DECL && DECL_NAME (TYPE_NAME (type)))
+        {
+          //If we really have the orignal type just return it
+          if (TYPE_MAIN_VARIANT(type) == TREE_TYPE(TYPE_NAME (type)) || type == TYPE_MAIN_VARIANT(type) )
+          {
+            type = TYPE_MAIN_VARIANT(type);
+          }
+          //otherwise we have a typedef and return that instead
+          else
+          {
+            type = TYPE_NAME (type);
+          }
+        }
+      }
+      else
+      {
+        type = TYPE_MAIN_VARIANT(type);
+      }
+    }
+    //return the real type
+    else
+    {
+      type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
+    }
+  }
+  //This node is a primitive type
+  else
+  {
+    type = TYPE_MAIN_VARIANT(node);
+  }
 #if 1 //BBBB
   if (type) {
     tree tree_type = TREE_TYPE(type);
@@ -2456,6 +2435,24 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
 	}
   }
 #endif
+  return type;
+}
+
+
+long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
+{
+  long unitId = getReferenceId(var);
+#if 0 //BBBB
+  if (unitId >= 781) {
+	  int junk = 123;
+  }
+#endif
+  writeTripleKdmType(unitId, KdmType::StorableUnit());
+
+  std::string name = nodeName(var);
+  writeTripleName(unitId, name);
+
+  tree type = typedefTypeCheck(var);
   long ref = getReferenceId(type);
 
   writeTriple(unitId, KdmPredicate::Type(), ref);
@@ -2468,12 +2465,8 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   writeKdmSourceRef(unitId, var);
 
   if (containPolicy == WriteKdmContainsRelation) {
-#if 1 //BBBB
     std::string linkIdStr = gcckdm::getLinkId(var, name);
     writeTripleLinkId(unitId, linkIdStr);
-#else
-    writeTripleLinkId(unitId, name);
-#endif
     writeTripleContains(getSourceFileReferenceId(var), unitId);
   }
 
@@ -2576,33 +2569,43 @@ bool KdmTripleWriter::hasReferenceId(tree const node) const
 
 long KdmTripleWriter::getReferenceId(tree const node)
 {
-  long retValue(-1);
-  std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
-#if 1 //BBBB - TMP
-	if (mKdmElementId + 1 == 387) {
+#if 0 //BBBB - TMP
+	if ((long unsigned int)node == 0xb7d6b2e8) {
 		int junk = 123;
 	}
 #endif
-  if (result.second)
-  {
+  long retValue(-1);
+  std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
+#if 0 //BBBB - TMP
+	if (mKdmElementId + 1 == 777) {
+		int junk = 123;
+	}
+#endif
+  if (result.second) {
     //if we haven't processed this node before new node....queue it node for later processing
-    if (mProcessedNodes.find(node) == mProcessedNodes.end())
-    {
+    if (mProcessedNodes.find(node) == mProcessedNodes.end()) {
 //Keeping this here for debugging
 //      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
       mNodeQueue.push(node);
     }
     retValue = ++mKdmElementId;
+#if 1 //BBBB
+    if (TREE_TYPE(node)) {
+      tree type = typedefTypeCheck(node);
+      if (type) {
+        //reserve the id for this type for later processing
+        getReferenceId(type);
+      }
+    }
+#else
     tree treeType = TREE_TYPE(node);
-    if (treeType)
-    {
+    if (treeType) {
       tree t2(TYPE_MAIN_VARIANT(treeType));
       //reserve the id for this type for later processing
       getReferenceId(t2);
     }
-  }
-  else
-  {
+#endif
+  } else {
     retValue = result.first->second;
   }
   return retValue;
@@ -2703,7 +2706,7 @@ long KdmTripleWriter::getUserTypeId(KdmType const & type)
 bool KdmTripleWriter::nodeIsMarkedAsProcessed(tree const ast)
 {
 #if 0 //BBBB TMP
-  if ((const unsigned long)ast == 0xb703e480) {
+  if ((const unsigned long)ast == 0xb7a38c60) {
   	int junk = 123;
   }
 #endif
@@ -2713,7 +2716,7 @@ bool KdmTripleWriter::nodeIsMarkedAsProcessed(tree const ast)
 void KdmTripleWriter::markNodeAsProcessed(tree const ast)
 {
 #if 0 //BBBB TMP
-  if ((const unsigned long)ast == 0xb703e480) {
+  if ((const unsigned long)ast == 0xb7a38c60) {
   	int junk = 123;
   }
 #endif

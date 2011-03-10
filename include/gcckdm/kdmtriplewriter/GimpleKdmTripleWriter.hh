@@ -273,14 +273,14 @@ private:
   ActionDataPtr writeKdmPtrReplace(gimple const gs);
 
 
-
   ActionDataPtr writeKdmPtrSelect(gimple const gs);
   ActionDataPtr writeKdmPtrSelect(tree const lhs, tree const rhs, location_t const loc);
 //  ActionDataPtr writeKdmPtrSelect(long writesId /*, long readsId/*,adtree const rhs, location_t const loc);
   ActionDataPtr writeKdmPtrSelect(RelationTarget const & writesTarget, RelationTarget const & addressesTarget);
 
-  long writeKdmStorableUnit(long const typeId, expanded_location const & xloc);
-  long writeKdmStorableUnit(long const typeId, location_t loc);
+
+  long writeKdmStorableUnit(tree const node, location_t const loc);
+  long writeKdmStorableUnitInternal(long const typeId, location_t const loc);
   void writeKdmStorableUnitKindLocal(tree const var);
 
 

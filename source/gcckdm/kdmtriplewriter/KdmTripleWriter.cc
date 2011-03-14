@@ -2531,7 +2531,7 @@ void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree
         tree op0 = TREE_OPERAND (value, 0);
         if (op0) {
           if (TREE_CODE(op0) == COMPONENT_REF) {
-        	GimpleKdmTripleWriter::ActionDataPtr actionData = mGimpleWriter->writeKdmMemberSelect(NULL_TREE /*tree const lhs*/, op0 /*tree const rhs*/, gcckdm::locationOf(op0) /*location_t const loc*/);
+        	GimpleKdmTripleWriter::ActionDataPtr actionData = mGimpleWriter->writeKdmMemberSelect(NULL_TREE /*tree const lhs*/, op0 /*tree const rhs*/, gcckdm::locationOf(op0) /*location_t const loc*/, GimpleKdmTripleWriter::StorableUnitsGlobal);
         	writeTripleContains(getSourceFileReferenceId(op0), actionData->actionId());
         	writeRelation(KdmType::HasValue(), storableUnitId, actionData->outputId());
           } else {

@@ -1812,7 +1812,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstru
   ActionDataPtr lhsData = ActionDataPtr(new ActionData());
   if (not lhs) {
     lhsData->outputId(writeKdmStorableUnit(rhs,loc));
-//    lhsData->outputId(writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc));
     mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
   } else {
     lhsData = getRhsReferenceId(lhs);
@@ -1921,7 +1920,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeBitAssign(tree 
   tree startNode = TREE_OPERAND(rhs, 2);
   long startBitId = getReferenceId(startNode);
   long lhsId = (not lhs) ? writeKdmStorableUnit(rhs,loc) : getReferenceId(lhs);
-  //  long lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc) : getReferenceId(lhs);
 
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::BitAssign());
@@ -1982,9 +1980,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
   tree op0 = TREE_OPERAND (rhs, 0); //var_decl
   tree op1 = TREE_OPERAND (rhs, 1); //index
 
-
   long lhsId = (not lhs) ? writeKdmStorableUnit(op0,loc) : getReferenceId(lhs);
-//  long lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),loc) : getReferenceId(lhs);
 
   ActionDataPtr op0Data = getRhsReferenceId(op0);
   ActionDataPtr op1Data = getRhsReferenceId(op1);
@@ -1997,14 +1993,10 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
   writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(op1, op1Data->outputId()));
   writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), RelationTarget(op0, op0Data->outputId()));
 
-
-  if (not lhs)
-  {
+  if (not lhs) {
     mKdmWriter.writeTripleContains(actionData->actionId(), lhsId);
     writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), lhsId);
-  }
-  else
-  {
+  } else {
     writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), RelationTarget(lhs, lhsId));
   }
 
@@ -2144,8 +2136,13 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 // Example: a = s.m
 //D.1716 = this->m_bar;
 //D.4427 = hp->h_length;
-GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc)
-{
+GimpleKdmTripleWriter::ActionDataPtr
+GimpleKdmTripleWriter::writeKdmMemberSelect(
+  tree const lhs,
+  tree const rhs,
+  location_t const loc,
+  const GimpleKdmTripleWriter::StorableUnitsKind storableUnitsKind
+) {
   assert(TREE_CODE(rhs) == COMPONENT_REF);
 
   expanded_location xloc = expand_location(loc);
@@ -2162,8 +2159,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
     long refId = getReferenceId(indirectRef);
     tree lhs = TREE_TYPE(indirectRef);
 
-    lhsId = writeKdmStorableUnit(lhs,loc);
-//    lhsId = writeKdmStorableUnit(getReferenceId(lhs),loc);
+    lhsId = writeKdmStorableUnit(lhs,loc,storableUnitsKind);
 
     //Resolve the indirect reference put result in temp
     ActionDataPtr ptrData = writeKdmPtrSelect(RelationTarget(lhs,lhsId), RelationTarget(indirectRef,refId));
@@ -2194,8 +2190,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
     ActionDataPtr lhsData = ActionDataPtr(new ActionData());
     if (not lhs) {
-      lhsData->outputId(writeKdmStorableUnit(rhs,loc));
-//      lhsData->outputId(writeKdmStorableUnit(getReferenceId(TREE_TYPE(rhs)),loc));
+      lhsData->outputId(writeKdmStorableUnit(rhs,loc,storableUnitsKind));
     } else {
       lhsData = getRhsReferenceId(lhs);
     }
@@ -2330,7 +2325,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
 
     //Determine lhsid
     lhsId = (not lhs) ? writeKdmStorableUnit(TREE_OPERAND(op0, 0),loc) : getReferenceId(lhs);
-//    lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(TREE_OPERAND(op0, 0))),loc) : getReferenceId(lhs);
 
     //Write Ptr Element
     actionData = writeKdmPtr(RelationTarget(lhs,lhsId), RelationTarget(NULL_TREE, selectData->outputId()));
@@ -2355,7 +2349,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
     // Example: a = &b;
 
     lhsId = (not lhs) ? writeKdmStorableUnit(op0,loc) : getReferenceId(lhs);
-//    lhsId = (not lhs) ? writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),loc) : getReferenceId(lhs);
 
     ActionDataPtr rhsData = getRhsReferenceId(op0);
     actionData = writeKdmPtr(RelationTarget(lhs,lhsId), RelationTarget(op0, rhsData->outputId()));
@@ -2407,7 +2400,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(tr
   if (not lhs) {
     lhsData = ActionDataPtr(new ActionData());
     lhsData->outputId(writeKdmStorableUnit(op0,loc));
-//    lhsData->outputId(writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)),loc));
   } else {
     lhsData = getRhsReferenceId(lhs);
   }
@@ -2455,23 +2447,38 @@ void GimpleKdmTripleWriter::writeKdmStorableUnitKindLocal(tree const var)
 }
 
 
-long GimpleKdmTripleWriter::writeKdmStorableUnit(tree const node, location_t const loc)
-{
+long
+GimpleKdmTripleWriter::writeKdmStorableUnit(
+  tree const node,
+  location_t const loc,
+  const GimpleKdmTripleWriter::StorableUnitsKind storableUnitsKind
+) {
   tree type = mKdmWriter.typedefTypeCheck(node);
   long typeId = mKdmWriter.getReferenceId(type);
-  return writeKdmStorableUnitInternal(typeId, loc);
+  return writeKdmStorableUnitInternal(typeId, loc, storableUnitsKind);
 }
 
 
-long GimpleKdmTripleWriter::writeKdmStorableUnitInternal(long const typeId, location_t const loc)
-{
+long
+GimpleKdmTripleWriter::writeKdmStorableUnitInternal(
+  long const typeId,
+  location_t const loc,
+  const GimpleKdmTripleWriter::StorableUnitsKind storableUnitsKind
+) {
   expanded_location const & xloc = expand_location(loc);
   long unitId = mKdmWriter.getNextElementId();
   mKdmWriter.writeTripleKdmType(unitId, KdmType::StorableUnit());
   if (mSettings.outputRegVarNames) {
     mKdmWriter.writeTripleName(unitId, "M." + boost::lexical_cast<std::string>(++mRegisterVariableIndex));
   }
-  mKdmWriter.writeTripleKind(unitId, KdmKind::Register());
+  if (storableUnitsKind == StorableUnitsRegister) {
+    mKdmWriter.writeTripleKind(unitId, KdmKind::Register());
+  } else if (storableUnitsKind == StorableUnitsGlobal) {
+    mKdmWriter.writeTripleKind(unitId, KdmKind::Global());
+  } else {
+    std::string msg(boost::str(boost::format("storableUnitsKind (%1%) in %2%:%3%") % storableUnitsKind % BOOST_CURRENT_FUNCTION % __LINE__));
+    mKdmWriter.writeUnsupportedComment(msg);
+  }
   mKdmWriter.writeTriple(unitId, KdmPredicate::Type(), typeId);
   mKdmWriter.writeKdmSourceRef(unitId, xloc);
   return unitId;

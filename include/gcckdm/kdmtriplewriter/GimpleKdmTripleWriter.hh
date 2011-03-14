@@ -45,6 +45,8 @@ class GimpleKdmTripleWriter
 {
 public:
 
+  typedef boost::shared_ptr<ActionData> ActionDataPtr;
+
   /**
    * Constructs a kdm triple writer that knows about GIMPLE
    * how to parse it, how to convert GIMPLE to KDM
@@ -67,6 +69,9 @@ public:
    */
   void processAstFunctionDeclarationNode(tree functionDecl);
 
+  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc);
+
+
 private:
 
   /**
@@ -82,7 +87,6 @@ private:
   };
 
   typedef std::tr1::unordered_map<expanded_location, long, ExpandedLocationHash, ExpandedLocationEqual> LocationMap;
-  typedef boost::shared_ptr<ActionData> ActionDataPtr;
   typedef std::queue<ActionDataPtr> LabelQueue;
   typedef std::tr1::unordered_map<std::string, long> LabelMap;
   typedef std::tr1::unordered_map<long, long> LongMap;
@@ -241,7 +245,6 @@ private:
    * @param rhs
    * @param loc
    */
-  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc);
   ActionDataPtr writeKdmMemberSelect(RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
   ActionDataPtr writeKdmMemberReplace(gimple const gs);

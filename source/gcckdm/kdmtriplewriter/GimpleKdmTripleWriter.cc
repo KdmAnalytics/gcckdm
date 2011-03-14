@@ -326,10 +326,10 @@ void GimpleKdmTripleWriter::writeLabelQueue(ActionDataPtr actionData, location_t
 long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 {
   //Handy debug hook code
-//  if (TREE_CODE(ast) == COMPONENT_REF)
-//  {
-//    int i  = 0;
-//  }
+  if (TREE_CODE(ast) == COMPONENT_REF)
+  {
+    int i  = 0;
+  }
 //  if (TREE_CODE(ast) == INDIRECT_REF)
 //  {
 //    int i = 0;
@@ -923,7 +923,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleConditi
 
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallStatement(gimple const gs)
 {
-  ActionDataPtr actionData(new ActionData(mKdmWriter.getNextElementId()));
+	int i = mKdmWriter.getNextElementId();
+  ActionDataPtr actionData(new ActionData(i));
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
 
   //op0 can be a VAR_DECL, PARM_DECL or FUNCTION_DECL
@@ -2123,6 +2124,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   actionData->outputId(op0Id);
   return actionData;
 }
+
 
 /** Write to LHS
  * Addresses object

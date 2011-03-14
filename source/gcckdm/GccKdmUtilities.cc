@@ -731,7 +731,7 @@ std::string getAstNodeName(tree node)
         }
         else
         {
-            std::string msg(str(boost::format("AST Type Node (%1%) in %2%") % tree_code_name[TREE_CODE(node)] % BOOST_CURRENT_FUNCTION));
+            std::string msg(str(boost::format("# WARNING: Unable to determine node name: (%1%) in %2%") % tree_code_name[TREE_CODE(node)] % BOOST_CURRENT_FUNCTION));
 //            writeUnsupportedComment(msg);
             std::cerr << msg << std::endl;
         }
@@ -745,7 +745,7 @@ std::string getAstNodeName(tree node)
       }
       default:
       {
-          std::string msg(str(boost::format("AST Type Node (%1%) in %2%") % tree_code_name[TREE_CODE(node)] % BOOST_CURRENT_FUNCTION));
+          std::string msg(str(boost::format("# WARNING: Unable to determine node name: (%1%) in %2%") % tree_code_name[TREE_CODE(node)] % BOOST_CURRENT_FUNCTION));
 //          writeUnsupportedComment(msg);
           std::cerr << msg << std::endl;
       }

@@ -45,6 +45,15 @@ class GimpleKdmTripleWriter
 {
 public:
 
+  //Flag to determine if the Kind for temporary storable units should be marked as registed vs. global.
+  enum StorableUnitsKind
+  {
+	StorableUnitsRegister = 0,
+	StorableUnitsGlobal = 1
+  };
+
+  typedef boost::shared_ptr<ActionData> ActionDataPtr;
+
   /**
    * Constructs a kdm triple writer that knows about GIMPLE
    * how to parse it, how to convert GIMPLE to KDM
@@ -67,6 +76,9 @@ public:
    */
   void processAstFunctionDeclarationNode(tree functionDecl);
 
+  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc, const GimpleKdmTripleWriter::StorableUnitsKind storableUnitsKind = StorableUnitsRegister);
+
+
 private:
 
   /**
@@ -82,7 +94,6 @@ private:
   };
 
   typedef std::tr1::unordered_map<expanded_location, long, ExpandedLocationHash, ExpandedLocationEqual> LocationMap;
-  typedef boost::shared_ptr<ActionData> ActionDataPtr;
   typedef std::queue<ActionDataPtr> LabelQueue;
   typedef std::tr1::unordered_map<std::string, long> LabelMap;
   typedef std::tr1::unordered_map<long, long> LongMap;
@@ -241,7 +252,6 @@ private:
    * @param rhs
    * @param loc
    */
-  ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc);
   ActionDataPtr writeKdmMemberSelect(RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
   ActionDataPtr writeKdmMemberReplace(gimple const gs);
@@ -279,8 +289,8 @@ private:
   ActionDataPtr writeKdmPtrSelect(RelationTarget const & writesTarget, RelationTarget const & addressesTarget);
 
 
-  long writeKdmStorableUnit(tree const node, location_t const loc);
-  long writeKdmStorableUnitInternal(long const typeId, location_t const loc);
+  long writeKdmStorableUnit(tree const node, location_t const loc, const GimpleKdmTripleWriter::StorableUnitsKind storableUnitsKind = StorableUnitsRegister);
+  long writeKdmStorableUnitInternal(long const typeId, location_t const loc, const GimpleKdmTripleWriter::StorableUnitsKind storableUnitsKind = StorableUnitsRegister);
   void writeKdmStorableUnitKindLocal(tree const var);
 
 

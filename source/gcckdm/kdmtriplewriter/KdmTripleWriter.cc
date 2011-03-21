@@ -2821,8 +2821,10 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   std::string name = nodeName(type);
 
   KdmType kdmType = KdmType::PrimitiveType();
-  if (name.find("int") != std::string::npos || name.find("long") != std::string::npos || name.find("unnamed-unsigned") != std::string::npos
-      || name.find("unnamed-signed") != std::string::npos)
+  if (name.find("int") != std::string::npos ||
+      name.find("long") != std::string::npos ||
+      name.find("unnamed-unsigned") != std::string::npos ||
+      name.find("unnamed-signed") != std::string::npos)
   {
     kdmType = KdmType::IntegerType();
   }

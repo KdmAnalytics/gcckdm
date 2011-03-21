@@ -1401,10 +1401,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleBinaryA
           }
           default:
           {
-            std::string msg(
-                boost::str(
-                    boost::format("GIMPLE binary assignment operation '%1%' (%2%) in %3% on line %4%") % op_symbol_code(gimple_assign_rhs_code(gs))
-                        % std::string(tree_code_name[gimple_assign_rhs_code(gs)]) % BOOST_CURRENT_FUNCTION % __LINE__));
+            std::string msg(boost::str(boost::format("GIMPLE binary assignment operation '%1%' (%2%) in %3% on line %4%") % op_symbol_code(gimple_assign_rhs_code(gs))% std::string(tree_code_name[gimple_assign_rhs_code(gs)]) % BOOST_CURRENT_FUNCTION % __LINE__));
             mKdmWriter.writeUnsupportedComment(msg);
             break;
           }
@@ -1418,8 +1415,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleBinaryA
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleTernaryAssignStatement(gimple const gs)
 {
   enum tree_code rhs_code = gimple_assign_rhs_code(gs);
-  std::string msg(
-      boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code]) % BOOST_CURRENT_FUNCTION));
+  std::string msg(boost::str(boost::format("GIMPLE assignment operation (%1%) in %2%") % std::string(tree_code_name[rhs_code]) % BOOST_CURRENT_FUNCTION));
   mKdmWriter.writeUnsupportedComment(msg);
   return ActionDataPtr();
 }
@@ -2197,8 +2193,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberSelect
 
     //perform memberselect using temp
     ActionDataPtr op1Data = getRhsReferenceId(op1);
-    actionData = writeKdmMemberSelect(RelationTarget(NULL_TREE, lhsId), RelationTarget(op1, op1Data->outputId()),
-        RelationTarget(NULL_TREE, ptrData->outputId()));
+    actionData = writeKdmMemberSelect(RelationTarget(NULL_TREE, lhsId), RelationTarget(op1, op1Data->outputId()), RelationTarget(NULL_TREE, ptrData->outputId()));
     actionData->startActionId(ptrData->startActionId());
 
     //contain ptr in memberselect
@@ -2323,8 +2318,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplac
   //which should be the first operand....
   ActionDataPtr lhsData = (TREE_CODE(op) == INDIRECT_REF) ? getRhsReferenceId(TREE_OPERAND(op, 0)) : getRhsReferenceId(TREE_OPERAND(lhs, 0));
   ActionDataPtr rhsData = getRhsReferenceId(rhs);
-  actionData = writeKdmMemberReplace(RelationTarget(member, memberId), RelationTarget(rhs, rhsData->outputId()),
-      RelationTarget(lhs, lhsData->outputId()));
+  actionData = writeKdmMemberReplace(RelationTarget(member, memberId), RelationTarget(rhs, rhsData->outputId()),RelationTarget(lhs, lhsData->outputId()));
   configureDataAndFlow(actionData, lhsData, rhsData);
   return actionData;
 }

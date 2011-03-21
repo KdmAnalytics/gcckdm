@@ -274,7 +274,10 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mInventoryMap(),
   mProcessedNodes(),
   mNodeQueue(),
-  mValues(), mUidGraph(),
+#if 0 //BBBB
+  mValues(),
+#endif
+  mUidGraph(),
   mUid(0),
   mUserTypes(),
   mContainment(),
@@ -300,7 +303,9 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
   mInventoryMap(),
   mProcessedNodes(),
   mNodeQueue(),
+#if 0 //BBBB
   mValues(),
+#endif
   mUidGraph(),
   mUid(0),
   mUserTypes(),
@@ -406,7 +411,7 @@ void KdmTripleWriter::processNodeQueue()
     tree node = mNodeQueue.front();
 
 #if 1 //BBBB TMP
-    if ((const unsigned long)node == 0xb76ed558) {
+    if ((const unsigned long)node == 0xb7ceba60) {
     	int junk = 123;
     }
 #endif
@@ -583,10 +588,12 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
           writeComment(msg);
         }
       }
+#if 0 //BBBB
       else if (treeCode == INTEGER_CST || treeCode == REAL_CST || treeCode == STRING_CST)
       {
-        processAstValueNode(ast);
+    	id = processAstValueNode(ast, WriteKdmContainsRelation);
       }
+#endif
       else if (treeCode == COMPONENT_REF)
       {
 #if 0 //BBBB
@@ -595,6 +602,7 @@ long KdmTripleWriter::processAstNodeInternal(tree const ast, ContainsRelationPol
     	long astId = getReferenceId(ast);
     	writeTripleContains(getSourceFileReferenceId(ast), astId);
 #else
+    	/* This should not happen since we handle COMPONENT_REF elsewhere. */
         std::string msg(str(boost::format("<%3%> AST Node (%1%) in %2%:%4%") % tree_code_name[treeCode] % BOOST_CURRENT_FUNCTION % getReferenceId(ast) % __LINE__));
         writeUnsupportedComment(msg);
 #endif
@@ -1340,7 +1348,11 @@ void KdmTripleWriter::writeEnumType(tree const enumType)
     //
     if (TREE_CODE (TREE_VALUE (tv)) == INTEGER_CST)
     {
+#if 1 //BBBB
+      long valueId = getNextElementId();
+#else
       long valueId = getReferenceId(tv);
+#endif
       int value = TREE_INT_CST_LOW (TREE_VALUE (tv));
       writeTripleKdmType(valueId, KdmType::Value());
       std::string name = boost::lexical_cast<std::string>(value);
@@ -1401,8 +1413,7 @@ void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
       }
       else
       {
-        std::string msg(
-            str(boost::format("FIXME: %1% : Expected RECORD_TYPE or UNION_TYPE. %2%:%3%") % mCompilationFile % BOOST_CURRENT_FUNCTION % __LINE__));
+        std::string msg(str(boost::format("FIXME: %1% : Expected RECORD_TYPE or UNION_TYPE. %2%:%3%") % mCompilationFile % BOOST_CURRENT_FUNCTION % __LINE__));
         writeComment(msg);
       }
     }
@@ -1413,11 +1424,20 @@ void KdmTripleWriter::processAstFieldDeclarationNode(tree const fieldDecl)
   }
 }
 
-void KdmTripleWriter::processAstValueNode(tree const val)
+long KdmTripleWriter::processAstValueNode(tree const val, ContainsRelationPolicy const containPolicy)
 {
   //  if (mValues.find(nodeName(val)) == mValues.end())
   //  {
-  writeKdmValue(val);
+  long valueId = writeKdmValue(val);
+#if 0 //BBBBB
+  if (containPolicy == WriteKdmContainsRelation) {
+    // Containment: make values contained in the source file
+    long unitId = getSourceFileReferenceId(val);
+    writeTripleContains(unitId, valueId); //??????
+    writeKdmSourceRef(valueId, val);  //???????
+  }
+#endif
+  return valueId;
   //  }
 }
 
@@ -1647,8 +1667,8 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
   lockUid(false);
 
   return callableUnitId;
-
 }
+
 
 /**
  * Just get the reference of the functionDecl and pass it along
@@ -1658,15 +1678,18 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRela
   return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, containPolicy, isTemplate, WriteSignatureUnit);
 }
 
+
 void KdmTripleWriter::lockUid(bool val)
 {
   mLockUid = val;
 }
 
+
 bool KdmTripleWriter::lockUid() const
 {
   return mLockUid;
 }
+
 
 /**
  * C++ containment is more complicated then standard C containment. In KDM we follow
@@ -2557,7 +2580,15 @@ void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree
       case INTEGER_CST:
       case REAL_CST:
       {
-        writeRelation(KdmType::HasValue(), storableUnitId, getReferenceId(value));
+#if 0 //BBBBBB
+        long valueId = getReferenceId(value);
+#else
+        long valueId = processAstValueNode(value, SkipKdmContainsRelation);
+#endif
+        writeRelation(KdmType::HasValue(), storableUnitId, valueId);
+#if 1 //BBBB
+        writeTripleContains(storableUnitId, valueId);
+#endif
         break;
       }
       default:
@@ -2594,7 +2625,11 @@ void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree
 
 long KdmTripleWriter::writeKdmValue(tree const val)
 {
+#if 0 //BBBB
   long valueId = getReferenceId(val);//getValueId(val);
+#else
+  long valueId = getNextElementId();
+#endif
   tree type = TYPE_MAIN_VARIANT(TREE_TYPE(val));
   long ref = getReferenceId(type);
 
@@ -2604,9 +2639,15 @@ long KdmTripleWriter::writeKdmValue(tree const val)
   writeTripleLinkId(valueId, name);
   writeTriple(valueId, KdmPredicate::Type(), ref);
 
+#if 0 //BBBB
   writeLanguageUnitContains(valueId);
-
+#endif
+#if 0 //BBBB
+  markNodeAsProcessed(val);
+#endif
+#if 0 //BBBB
   mValues.insert(std::make_pair(nodeName(val), valueId));
+#endif
   return valueId;
 }
 
@@ -2619,15 +2660,15 @@ bool KdmTripleWriter::hasReferenceId(tree const node) const
 long KdmTripleWriter::getReferenceId(tree const node)
 {
 #if 1 //BBBB - TMP
-	if ((long unsigned int)node == 0xb76ed534) {
+	if ((long unsigned int)node == 0xb7d6b180) {
 		int junk = 123;
-		std::cerr  << nodeName(node) << std::endl;
+//		std::cerr  << nodeName(node) << std::endl;
 	}
 #endif
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
 #if 1 //BBBB - TMP
-	if (mKdmElementId + 1 == 90) {
+	if (mKdmElementId + 1 == 79) {
 		int junk = 123;
 	}
 #endif
@@ -2668,16 +2709,34 @@ long KdmTripleWriter::getReferenceId(tree const node)
  */
 long KdmTripleWriter::getValueId(tree const node)
 {
+#if 1 //BBBBB
+
+#if 0 //BBBBB
+  long valueId = getReferenceId(node);
+  processAstNodeInternal(node);
+#else
+  long valueId = processAstValueNode(node, SkipKdmContainsRelation);
+#endif
+  return valueId;
+
+#else
+
   std::string name = nodeName(node);
   ValueMap::const_iterator i = mValues.find(name);
   long valueId = invalidId;
   if (i == mValues.end()) {
     valueId = getReferenceId(node);
+#if 0 //BBBBB
     processAstNodeInternal(node);
+#else
+    processAstValueNode(node, SkipKdmContainsRelation);
+#endif
   } else {
     valueId = i->second;
   }
   return valueId;
+
+#endif
 }
 
 
@@ -2793,6 +2852,11 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 
 long KdmTripleWriter::getNextElementId()
 {
+#if 1 //BBBB - TMP
+  if (mKdmElementId + 1 == 79) {
+	int junk = 123;
+  }
+#endif
   return ++mKdmElementId;
 }
 
@@ -3283,6 +3347,7 @@ long KdmTripleWriter::writeKdmSourceRef(long id, const expanded_location & eloc)
   return id;
 }
 
+
 void KdmTripleWriter::writeLanguageUnitContains(long const child, bool uid)
 {
   //Additions to the language unit are always unlocked.  Additions to the
@@ -3293,6 +3358,7 @@ void KdmTripleWriter::writeLanguageUnitContains(long const child, bool uid)
   writeTripleContains(KdmElementId_LanguageUnit, child, uid);
   lockUid(val);
 }
+
 
 long KdmTripleWriter::writeRelation(KdmType const & type, long const fromId, long const toId)
 {

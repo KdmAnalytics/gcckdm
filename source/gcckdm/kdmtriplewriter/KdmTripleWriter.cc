@@ -2660,7 +2660,7 @@ bool KdmTripleWriter::hasReferenceId(tree const node) const
 long KdmTripleWriter::getReferenceId(tree const node)
 {
 #if 1 //BBBB - TMP
-	if ((long unsigned int)node == 0xb7d6b180) {
+	if ((long unsigned int)node == 0xb7ceb400) {
 		int junk = 123;
 //		std::cerr  << nodeName(node) << std::endl;
 	}

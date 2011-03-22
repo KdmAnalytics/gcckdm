@@ -372,12 +372,23 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
   else
   {
     //IF we are referencing a type ensure that we are using the _real_ type
-    if (TYPE_P(ast))
-    {
+    if (TYPE_P(ast)) {
       return mKdmWriter.getReferenceId(TYPE_MAIN_VARIANT(ast));
     }
-    else
-    {
+#if 1 //BBBBB
+    else if (isValueNode(ast)) {
+      return mKdmWriter.getValueId(ast);
+#if 0 //BBBB
+      long valueId = mKdmWriter.getValueId(rhs);
+      data = ActionDataPtr(new ActionData());
+      data->outputId(valueId);
+      data->value(true);
+      long blockId = getBlockReferenceId(gimple_location(junk_gs));
+      mKdmWriter.writeTripleContains(blockId, valueId);
+#endif
+    }
+#endif
+    else {
       return mKdmWriter.getReferenceId(ast);
     }
   }
@@ -1979,10 +1990,23 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeBitAssign(tree 
     structNode = op1;
   }
   long structId = getReferenceId(structNode);
+
   tree sizeNode = TREE_OPERAND(rhs, 1);
   long sizeBitId = getReferenceId(sizeNode);
+#if 1 //BBBBB
+  if (isValueNode(sizeNode)) {
+    mKdmWriter.writeTripleContains(actionData->actionId(), sizeBitId);
+  }
+#endif
+
   tree startNode = TREE_OPERAND(rhs, 2);
   long startBitId = getReferenceId(startNode);
+#if 1 //BBBBB
+  if (isValueNode(startNode)) {
+    mKdmWriter.writeTripleContains(actionData->actionId(), startBitId);
+  }
+#endif
+
   long lhsId = (not lhs) ? writeKdmStorableUnit(rhs,loc) : getReferenceId(lhs);
 
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());

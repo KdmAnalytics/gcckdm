@@ -384,8 +384,11 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
 }
 
 //static gimple junk_gs;
-
+#if 1 //BBBB
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tree const rhs)
+#else
+GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::getRhsReferenceId(tree const rhs, const long containingActionId)
+#endif
 {
   ActionDataPtr data;
 
@@ -702,6 +705,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
                 actionData->startActionId(*currData);
               }
             }
+#if 1 //BBBBB
+            else if (isValueNode(op) && currData->hasOutputId()) {
+              mKdmWriter.writeTripleContains(actionData->actionId(), currData->outputId());
+            }
+#endif
 
             //Hook up flows if we have more than one output
             if (prevData && currData->hasActionId())
@@ -744,6 +752,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
                 actionData->startActionId(*currData);
               }
             }
+#if 1 //BBBBB
+            else if (isValueNode(op) && currData->hasOutputId()) {
+              mKdmWriter.writeTripleContains(actionData->actionId(), currData->outputId());
+            }
+#endif
 
             //Hook up flows if we have more than one output
             if (prevData && currData->hasActionId())
@@ -1110,6 +1123,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
       {
         writeKdmFlow(lastParamData->actionId(), actionData->actionId());
       }
+#if 1 //BBBBB
+      if (isValueNode(lhs) && lhsData->hasOutputId()) {
+        mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
+      }
+#endif
     }
     writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), RelationTarget(lhs, lhsData->outputId()));
   }
@@ -1851,13 +1869,18 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstru
     mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
   } else {
     lhsData = getRhsReferenceId(lhs);
-  }
 
-  if (lhsData->hasActionId()) {
-    actionData->startActionId(*lhsData);
-    writeKdmFlow(lhsData->actionId(), actionData->actionId());
-    mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->actionId());
-    actionData->outputId(lhsData->outputId());
+    if (lhsData->hasActionId()) {
+      actionData->startActionId(*lhsData);
+      writeKdmFlow(lhsData->actionId(), actionData->actionId());
+      mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->actionId());
+      actionData->outputId(lhsData->outputId());
+    }
+#if 1 //BBBBB
+    else if (isValueNode(lhs) && lhsData->hasOutputId()) {
+      mKdmWriter.writeTripleContains(actionData->actionId(), lhsData->outputId());
+    }
+#endif
   }
 
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
@@ -1883,9 +1906,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryOperati
   ActionDataPtr actionData(new ActionData(actionId));
   long lhsId = getReferenceId(lhs);
   ActionDataPtr rhsData = getRhsReferenceId(rhs);
-
-  if (rhsData->hasActionId())
-  {
+  if (rhsData->hasActionId()) {
     writeKdmFlow(rhsData->actionId(), actionId);
     actionData->startActionId(rhsData->actionId());
   }
@@ -1915,17 +1936,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrReplace(g
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrReplace());
 
   ActionDataPtr rhsData = getRhsReferenceId(rhs);
-
-  //Hook up flows and containment
-  if (rhsData->hasActionId())
-  {
+  if (rhsData->hasActionId()) {
     writeKdmFlow(rhsData->actionId(), actionData->actionId());
     actionData->startActionId(rhsData->startActionId());
     mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->actionId()));
-  }
-  else
-  {
+  } else {
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->outputId()));
 #if 1 //BBBBB
     if (isValueNode(rhs) && rhsData->hasOutputId()) {
@@ -2032,8 +2048,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArraySelect(
 
   ActionDataPtr op0Data = getRhsReferenceId(op0);
   ActionDataPtr op1Data = getRhsReferenceId(op1);
-
-  //Configure Flows and containment
   configureDataAndFlow(actionData, op0Data, op1Data);
 
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
@@ -2068,31 +2082,32 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   tree op1 = TREE_OPERAND (lhs, 1);
 
   ActionDataPtr rhsData = getRhsReferenceId(rhs);
-  long lastId = ActionData::InvalidId;
-  if (rhsData->hasActionId())
-  {
+  if (rhsData->hasActionId()) {
     actionData->startActionId(rhsData->startActionId());
     mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
-    lastId = rhsData->actionId();
   }
-  //lastId = rhsData->outputId();
+#if 1 //BBBBB
+  else if (isValueNode(rhs) && rhsData->hasOutputId()) {
+    mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->outputId());
+  }
+#endif
+
+  long lastId = ActionData::InvalidId;
+  if (rhsData->hasActionId()) {
+	lastId = rhsData->actionId();
+  }
 
   ActionDataPtr selectData;
-  if (TREE_CODE(op0) == ARRAY_REF)
-  {
+  if (TREE_CODE(op0) == ARRAY_REF) {
     //possible Multi-dimensional arrays
-    while (TREE_CODE(op0) == ARRAY_REF)
-    {
+    while (TREE_CODE(op0) == ARRAY_REF) {
       selectData = writeKdmArraySelect(NULL_TREE, op0, gimple_location(gs));
 
       //we don't have a rhs reference to an actionElement
-      if (!actionData->hasFlow())
-      {
+      if (!actionData->hasFlow()) {
         actionData->startActionId(selectData->startActionId());
-      }
-      //we have already started the flow chain
-      else
-      {
+      } else {
+        //we have already started the flow chain
         writeKdmFlow(lastId, selectData->startActionId());
       }
       mKdmWriter.writeTripleContains(actionData->actionId(), selectData->actionId());
@@ -2106,33 +2121,23 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
     selectData.reset();
   }
 
-  if (TREE_CODE(op0) == COMPONENT_REF || TREE_CODE(op0) == INDIRECT_REF)
-  {
-    if (TREE_CODE(op0) == COMPONENT_REF)
-    {
+  if (TREE_CODE(op0) == COMPONENT_REF || TREE_CODE(op0) == INDIRECT_REF) {
+    if (TREE_CODE(op0) == COMPONENT_REF) {
       //D.11082->level[1] = D.11083;
       selectData = writeKdmMemberSelect(NULL_TREE, op0, gimple_location(gs));
-    }
-    else
-    {
+    } else {
       //(*D.20312)[0] = D.20316;
       selectData = writeKdmPtr(NULL_TREE, op0, gimple_location(gs));
     }
     //mKdmWriter.writeTripleContains(actionData->actionId(), selectData->actionId());
-    if (selectData && !actionData->hasFlow())
-    {
+    if (selectData && !actionData->hasFlow()) {
       actionData->startActionId(selectData->startActionId());
     }
-  }
-  else if (TREE_CODE(op0) == VAR_DECL)
-  {
-    if (rhsData->hasActionId())
-    {
+  } else if (TREE_CODE(op0) == VAR_DECL) {
+    if (rhsData->hasActionId()) {
       writeKdmFlow(rhsData->actionId(), actionData->actionId());
     }
-  }
-  else
-  {
+  } else {
     std::string msg(boost::str(boost::format("ArrayReplace type (%1%) in %2%:%3%") % std::string(tree_code_name[TREE_CODE(op0)]) % BOOST_CURRENT_FUNCTION % __LINE__));
     mKdmWriter.writeUnsupportedComment(msg);
   }
@@ -2158,11 +2163,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
   writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->outputId())); //new value
 
   //# style->text[i] = rc_style->text[i];
-  if (selectData)
-  {
+  if (selectData) {
     mKdmWriter.writeTripleContains(actionData->actionId(), selectData->actionId());
-    if (rhsData->hasActionId())
-    {
+    if (rhsData->hasActionId()) {
       //Hook flows from rhs to the lhs
       writeKdmFlow(rhsData->actionId(), selectData->startActionId());
     }
@@ -2242,6 +2245,11 @@ GimpleKdmTripleWriter::writeKdmMemberSelect(
     } else {
       //otherwise just flow from the ptr to the memberselect
       writeKdmFlow(ptrData->actionId(), actionData->actionId());
+#if 1 //BBBBB
+      if (isValueNode(op1) && op1Data->hasOutputId()) {
+        mKdmWriter.writeTripleContains(actionData->actionId(), op1Data->outputId());
+      }
+#endif
     }
 
   } else {
@@ -2464,6 +2472,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtr(tree con
       writeKdmFlow(rhsData->actionId(), actionData->actionId());
       mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
     }
+#if 1 //BBBBB
+    else if (isValueNode(op0) && rhsData->hasOutputId()) {
+      mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->outputId());
+    }
+#endif
+
   }
   return actionData;
 }

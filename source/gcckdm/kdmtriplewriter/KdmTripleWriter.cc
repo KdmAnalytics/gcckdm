@@ -2668,7 +2668,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
 #if 1 //BBBB - TMP
-	if (mKdmElementId + 1 == 79) {
+	if (mKdmElementId + 1 == 297) {
 		int junk = 123;
 	}
 #endif
@@ -2853,7 +2853,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 79) {
+  if (mKdmElementId + 1 == 297) {
 	int junk = 123;
   }
 #endif

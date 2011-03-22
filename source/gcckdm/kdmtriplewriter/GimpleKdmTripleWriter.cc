@@ -2031,8 +2031,6 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeBitAssign(tree 
   }
 #endif
 
-  long lhsId = (not lhs) ? writeKdmStorableUnit(rhs,loc) : getReferenceId(lhs);
-
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::BitAssign());
   writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(sizeNode, sizeBitId));

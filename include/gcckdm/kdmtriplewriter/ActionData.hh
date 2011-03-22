@@ -71,7 +71,9 @@ public:
     mActionId(InvalidId),
     mStartActionId(InvalidId),
     mOutputId(InvalidId),
-    mGotoAction(false)
+    mGotoAction(false),
+    mReturnAction(false),
+    mValue(false)
   {}
 
   /**
@@ -85,7 +87,8 @@ public:
     mStartActionId(actId),
     mOutputId(InvalidId),
     mGotoAction(false),
-    mReturnAction(false)
+    mReturnAction(false),
+    mValue(false)
   {}
 
   /**
@@ -120,7 +123,6 @@ public:
     mGotoAction = gotoAction;
   }
 
-
   bool isReturnAction() const
   {
     return mReturnAction;
@@ -129,6 +131,16 @@ public:
   void returnAction(bool flag)
   {
     mReturnAction = flag;
+  }
+
+  /**
+   * Returns true if this ActionData represents a value
+   */
+  bool isValue() const { return mValue; }
+
+  void value(bool value)
+  {
+    mValue = value;
   }
 
   /**
@@ -202,6 +214,7 @@ public:
    *
    */
   bool hasActionId() const { return mActionId != InvalidId; }
+  bool hasOutputId() const { return mOutputId != InvalidId; }
 
 private:
   long mActionId;
@@ -209,6 +222,7 @@ private:
   long mOutputId;
   bool mGotoAction;
   bool mReturnAction;
+  bool mValue;
 };
 
 #endif /* GCCKDM_KDMTRIPLEWRITER_ACTIONDATA_HH_ */

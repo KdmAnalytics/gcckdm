@@ -400,6 +400,8 @@ public:
    */
   long getValueId(tree const node);
 
+  long writeKdmValue(tree const val);
+
   /**
    * Write relation of the given type from fromId to toId
    *
@@ -574,7 +576,7 @@ private:
    */
   long processAstTypeDecl(tree const typeNode);
   void processAstVariableDeclarationNode(tree const varDecl);
-  void processAstValueNode(tree const valueConst);
+  long processAstValueNode(tree const valueConst, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation);
 
   void writeVersionHeader();
 
@@ -681,7 +683,6 @@ private:
 
   long writeKdmSignatureType(tree const functionType);
   long writeKdmSourceRef(long id, tree const var);
-  long writeKdmValue(tree const val);
 
   /**
    * Write type qualifiers as Stereotypes on the declarations
@@ -746,8 +747,10 @@ private:
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
 
+#if 0 //BBBB
   /// Value cache
   ValueMap mValues;
+#endif
 
   //Graph to store generated UID's
   UidGraph mUidGraph;

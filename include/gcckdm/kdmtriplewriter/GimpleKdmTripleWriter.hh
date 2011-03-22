@@ -299,7 +299,11 @@ private:
 
 
   long getReferenceId(tree const ast);
+#if 1 //BBBB
   ActionDataPtr getRhsReferenceId(tree const rhs);
+#else
+  ActionDataPtr getRhsReferenceId(tree const rhs, const long containingActionId);
+#endif
   tree resolveCall(tree const tree);
 
   ActionDataPtr updateFlow(ActionDataPtr mainFlow, ActionDataPtr update);

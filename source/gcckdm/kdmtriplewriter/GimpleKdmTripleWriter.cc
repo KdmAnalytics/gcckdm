@@ -2578,9 +2578,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(tr
   if (not lhs)
   {
     lhsData = ActionDataPtr(new ActionData());
-  }
-  else
-  {
+    lhsData->outputId(writeKdmStorableUnit(op0,loc));
+  } else {
     lhsData = getRhsReferenceId(lhs);
   }
   ActionDataPtr rhsData = getRhsReferenceId(op0);

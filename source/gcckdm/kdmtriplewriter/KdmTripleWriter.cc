@@ -2532,7 +2532,11 @@ tree KdmTripleWriter::typedefTypeCheck(tree const node)
     type = TYPE_MAIN_VARIANT(node);
   }
 #if 1 //BBBB
+#if 1 //BBBB
+  if (type && (TREE_CODE(type) != FUNCTION_TYPE))
+#else
   if (type)
+#endif
   {
     tree tree_type = TREE_TYPE(type);
     if (tree_type)
@@ -2554,8 +2558,8 @@ tree KdmTripleWriter::typedefTypeCheck(tree const node)
 long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
 {
   long unitId = getReferenceId(var);
-#if 0 //BBBB
-  if (unitId >= 781)
+#if 1 //BBBB
+  if (unitId == 59)
   {
     int junk = 123;
   }
@@ -2728,8 +2732,8 @@ long KdmTripleWriter::getReferenceId(tree const node)
 #endif
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
-#if 0 //BBBB - TMP
-	if (mKdmElementId + 1 == 297) {
+#if 1 //BBBB - TMP
+	if (mKdmElementId + 1 == 59) {
 		int junk = 123;
 	}
 #endif
@@ -2924,7 +2928,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 297) {
+  if (mKdmElementId + 1 == 59) {
 	int junk = 123;
   }
 #endif

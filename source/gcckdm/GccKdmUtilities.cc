@@ -189,7 +189,7 @@ std::string const locationString(location_t loc)
 std::string getDemangledName(tree node)
 {
   tree mangledNameNode = NULL_TREE;
-  int demangle_opt;
+  int demangle_opt = 0;
 
   if (HAS_DECL_ASSEMBLER_NAME_P(node) &&
       DECL_NAME (node) &&
@@ -259,7 +259,11 @@ std::string getDemangledName(tree node)
         {
           if(index > braceIndex)
           {
+#if 1 //BBBB
+            demangledName.erase(0, index + 1);
+#else
             demangledName.erase(0, index + 2);
+#endif
           }
         }
 

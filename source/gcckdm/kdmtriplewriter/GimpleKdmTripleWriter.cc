@@ -127,12 +127,13 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
   }
 
   //inline functions haven't been gimplified yet so we do it to simplify processing
-  if (!gimple_has_body_p(functionDeclNode) && !DECL_EXTERNAL(functionDeclNode))
-  {
+  if (!gimple_has_body_p(functionDeclNode)) {
+#if 0 //BBBB
+   if (!DECL_EXTERNAL(functionDeclNode)) {
+#endif
     //Calling gimplify_function_tree can cause a segfaults so we first
     //perform a few manual checks to ensure the node can be gimplified
-    if (DECL_SAVED_TREE (functionDeclNode) == NULL)
-    {
+    if (DECL_SAVED_TREE (functionDeclNode) == NULL) {
       gimple_seq body = gimple_body(functionDeclNode);
 
       //this check taken from tree-cfg.c in the gcc source code
@@ -141,11 +142,12 @@ void GimpleKdmTripleWriter::processAstFunctionDeclarationNode(tree const functio
       {
         gimplify_function_tree(functionDeclNode);
       }
-    }
-    else
-    {
+    } else {
       gimplify_function_tree(functionDeclNode);
     }
+#if 0 //BBBB
+   }
+#endif
   }
 
   if (gimple_has_body_p(functionDeclNode))

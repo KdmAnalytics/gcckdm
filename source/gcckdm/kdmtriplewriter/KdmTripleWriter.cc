@@ -2559,7 +2559,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
 {
   long unitId = getReferenceId(var);
 #if 1 //BBBB
-  if (unitId == 59)
+  if (unitId == 62)
   {
     int junk = 123;
   }
@@ -2732,16 +2732,16 @@ long KdmTripleWriter::getReferenceId(tree const node)
 #endif
   long retValue(-1);
   std::pair<TreeMap::iterator, bool> result = mReferencedNodes.insert(std::make_pair(node, mKdmElementId + 1));
-#if 1 //BBBB - TMP
-	if (mKdmElementId + 1 == 59) {
-		int junk = 123;
-	}
-#endif
   if (result.second)
   {
     //if we haven't processed this node before new node....queue it node for later processing
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
+#if 1 //BBBB - TMP
+      if (mKdmElementId + 1 == 62) {
+		int junk = 123;
+	  }
+#endif
       //Keeping this here for debugging
       //      fprintf(stderr,"mNodeQueue.push: %p <%ld>\n", node, mKdmElementId + 1);
       mNodeQueue.push(node);
@@ -2928,7 +2928,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 59) {
+  if (mKdmElementId + 1 == 62) {
 	int junk = 123;
   }
 #endif

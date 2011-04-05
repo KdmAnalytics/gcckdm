@@ -2558,8 +2558,8 @@ tree KdmTripleWriter::typedefTypeCheck(tree const node)
 long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
 {
   long unitId = getReferenceId(var);
-#if 1 //BBBB
-  if (unitId == 62)
+#if 0 //BBBB
+  if (unitId == 53)
   {
     int junk = 123;
   }
@@ -2738,7 +2738,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 62) {
+      if (mKdmElementId + 1 == 55) {
 		int junk = 123;
 	  }
 #endif
@@ -2928,7 +2928,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 62) {
+  if (mKdmElementId + 1 == 55) {
 	int junk = 123;
   }
 #endif

@@ -1975,7 +1975,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrReplace(g
     writeKdmFlow(rhsData->actionId(), actionData->actionId());
     actionData->startActionId(rhsData->startActionId());
     mKdmWriter.writeTripleContains(actionData->actionId(), rhsData->actionId());
+#if 1 //BBBBB
+    writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->outputId()));
+#else
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->actionId()));
+#endif
   } else {
     writeKdmActionRelation(KdmType::Reads(), actionData->actionId(), RelationTarget(rhs, rhsData->outputId()));
 #if 1 //BBBBB

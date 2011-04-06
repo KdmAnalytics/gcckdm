@@ -1100,8 +1100,34 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
       std::string name(nodeName(templateDecl));
       writeTripleKdmType(templateUnitId, KdmType::TemplateUnit());
       writeTripleName(templateUnitId, name);
+#if 1 //BBBB
+	  writeTripleLinkId(templateUnitId, name);
+#endif
       writeKdmSourceRef(templateUnitId, templateDecl);
       writeKdmCxxContains(templateUnitId, templateDecl);
+
+#if 0 //TMP BBBBBB
+	  std::string name(nodeName(member));
+	  writeTripleName(memberId, name);
+	  writeTripleLinkId(memberId, name);
+#endif
+#if 0 //TMP BBBBBB
+      writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
+#endif
+#if 0 //TMP BBBBBB
+      std::string name(nodeName(functionType));
+      long signatureId = getReferenceId(functionType);
+      writeTripleKdmType(signatureId, KdmType::Signature());
+      writeTripleName(signatureId, name);
+      writeTripleLinkId(signatureId, name);
+#endif
+#if 0 //TMP BBBBBB
+      std::string enumName = nodeName(enumType);
+      std::string linkName = (enumName == gcckdm::constants::getUnamedNodeString()) ? getLinkIdForType(enumType) : enumName;
+      writeTripleName(enumId, enumName);
+      writeTripleLinkId(enumId, linkName);
+#endif
+
 
       // Write TemplateParameters
       tree parms = DECL_TEMPLATE_PARMS (templateDecl);
@@ -1251,6 +1277,9 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
           name = gcckdm::constants::getUnamedNodeString();
         }
         writeTripleName(id, name);
+#if 1 //BBBB
+        writeTripleLinkId(id, name);
+#endif
       }
 
       writeKdmSourceRef(id, typeNode);

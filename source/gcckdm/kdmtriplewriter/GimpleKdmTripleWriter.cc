@@ -378,12 +378,8 @@ long GimpleKdmTripleWriter::getReferenceId(tree const ast)
     else if (isValueNode(ast)) {
       return mKdmWriter.getValueId(ast);
 #if 0 //BBBB
-      long valueId = mKdmWriter.getValueId(rhs);
-      data = ActionDataPtr(new ActionData());
-      data->outputId(valueId);
-      data->value(true);
-      long blockId = getBlockReferenceId(gimple_location(junk_gs));
-      mKdmWriter.writeTripleContains(blockId, valueId);
+      op1Id = mKdmWriter.getValueId(op1);
+      mKdmWriter.writeTripleContains(actionData->actionId(), op1Id);
 #endif
     }
 #endif
@@ -1712,6 +1708,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleSwitchS
   //switch variable
   tree index = gimple_switch_index(gs);
   long indexId = getReferenceId(index);
+#if 1 //BBBBB
+  if (isValueNode(index)) {
+    mKdmWriter.writeTripleContains(actionId, indexId);
+  }
+#endif
   mKdmWriter.writeTripleKind(actionId, KdmKind::Switch());
   writeKdmActionRelation(KdmType::Reads(), actionId, RelationTarget(index, indexId));
   if (gimple_location(gs))

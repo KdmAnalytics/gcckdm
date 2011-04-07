@@ -2767,7 +2767,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 55) {
+      if (mKdmElementId + 1 == 16425) {
 		int junk = 123;
 	  }
 #endif
@@ -2957,7 +2957,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 55) {
+  if (mKdmElementId + 1 == 16425) {
 	int junk = 123;
   }
 #endif

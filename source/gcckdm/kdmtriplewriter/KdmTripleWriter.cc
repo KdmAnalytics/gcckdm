@@ -665,7 +665,9 @@ long KdmTripleWriter::processAstDeclarationNode(tree const decl, ContainsRelatio
     }
     case PARM_DECL:
     {
+#if 0 //BBBB
       writeComment("FIXME: Do we need these parm_decls?");
+#endif
       return id;
     }
     case TYPE_DECL:
@@ -701,7 +703,9 @@ long KdmTripleWriter::processAstDeclarationNode(tree const decl, ContainsRelatio
       //    }
     case LABEL_DECL:
     {
+#if 0 //BBBB
       writeComment("FIXME: We are skipping a label_decl here is it needed?");
+#endif
       //      processAstLabelDeclarationNode(decl);
       return id;
     }
@@ -2879,10 +2883,12 @@ long KdmTripleWriter::getSourceFileReferenceId(tree const node)
     //      unitId = KdmElementId_CompilationUnit;
     //    }
 
+#if 0 //BBBBB  This also produces warnings on inline functions defined within class, which is undesirable. To remove completely.
     if (DECL_P(node) && DECL_EXTERNAL(node))
     {
       writeComment("WARNING: External element '" + nodeName(node) + "' found within CompilationUnit '" + mCompilationFile.string());
     }
+#endif
     unitId = KdmElementId_CompilationUnit;
   }
   return unitId;

@@ -1189,7 +1189,9 @@ void GimpleKdmTripleWriter::processGimpleGotoStatement(gimple const gs)
   if (!gimple_location(gs))
   {
     //this goto doesn't have a location.... use the destination location?
+#if 0 //BBBB
     mKdmWriter.writeComment("FIXME: This GOTO doesn't have a location... what should we use instead");
+#endif
     actionData->gotoAction(true);
     mLabelQueue.push(actionData);
     mLabelFlag = true;
@@ -1235,14 +1237,18 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       //Casting a pointer
       if (TREE_CODE(rhsNode) == ADDR_EXPR)
       {
+#if 0 //BBBBB
         mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
+#endif
         actionData = writeKdmPtr(gs);
         break;
       }
       else
       {
         //Simple cast, no pointers or references
+#if 0 //BBBBB
         mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
+#endif
         actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
       }
       break;
@@ -1994,7 +2000,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrReplace(g
 
   //Have to determine if there is a bug in the spec here or not
   //where does the write relationship go?
+#if 0 //BBBB
   mKdmWriter.writeComment("FIXME: KDM spec states there should be a writes relationship here.. ");
+#endif
   //writeKdmActionRelation(KdmType::Writes(), actionId, lhsId);
   return actionData;
 }
@@ -2230,7 +2238,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmArrayReplace
 
   //Have to determine if there is a bug in the spec here or not
   //where does the write relationship go?
+#if 0 //BBBB
   mKdmWriter.writeComment("FIXME: KDM spec states there should be a writes relationship here..");
+#endif
   actionData->outputId(op0Id);
   return actionData;
 }
@@ -2607,9 +2617,12 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmPtrSelect(Re
   mKdmWriter.writeTripleKdmType(actionData->actionId(), KdmType::ActionElement());
   mKdmWriter.writeTripleKind(actionData->actionId(), KdmKind::PtrSelect());
   writeKdmActionRelation(KdmType::Writes(), actionData->actionId(), writesTarget);
+
   //FIXME: We skip this reads for the moment need to clarification in the KDM Spec
   //writeKdmActionRelation(KdmType::Reads(), actionId, readsId);
+#if 0 //BBBB
   mKdmWriter.writeComment("FIXME: KDM spec states there should be a reads relationship here..");
+#endif
 
   writeKdmActionRelation(KdmType::Addresses(), actionData->actionId(), addressesTarget);
   actionData->outputId(writesTarget.id);

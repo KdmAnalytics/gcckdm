@@ -2260,6 +2260,7 @@ bool KdmTripleWriter::updateUidGraph(long const parent, long const child)
   }
   return retVal;
 }
+
 void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & name)
 {
   writeTriple(subject, KdmPredicate::LinkId(), name);
@@ -2723,29 +2724,14 @@ void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree
 
 long KdmTripleWriter::writeKdmValue(tree const val)
 {
-#if 0 //BBBB
-  long valueId = getReferenceId(val);//getValueId(val);
-#else
   long valueId = getNextElementId();
-#endif
   tree type = TYPE_MAIN_VARIANT(TREE_TYPE(val));
   long ref = getReferenceId(type);
-
   writeTripleKdmType(valueId, KdmType::Value());
   std::string name = nodeName(val);
   writeTripleName(valueId, name);
   writeTripleLinkId(valueId, name);
   writeTriple(valueId, KdmPredicate::Type(), ref);
-
-#if 0 //BBBB
-  writeLanguageUnitContains(valueId);
-#endif
-#if 0 //BBBB
-  markNodeAsProcessed(val);
-#endif
-#if 0 //BBBB
-  mValues.insert(std::make_pair(nodeName(val), valueId));
-#endif
   return valueId;
 }
 

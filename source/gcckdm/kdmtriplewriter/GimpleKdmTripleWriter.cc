@@ -1810,31 +1810,42 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
 
   //If the target is external then we replace the requested relationship with a CompliesTo and a LinkSrc
   //Bitfields are external however Nick wants them to have writes instead of compilesTo
-  if (target.node != NULL_TREE && (DECL_P(target.node) && !DECL_BIT_FIELD(target.node)) && DECL_EXTERNAL(target.node))
-  {
-    std::string nodeName(gcckdm::getAstNodeName(target.node));
-    if (type == KdmType::Addresses())
-    {
-      mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkAddresssPrefix + nodeName);
-    }
-    else if (type == KdmType::Reads())
-    {
-      mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkReadsPrefix + nodeName);
-    }
-    else if (type == KdmType::Writes())
-    {
-      mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkWritesPrefix + nodeName);
-    }
-    else if (type == KdmType::Calls())
-    {
-      mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkCallsPrefix + nodeName);
-    }
-    mKdmWriter.writeTripleKdmType(arId, KdmType::CompliesTo());
+  if (target.node != NULL_TREE) {
+	if (DECL_P(target.node)) {
+	  if (!DECL_BIT_FIELD(target.node)) {
+	    if (DECL_EXTERNAL(target.node)) {
+
+	      std::string nodeName(gcckdm::getAstNodeName(target.node));
+	      if (type == KdmType::Addresses())
+	      {
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkAddresssPrefix + nodeName);
+	      }
+	      else if (type == KdmType::Reads())
+	      {
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkReadsPrefix + nodeName);
+	      }
+	      else if (type == KdmType::Writes())
+	      {
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkWritesPrefix + nodeName);
+	      }
+	      else if (type == KdmType::Calls())
+	      {
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkCallsPrefix + nodeName);
+	      }
+	      mKdmWriter.writeTripleKdmType(arId, KdmType::CompliesTo());
+
+	      mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
+	      mKdmWriter.writeTriple(arId, KdmPredicate::To(), target.id);
+	      mKdmWriter.writeTripleContains(fromId, arId, false);
+
+	      return arId;
+	    }
+	  }
+	}
   }
-  else
-  {
-    mKdmWriter.writeTripleKdmType(arId, type);
-  }
+
+  mKdmWriter.writeTripleKdmType(arId, type);
+
   mKdmWriter.writeTriple(arId, KdmPredicate::From(), fromId);
   mKdmWriter.writeTriple(arId, KdmPredicate::To(), target.id);
   mKdmWriter.writeTripleContains(fromId, arId, false);

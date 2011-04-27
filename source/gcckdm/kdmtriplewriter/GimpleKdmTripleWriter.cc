@@ -1813,7 +1813,7 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
   if (target.node != NULL_TREE) {
 	if (DECL_P(target.node)) {
       if (DECL_EXTERNAL(target.node)) {
-	    if (!DECL_BIT_FIELD(target.node)) {
+	    if (TREE_CODE(target.node) != FIELD_DECL || !DECL_BIT_FIELD(target.node)) {
 
 	      std::string nodeName(gcckdm::getAstNodeName(target.node));
 	      if (type == KdmType::Addresses())

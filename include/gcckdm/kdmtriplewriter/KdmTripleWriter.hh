@@ -732,8 +732,7 @@ private:
    * FuncPtr funcs[] = { foo, bar }
    *
    */
-  void writeHasValueRelationships(const long storableUnitId, const tree constructor);
-
+  void writeHasValueRelationships(const tree var, const tree constructor);
 
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
   long mKdmElementId; /// The current element id, incremented for each new element

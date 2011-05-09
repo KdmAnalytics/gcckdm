@@ -2508,7 +2508,7 @@ void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
     tree declInitial = DECL_INITIAL(var);
     if (declInitial && declInitial != error_mark_node && TREE_CODE(declInitial) == CONSTRUCTOR)
     {
-      writeHasValueRelationships(unitId, declInitial);
+      writeHasValueRelationships(var, declInitial);
     }
   }
 }
@@ -2626,76 +2626,146 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   return unitId;
 }
 
-
 /**
  * Write a hasValue Relation for each value contained in the constructor/initializer
  *
  * code lifted from print-tree.c
  */
-void KdmTripleWriter::writeHasValueRelationships(long const storableUnitId, tree constructor)
+void KdmTripleWriter::writeHasValueRelationships(const tree var, const tree constructor)
 {
+  const long storableUnitId = getReferenceId(var);
   unsigned HOST_WIDE_INT cnt;
-  tree index, value;
+  tree index, value0;
   VEC_length (constructor_elt, CONSTRUCTOR_ELTS (constructor));
-  FOR_EACH_CONSTRUCTOR_ELT (CONSTRUCTOR_ELTS (constructor), cnt, index, value)
+  FOR_EACH_CONSTRUCTOR_ELT (CONSTRUCTOR_ELTS (constructor), cnt, index, value0)
   {
-    switch (TREE_CODE(value))
-    {
-      case ADDR_EXPR:
-      {
-        tree op0 = TREE_OPERAND (value, 0);
-        if (op0)
-        {
-          if (TREE_CODE(op0) == COMPONENT_REF)
-          {
-            GimpleKdmTripleWriter::ActionDataPtr actionData = mGimpleWriter->writeKdmMemberSelect(NULL_TREE /*tree const lhs*/,
-                op0 /*tree const rhs*/, gcckdm::locationOf(op0) /*location_t const loc*/, GimpleKdmTripleWriter::StorableUnitsGlobal);
-            writeTripleContains(getSourceFileReferenceId(op0), actionData->actionId());
-            writeRelation(KdmType::HasValue(), storableUnitId, actionData->outputId());
-          }
-          else
-          {
-            long id = getReferenceId(op0);
-            writeRelation(KdmType::HasValue(), storableUnitId, id);
-            //            std::string msg(str(boost::format("Storable unit <%3%>: Value node (%1%) with operand (%5%) in %2%:%4%") % tree_code_name[TREE_CODE(value)] % BOOST_CURRENT_FUNCTION % storableUnitId % __LINE__ % tree_code_name[TREE_CODE(op0)]));
-            //            writeUnsupportedComment(msg);
-          }
-        }
-        else
-        {
-#if 1 //BBBB
-          std::string msg(str(boost::format("Storable unit <%3%>: Value node (%1%) with NULL operand in %2%:%4%") % tree_code_name[TREE_CODE(value)] % BOOST_CURRENT_FUNCTION % storableUnitId % __LINE__));
-          writeUnsupportedComment(msg);
+	tree value = value0;
+	if (value != NULL) {
+      bool changed;
+	  do {
+		changed = false;
+		switch (TREE_CODE(value)) {
+		  case NOP_EXPR:
+		  {
+			value = TREE_OPERAND(value, 0);
+			changed = true;
+			break;
+		  }
+		  case ADDR_EXPR:
+		  {
+			value = TREE_OPERAND(value, 0);
+			changed = true;
+			break;
+		  }
+		  case ARRAY_REF:
+		  {
+			value = TREE_OPERAND(value, 0);
+			changed = true;
+			break;
+		  }
+		  case POINTER_PLUS_EXPR:
+	      {
+			value = TREE_OPERAND(value, 0);
+			changed = true;
+			break;
+		  }
+	      case COMPONENT_REF:
+	      {
+	    	     tree writesTarget;
+	    	     long writesTargetId;
+	    	     if (index && TREE_CODE(index) == FIELD_DECL) {
+	    	       writesTarget = index;
+	    	       writesTargetId = getReferenceId(index);
+	    	     } else {
+	    	       tree type = TYPE_MAIN_VARIANT(TREE_TYPE(var));
+	    	       long typeId = getReferenceId(type);
+	    	       writesTarget = type;
+	    	       writesTargetId = typeId;
+	    	     }
+	        tree op0 = value;
+	        GimpleKdmTripleWriter::ActionDataPtr op0actionData = mGimpleWriter->writeKdmMemberSelect(NULL_TREE /*tree const lhs*/,
+	          op0 /*tree const rhs*/, gcckdm::locationOf(op0) /*location_t const loc*/, GimpleKdmTripleWriter::StorableUnitsGlobal);
+	    	GimpleKdmTripleWriter::ActionDataPtr actionData = mGimpleWriter->writeKdmMemberReplace(
+	    	  GimpleKdmTripleWriter::RelationTarget(writesTarget, writesTargetId) /*RelationTarget(member, memberId)*/,
+	    	  GimpleKdmTripleWriter::RelationTarget(NULL_TREE /*actionData->output()?????*/, op0actionData->outputId()),
+	    	  GimpleKdmTripleWriter::RelationTarget(var, storableUnitId));
+	        //GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplace(
+	        //          RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
+	    	writeTripleContains(getSourceFileReferenceId(op0), op0actionData->actionId());
+	        writeTripleContains(storableUnitId, actionData->actionId());
+	        break;
+	      }
+	      case STRING_CST:
+	      case INTEGER_CST:
+	      case REAL_CST:
+	      {
+	    	     tree writesTarget;
+	    	     long writesTargetId;
+	    	     if (index && TREE_CODE(index) == FIELD_DECL) {
+	    	       writesTarget = index;
+	    	       writesTargetId = getReferenceId(index);
+	    	     } else {
+	    	       tree type = TYPE_MAIN_VARIANT(TREE_TYPE(var));
+	    	       long typeId = getReferenceId(type);
+	    	       writesTarget = type;
+	    	       writesTargetId = typeId;
+	    	     }
+	        long valueId = processAstValueNode(value, SkipKdmContainsRelation);
+	    	GimpleKdmTripleWriter::ActionDataPtr actionData = mGimpleWriter->writeKdmMemberReplace(
+	    	  GimpleKdmTripleWriter::RelationTarget(writesTarget, writesTargetId) /*RelationTarget(member, memberId)*/,
+	    	  GimpleKdmTripleWriter::RelationTarget(value, valueId),
+	    	  GimpleKdmTripleWriter::RelationTarget(var, storableUnitId));
+	    	//GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplace(
+	        //          RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
+	        writeTripleContains(actionData->actionId(), valueId);
+	        writeTripleContains(storableUnitId, actionData->actionId());
+	        break;
+	      }
+	      case CONSTRUCTOR:
+	      {
+#if 0 //BBBB
+	        writeHasValueRelationships(var, value);
 #endif
-        }
-        break;
-      }
-      case CONSTRUCTOR:
-      {
-        writeHasValueRelationships(storableUnitId, value);
-        break;
-      }
-      case STRING_CST:
-      case INTEGER_CST:
-      case REAL_CST:
-      {
-#if 0 //BBBBBB
-        long valueId = getReferenceId(value);
+	        break;
+	      }
+	      default:
+	      {
+#if 1 //BBBB
+	    	tree writesTarget;
+	    	long writesTargetId;
+	    	if (index && TREE_CODE(index) == FIELD_DECL) {
+	    	  writesTarget = index;
+	    	  writesTargetId = getReferenceId(index);
+	    	} else {
+	    	  tree type = TYPE_MAIN_VARIANT(TREE_TYPE(var));
+	    	  long typeId = getReferenceId(type);
+	    	  writesTarget = type;
+	    	  writesTargetId = typeId;
+	    	}
+	        long valueId = getReferenceId(value);
+	      	GimpleKdmTripleWriter::ActionDataPtr actionData = mGimpleWriter->writeKdmMemberReplace(
+	      	  GimpleKdmTripleWriter::RelationTarget(writesTarget, writesTargetId) /*RelationTarget(member, memberId)*/,
+	      	  GimpleKdmTripleWriter::RelationTarget(value, valueId),
+	      	  GimpleKdmTripleWriter::RelationTarget(var, storableUnitId));
+	        //GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmMemberReplace(
+	        //          RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
+	        writeTripleContains(storableUnitId, actionData->actionId());
 #else
-        long valueId = processAstValueNode(value, SkipKdmContainsRelation);
+	        std::string msg(str(boost::format("Storable unit <%3%>: Unexpected CONSTRUCTOR element (%1%) in %2%:%4%") % tree_code_name[TREE_CODE(value)] % BOOST_CURRENT_FUNCTION % storableUnitId % __LINE__));
+	        writeUnsupportedComment(msg);
 #endif
-        writeRelation(KdmType::HasValue(), storableUnitId, valueId);
+	        break;
+	      }
+		}
+	  } while (changed);
 #if 1 //BBBB
-        writeTripleContains(storableUnitId, valueId);
+    } else {
+      std::string msg(str(boost::format("Storable unit <%3%>: CONSTRUCTOR element (%1%) with NULL operand in %2%:%4%") % tree_code_name[TREE_CODE(value)] % BOOST_CURRENT_FUNCTION % storableUnitId % __LINE__));
+      writeUnsupportedComment(msg);
 #endif
-        break;
-      }
-      default:
-        break;
     }
   }
 }
-
 
 //void KdmTripleWriter::writeKdmPtr(tree const addrExpr)
 //{
@@ -2743,8 +2813,8 @@ bool KdmTripleWriter::hasReferenceId(tree const node) const
 
 long KdmTripleWriter::getReferenceId(tree const node)
 {
-#if 0 //BBBB - TMP
-	if ((long unsigned int)node == 0xb7ceb400) {
+#if 1 //BBBB - TMP
+	if ((long unsigned int)node == 0xb7d68480) {
 		int junk = 123;
 //		std::cerr  << nodeName(node) << std::endl;
 	}

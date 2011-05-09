@@ -79,8 +79,6 @@ public:
   ActionDataPtr writeKdmMemberSelect(tree const lhs, tree const rhs, location_t const loc, const GimpleKdmTripleWriter::StorableUnitsKind storableUnitsKind = StorableUnitsRegister);
 
 
-private:
-
   /**
    * Wrapper class to allow action relationships to know the actual node as well as the id
    */
@@ -92,6 +90,9 @@ private:
     tree node;
     long id;
   };
+
+
+private:
 
   typedef std::tr1::unordered_map<expanded_location, long, ExpandedLocationHash, ExpandedLocationEqual> LocationMap;
   typedef std::queue<ActionDataPtr> LabelQueue;
@@ -256,9 +257,11 @@ private:
 
   ActionDataPtr writeKdmMemberReplace(gimple const gs);
   ActionDataPtr writeKdmMemberReplace(tree const lhs, tree const op, tree const rhs, location_t const loc);
+
+public:
   ActionDataPtr writeKdmMemberReplace(RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
-
+private:
   ActionDataPtr writeKdmPtr(gimple const gs);
 
   ActionDataPtr writeKdmActionElement(KdmKind const & kind, RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);

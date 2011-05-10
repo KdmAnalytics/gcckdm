@@ -2644,7 +2644,12 @@ void KdmTripleWriter::writeHasValueRelationships(const tree var, const tree cons
       bool changed;
 	  do {
 		changed = false;
-		switch (TREE_CODE(value)) {
+    	if (TREE_OPERAND_LENGTH(value) > 0) {
+          value = TREE_OPERAND(value, 0);
+          changed = true;
+    	} else {
+		 switch (TREE_CODE(value)) {
+#if 0 //BBBB
 		  case NOP_EXPR:
 		  {
 			value = TREE_OPERAND(value, 0);
@@ -2669,6 +2674,13 @@ void KdmTripleWriter::writeHasValueRelationships(const tree var, const tree cons
 			changed = true;
 			break;
 		  }
+		  case COMPOUND_LITERAL_EXPR:
+	      {
+			value = TREE_OPERAND(value, 0);
+			changed = true;
+			break;
+		  }
+#endif
 	      case COMPONENT_REF:
 	      {
 	    	     tree writesTarget;
@@ -2723,13 +2735,19 @@ void KdmTripleWriter::writeHasValueRelationships(const tree var, const tree cons
 	      }
 	      case CONSTRUCTOR:
 	      {
-#if 0 //BBBB
+#if 1 //BBBB
 	        writeHasValueRelationships(var, value);
 #endif
 	        break;
 	      }
 	      default:
 	      {
+#if 1 //BBBB
+	    	if (TREE_OPERAND_LENGTH(value) > 0) {
+		        std::string msg(str(boost::format("Storable unit <%3%>:  TREE_OPERAND_LENGTH(value == %1%) > 0 in %2%:%4%") % tree_code_name[TREE_CODE(value)] % BOOST_CURRENT_FUNCTION % storableUnitId % __LINE__));
+		        writeUnsupportedComment(msg);
+	    	}
+#endif
 #if 1 //BBBB
 	    	tree writesTarget;
 	    	long writesTargetId;
@@ -2756,7 +2774,8 @@ void KdmTripleWriter::writeHasValueRelationships(const tree var, const tree cons
 #endif
 	        break;
 	      }
-		}
+		 }
+	    }
 	  } while (changed);
 #if 1 //BBBB
     } else {

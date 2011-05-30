@@ -71,6 +71,7 @@ public:
     mActionId(InvalidId),
     mStartActionId(InvalidId),
     mOutputId(InvalidId),
+//    mDataElemId(InvalidId),
     mGotoAction(false),
     mReturnAction(false),
     mValue(false)
@@ -79,32 +80,16 @@ public:
   /**
    *  Creates an ActionData object setting the actionid, startActionId to the given id.
    *  The outputId is set to InvalidId and it's assumed this isn't a gotoAction
-   *  the
-   *
    */
   ActionData(long actId) :
     mActionId(actId),
     mStartActionId(actId),
     mOutputId(InvalidId),
+//    mDataElemId(InvalidId),
     mGotoAction(false),
     mReturnAction(false),
     mValue(false)
   {}
-
-  /**
-   * The subject id of the action element this actionData represents
-   *
-   * @return the subject id of the action element being
-   */
-  long actionId() const { return mActionId; }
-
-  /**
-   * Sets the action id to the given value.  Note: users should probably also set the
-   * startActionId if they use this method
-   *
-   * @param id of the KDM action element being tracked
-   */
-  void actionId(long id) { mActionId = id; }
 
   /**
    * Returns true if this ActionData represents a goto KDM element
@@ -194,32 +179,36 @@ public:
     return (mActionId != InvalidId) && (mStartActionId != InvalidId) && mActionId != mStartActionId;
   }
 
+  /**
+   * The subject id of the action element this actionData represents
+   *
+   * @return the subject id of the action element being
+   */
+  long actionId() const { return mActionId; }
 
   /**
-   * Returns the output id for this ActionData.  If this ActionData doesn't have an outputId
-   * it returns InvalidId
+   * Sets the action id to the given value.  Note: users should probably also set the
+   * startActionId if they use this method
    *
-   * @return the id of the a storeable unit or InvalidId if there is not output id
+   * @param id of the KDM action element being tracked
    */
-  long outputId() const { return mOutputId; }
+  void actionId(long id) { mActionId = id; }
 
-  /**
-   *  Set the outputId of this ActionData to the given id.
-   *
-   *  @param id the id of the storableunit representing this actionData
-   */
-  void outputId(long id) { mOutputId = id; }
-
-  /**
-   *
-   */
   bool hasActionId() const { return mActionId != InvalidId; }
+
+  long outputId() const { return mOutputId; }
+  void outputId(long id) { mOutputId = id; }
   bool hasOutputId() const { return mOutputId != InvalidId; }
+
+//  long dataElemId() const { return mDataElemId; }
+//  void dataElemId(long id) { mDataElemId = id; }
+//  bool hasDataElemId() const { return mDataElemId != InvalidId; }
 
 private:
   long mActionId;
   long mStartActionId;
   long mOutputId;
+//  long mDataElemId; /* KDM DataElement, i.e. the StorableUnit/ItemUnit/MemberUnit to be "Written" to. */
   bool mGotoAction;
   bool mReturnAction;
   bool mValue;

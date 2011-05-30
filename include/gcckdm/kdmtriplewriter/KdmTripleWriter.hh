@@ -343,6 +343,9 @@ public:
    */
   long getReferenceId(tree const node);
 
+  long getId(tree const node);
+  long getId_orInvalidIdForNULL(tree const node);
+
   /**
    * Returns the next available element Id.
    *
@@ -719,20 +722,8 @@ private:
    */
   bool updateUidGraph(const long parent, const long child);
 
-
-  /**
-   * Write hasValue relationships for cases where we need to detect values of intialized variables:
-   *
-   * For example:
-   *
-   * typedef void (*FuncPtr)();
-   *
-   * void foo()
-   * void bar()
-   * FuncPtr funcs[] = { foo, bar }
-   *
-   */
-  void writeHasValueRelationships(const tree var, const tree constructor);
+  void writeVarInitRels(const tree var, tree index, tree value);
+  void writeVarInitConstructor(const tree var, const tree constructor);
 
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
   long mKdmElementId; /// The current element id, incremented for each new element

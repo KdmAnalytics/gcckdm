@@ -89,6 +89,7 @@ private:
     KdmKind_TypeCast,
     KdmKind_Exception,
     KdmKind_CatchAll,
+    KdmKind_Init,
 
     // CallableKinds
     KdmKind_External,
@@ -128,6 +129,7 @@ public:
   static const KdmKind PtrSelect()            { return KdmKind(KdmKind_PtrSelect, "PtrSelect");  }
   static const KdmKind PtrCall()              { return KdmKind(KdmKind_PtrCall, "PtrCall");  }
   static const KdmKind Local()                { return KdmKind(KdmKind_Local, "local");  }
+  static const KdmKind Static()               { return KdmKind(KdmKind_Local, "static");  }
   static const KdmKind Global()               { return KdmKind(KdmKind_Local, "global");  }
   static const KdmKind Condition()            { return KdmKind(KdmKind_Local, "Condition"); }
   static const KdmKind Nop()                  { return KdmKind(KdmKind_Nop, "Nop"); }
@@ -173,6 +175,7 @@ public:
   static const KdmKind TypeCast()             { return KdmKind(KdmKind_TypeCast, "TypeCast"); }
   static const KdmKind Exception()            { return KdmKind(KdmKind_Exception, "Exception"); }
   static const KdmKind CatchAll()             { return KdmKind(KdmKind_CatchAll, "CatchAll"); }
+  static const KdmKind Init()                 { return KdmKind(KdmKind_Init, "Init");  }
 
   // CallableKind
   static const KdmKind External()             { return KdmKind(KdmKind_External, "external"); }

@@ -45,6 +45,8 @@ class GimpleKdmTripleWriter
 {
 public:
 
+  static long const invalidId = -1;
+
   //Flag to determine if the Kind for temporary storable units should be marked as registed vs. global.
   enum StorableUnitsKind
   {
@@ -229,24 +231,28 @@ private:
   long writeKdmExitFlow(long const fromId, long const toId);
 
   void writeKdmUnaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhsTarget);
-  void writeKdmBinaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhs1Target, RelationTarget const & rhs2Target);
+  void writeKdmBinaryRelationships(long const actionId, RelationTarget const & lhsDataElementTarget, RelationTarget const & lhsStorableUnitTarget, RelationTarget const & rhs1Target, RelationTarget const & rhs2Target);
 
   ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
   ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
   ActionDataPtr writeKdmUnaryConstructor(gimple const gs);
-  ActionDataPtr writeKdmUnaryConstructor(tree const lhs, tree const rhs, location_t const loc);
+public:
+  tree skipNOPs(tree value);
+  tree skip_all_COMPOUND_LITERAL_EXPR_and_DECL_EXPR(tree value);
+  ActionDataPtr writeKdmUnaryConstructor(tree const lhs, tree const rhs, location_t const loc, tree lhs_var = NULL_TREE, tree lhs_var_DE = NULL_TREE, long containingId = invalidId);
+private:
   ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
-  ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhs, tree const rhs1, tree const rhs2);
+  ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhsDataElement, tree const lhsStorableUnit, tree const rhs1, tree const rhs2);
   ActionDataPtr writeKdmArraySelect(gimple const gs);
   ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc);
   ActionDataPtr writeKdmArrayReplace(gimple const gs);
+
 
   /**
    * D.1716 = this->m_bar;
    * sin.sin_family = 2;
    */
   ActionDataPtr writeKdmMemberSelect(gimple const gs);
-
 
   /**
    * @param lhs
@@ -302,11 +308,9 @@ private:
 
 
   long getReferenceId(tree const ast);
-#if 1 //BBBB
-  ActionDataPtr getRhsReferenceId(tree const rhs);
-#else
-  ActionDataPtr getRhsReferenceId(tree const rhs, const long containingActionId);
-#endif
+public:
+  ActionDataPtr getRhsReferenceId(tree const rhs, tree lhs_var = NULL_TREE, tree lhs_var_DE = NULL_TREE, long containingId = invalidId);
+private:
   tree resolveCall(tree const tree);
 
   ActionDataPtr updateFlow(ActionDataPtr mainFlow, ActionDataPtr update);

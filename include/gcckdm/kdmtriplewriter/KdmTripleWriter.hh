@@ -722,9 +722,6 @@ private:
    */
   bool updateUidGraph(const long parent, const long child);
 
-  void writeVarInitRels(const tree var, tree index, tree value);
-  void writeVarInitConstructor(const tree var, const tree constructor);
-
   KdmSinkPtr mKdmSink; /// Pointer to the kdm output stream
   long mKdmElementId; /// The current element id, incremented for each new element
   GimpleWriter mGimpleWriter; /// The gimple writer
@@ -736,11 +733,6 @@ private:
   FileMap mInventoryMap;
   TreeSet mProcessedNodes;
   TreeQueue mNodeQueue;
-
-#if 0 //BBBB
-  /// Value cache
-  ValueMap mValues;
-#endif
 
   //Graph to store generated UID's
   UidGraph mUidGraph;

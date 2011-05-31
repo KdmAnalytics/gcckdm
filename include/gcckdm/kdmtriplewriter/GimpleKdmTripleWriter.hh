@@ -237,8 +237,7 @@ private:
   ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
   ActionDataPtr writeKdmUnaryConstructor(gimple const gs);
 public:
-  tree skipNOPs(tree value);
-  tree skip_all_COMPOUND_LITERAL_EXPR_and_DECL_EXPR(tree value);
+  tree skipAllNOPsEtc(tree value);
   ActionDataPtr writeKdmUnaryConstructor(tree const lhs, tree const rhs, location_t const loc, tree lhs_var = NULL_TREE, tree lhs_var_DE = NULL_TREE, long containingId = invalidId);
 private:
   ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);

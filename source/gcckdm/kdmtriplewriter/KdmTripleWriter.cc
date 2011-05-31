@@ -1525,10 +1525,11 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     SignatureUnitPolicy signaturePolicy)
 {
   std::string name = nodeName(functionDecl);
-  std::string linkSnkStr = linkCallablePrefix + gcckdm::getLinkId(functionDecl, name);
 
   if (isFrontendCxx())
   {
+    std::string linkSnkStr = linkCallablePrefix + gcckdm::getLinkId(functionDecl, name);
+
     if (DECL_CONSTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, KdmType::MethodUnit());
@@ -1615,14 +1616,16 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTripleKind(callableUnitId, KdmKind::Regular());
       //Identify this as a sink
       if (!isTemplate)
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + name);
+      {
+//BBBB    	  writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + name);
+        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
+      }
     }
     // Standard C does not require mangled names for link:id
     if (!isTemplate)
     {
       writeTripleLinkId(callableUnitId, name);
     }
-
   }
 
   writeTripleName(callableUnitId, name);

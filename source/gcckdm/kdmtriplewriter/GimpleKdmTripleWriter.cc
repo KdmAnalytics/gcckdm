@@ -1777,22 +1777,35 @@ long GimpleKdmTripleWriter::writeKdmActionRelation(KdmType const & type, long co
       if (DECL_EXTERNAL(target.node)) {
 	    if (TREE_CODE(target.node) != FIELD_DECL || !DECL_BIT_FIELD(target.node)) {
 
-	      std::string nodeName(gcckdm::getAstNodeName(target.node));
+#if 1 //BBBB
+	      std::string linkSuffix = gcckdm::getLinkId(target.node, gcckdm::getAstNodeName(target.node));
+#else
+	      std::string linkSuffix;
+          if (isFrontendCxx())
+    	  {
+        	linkSuffix = gcckdm::getLinkId(target.node, gcckdm::getAstNodeName(target.node));
+    	  }
+    	  else
+    	  {
+    		linkSuffix = gcckdm::getAstNodeName(target.node);
+    	  }
+#endif
+
 	      if (type == KdmType::Addresses())
 	      {
-	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkAddresssPrefix + nodeName);
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkAddresssPrefix + linkSuffix);
 	      }
 	      else if (type == KdmType::Reads())
 	      {
-	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkReadsPrefix + nodeName);
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkReadsPrefix + linkSuffix);
 	      }
 	      else if (type == KdmType::Writes())
 	      {
-	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkWritesPrefix + nodeName);
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkWritesPrefix + linkSuffix);
 	      }
 	      else if (type == KdmType::Calls())
 	      {
-	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkCallsPrefix + nodeName);
+	    	  mKdmWriter.writeTriple(fromId, KdmPredicate::LinkSrc(), linkCallsPrefix + linkSuffix);
 	      }
 	      mKdmWriter.writeTripleKdmType(arId, KdmType::CompliesTo());
 

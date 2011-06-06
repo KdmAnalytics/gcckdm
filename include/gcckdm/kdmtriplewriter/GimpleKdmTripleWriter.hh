@@ -389,6 +389,7 @@ private:
   LabelQueue mLabelQueue;
   LabelMap   mLabelMap;
 
+#if 0 //BBBB
   /**
    * Gcc GIMPLE can assign a member to a local variable, in the case of function pointers
    * we need a map to track the original source of the assignment to be able to hook
@@ -396,6 +397,7 @@ private:
    * purpose
    */
   LongMap mLocalFunctionPointerMap;
+#endif
 
   long mRegisterVariableIndex;
 

@@ -2866,7 +2866,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 1052) {
+  if (mKdmElementId + 1 == 104) {
 	int junk = 123;
   }
 #endif

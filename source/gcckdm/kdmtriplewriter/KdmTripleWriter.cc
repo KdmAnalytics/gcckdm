@@ -2703,7 +2703,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 1052) {
+      if (mKdmElementId + 1 == 42) {
 		int junk = 123;
 	  }
 #endif
@@ -2713,13 +2713,13 @@ long KdmTripleWriter::getReferenceId(tree const node)
     }
     retValue = ++mKdmElementId;
 #if 1 //BBBB
-    if (TREE_TYPE(node))
-    {
-      tree type = typedefTypeCheck(node);
-      if (type)
-      {
-        //reserve the id for this type for later processing
-        getReferenceId(type);
+    if (TREE_CODE(node) != FUNCTION_DECL) {
+      if (TREE_TYPE(node)) {
+        tree type = typedefTypeCheck(node);
+        if (type) {
+          //reserve the id for this type for later processing
+          getReferenceId(type);
+        }
       }
     }
 #else
@@ -2866,7 +2866,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 104) {
+  if (mKdmElementId + 1 == 42) {
 	int junk = 123;
   }
 #endif

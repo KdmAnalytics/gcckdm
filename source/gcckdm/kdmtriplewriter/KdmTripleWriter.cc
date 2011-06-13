@@ -2359,7 +2359,17 @@ long KdmTripleWriter::getLocationContextId(Path const & contextDir, long const r
 
 long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
 {
+#if 1 //BBBB2
+  tree type;
+  tree treeType = TREE_TYPE(param);
+  if (treeType) {
+    type = TYPE_MAIN_VARIANT(treeType);
+  } else {
+    type = TYPE_MAIN_VARIANT(param);
+  }
+#else
   tree type = typedefTypeCheck(param);
+#endif
   long ref = getReferenceId(type);
   long subjectId = getNextElementId();
   writeTripleKdmType(subjectId, KdmType::ParameterUnit());
@@ -2392,7 +2402,16 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewEleme
 
   writeTripleKdmType(parameterUnitId, KdmType::ParameterUnit());
 
-  tree type = NULL_TREE;
+#if 1 //BBBB2
+  tree type;
+  tree treeType = TREE_TYPE(param);
+  if (treeType) {
+    type = TYPE_MAIN_VARIANT(treeType);
+  } else {
+//    type = TYPE_MAIN_VARIANT(param);
+    type = TYPE_MAIN_VARIANT(TREE_VALUE (param));
+  }
+#else
   if (TREE_TYPE(param))
   {
     type = typedefTypeCheck(param);
@@ -2401,6 +2420,7 @@ long KdmTripleWriter::writeKdmParameterUnit(tree const param, bool forceNewEleme
   {
     type = TYPE_MAIN_VARIANT(TREE_VALUE (param));
   }
+#endif
 
   long ref = getReferenceId(type);
 
@@ -2460,7 +2480,17 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
   long itemId = getReferenceId(item);
   writeTripleKdmType(itemId, KdmType::ItemUnit());
 
+#if 1 //BBBB2
+  tree type;
+  tree treeType = TREE_TYPE(item);
+  if (treeType) {
+    type = TYPE_MAIN_VARIANT(treeType);
+  } else {
+    type = TYPE_MAIN_VARIANT(item);
+  }
+#else
   tree type = typedefTypeCheck(item);
+#endif
   long ref = getReferenceId(type);
   std::string name(nodeName(item));
 
@@ -2527,7 +2557,7 @@ void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
  *
  * @param node a type node
  */
-tree KdmTripleWriter::typedefTypeCheck(tree const node)
+tree KdmTripleWriter::typedefTypeCheck2(tree const node)
 {
   //determining type declaration
   tree type = TREE_TYPE(node);
@@ -2703,7 +2733,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 42) {
+      if (mKdmElementId + 1 == 47) {
 		int junk = 123;
 	  }
 #endif
@@ -2714,8 +2744,9 @@ long KdmTripleWriter::getReferenceId(tree const node)
     retValue = ++mKdmElementId;
 #if 1 //BBBB
     if (TREE_CODE(node) != FUNCTION_DECL) {
-      if (TREE_TYPE(node)) {
-        tree type = typedefTypeCheck(node);
+      tree treeType = TREE_TYPE(node);
+      if (treeType) {
+        tree type = typedefTypeCheck2(node);
         if (type) {
           //reserve the id for this type for later processing
           getReferenceId(type);
@@ -2866,7 +2897,7 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 42) {
+  if (mKdmElementId + 1 == 47) {
 	int junk = 123;
   }
 #endif

@@ -645,6 +645,8 @@ private:
   long writeKdmPointerType(tree const pointerType, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false, const long containedInId = invalidId);
   void writeEnumType(tree const enumType);
 
+  tree getTypeNode(tree type);
+
   /**
    * Handles output of enums, and structs, pass through of class to writeKdmClassType
    */

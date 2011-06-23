@@ -2872,31 +2872,6 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   return unitId;
 }
 
-//void KdmTripleWriter::writeKdmPtr(tree const addrExpr)
-//{
-//
-//  // ptr = &a[0];
-//  if (TREE_CODE(op0) == ARRAY_REF)
-//  {
-//    std::string msg(str(boost::format("ARRAY_REF(%1%) in %2%") % tree_code_name[TREE_CODE(op0)] % BOOST_CURRENT_FUNCTION));
-//    writeUnsupportedComment(msg);
-//  }
-//  // a = &b.d;
-//  else if (TREE_CODE(op0) == COMPONENT_REF)
-//  {
-//    std::string msg(str(boost::format("COMPONENT_REF (%1%) in %2%") % tree_code_name[TREE_CODE(op0)] % BOOST_CURRENT_FUNCTION));
-//    writeUnsupportedComment(msg);
-//  }
-//  // void foo();
-//  // a = { foo };
-//  else
-//  {
-//    //we have to create a temp variable... aka temp1
-//    //long storableId = writeKdmStorableUnit(getReferenceId(TREE_TYPE(op0)), gcckdm::locationOf(addrExpr));
-//
-//  }
-//}
-
 long KdmTripleWriter::writeKdmValue(tree const val)
 {
   long valueId = getNextElementId();
@@ -2949,6 +2924,16 @@ long KdmTripleWriter::getId_orInvalidIdForNULL(tree const node)
 	return node ? getReferenceId(node) : invalidId;
 }
 
+long KdmTripleWriter::getNextElementId()
+{
+#if 1 //BBBB - TMP
+  if (mKdmElementId + 1 == 76) {
+	int junk = 123;
+  }
+#endif
+  return ++mKdmElementId;
+}
+
 long KdmTripleWriter::getReferenceId(tree const node)
 {
 #if 1 //BBBB - TMP
@@ -2965,7 +2950,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 13058) {
+      if (mKdmElementId + 1 == 76) {
 		int junk = 123;
 	  }
 #endif
@@ -2999,7 +2984,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
   {
     retValue = result.first->second;
 #if 1 //BBBB - TMP
-    if (retValue == 13058) {
+    if (retValue == 76) {
       int junk = 123;
 	}
 #endif
@@ -3131,16 +3116,6 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
   return retValue;
 }
 
-long KdmTripleWriter::getNextElementId()
-{
-#if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 301) {
-	int junk = 123;
-  }
-#endif
-  return ++mKdmElementId;
-}
-
 void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
 {
   long typeKdmElementId = getReferenceId(type);
@@ -3269,12 +3244,6 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
 
   tree type = TREE_TYPE(arrayType);
 #if 1 //BBBB-7777
-#if 1 //BBBB - TMP
-  tree const typeMainVariant = TYPE_MAIN_VARIANT(type);
-  if ((long unsigned int)typeMainVariant == 0xb79231a0) {
-	int junk = 123;
-  }
-#endif
   tree t2 = getTypeNode(type);
 #else
   tree t2(TYPE_MAIN_VARIANT(type));

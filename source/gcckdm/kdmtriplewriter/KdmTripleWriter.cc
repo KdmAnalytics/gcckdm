@@ -3208,7 +3208,7 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
 
   tree type = TREE_TYPE(pointerType);
 #if 1 //BBBB-7777
-#if 1 //BBBB - TMP
+#if 0 //BBBB - TMP
   tree const typeMainVariant = TYPE_MAIN_VARIANT(type);
   if ((long unsigned int)typeMainVariant == 0xb79231a0) {
 	int junk = 123;
@@ -3243,6 +3243,12 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   writeTripleKdmType(arrayKdmElementId, KdmType::ArrayType());
 
   tree type = TREE_TYPE(arrayType);
+
+#if 0 //BBBB-TMP-DEL
+  tree type333 = ARRAY_TYPE_CHECK (arrayType);
+  tree const typeMainVariant333 = TYPE_MAIN_VARIANT(arrayType);
+#endif
+
 #if 1 //BBBB-7777
   tree t2 = getTypeNode(type);
 #else

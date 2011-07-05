@@ -29,7 +29,6 @@
 #include "gcckdm/GccKdmVersion.hh"
 
 
-
 /**
  * Have to define this to ensure that GCC is able to play nice with our plugin
  */
@@ -387,7 +386,6 @@ void registerCallbacks(char const * pluginName)
 //    }
 
 
-
   //Called Once at the start of a translation unit
   register_callback(pluginName, PLUGIN_START_UNIT, static_cast<plugin_callback_func> (executeStartUnit), NULL);
 
@@ -398,12 +396,11 @@ void registerCallbacks(char const * pluginName)
     // Called whenever a type has been parsed
     register_callback(pluginName, PLUGIN_FINISH_TYPE, static_cast<plugin_callback_func> (executeFinishType), NULL);
     // Called whenever a type has been parsed
-
 #ifdef HAS_FINISH_DECL
     register_callback(pluginName, PLUGIN_FINISH_DECL, static_cast<plugin_callback_func> (executeFinishDecl), NULL);
 #endif
-
   }
+
   //Attempt to get the very first gimple AST before any optimizations, called for every function
   struct register_pass_info pass_info;
   pass_info.pass = &kdmGimplePass;

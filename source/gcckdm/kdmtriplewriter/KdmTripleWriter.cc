@@ -1240,7 +1240,7 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
 {
   assert(TYPE_P(typeNode));
   long id = invalidId;
-  int treeCode(TREE_CODE(typeNode));
+  int treeCode = TREE_CODE(typeNode);
   switch (treeCode)
   {
     case ARRAY_TYPE:
@@ -1249,16 +1249,10 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
       break;
     }
     case FUNCTION_TYPE:
-    {
-      writeKdmSignatureType(typeNode);
-      break;
-    }
+      //Fall through
     case METHOD_TYPE:
     {
-      //writeKdmSignature(typeNode);
-#if 1 //BBBB
       writeKdmSignatureType(typeNode);
-#endif
       break;
     }
     case REFERENCE_TYPE:
@@ -1269,6 +1263,8 @@ long KdmTripleWriter::processAstTypeNode(tree const typeNode, ContainsRelationPo
       id = writeKdmPointerType(typeNode, containPolicy, isTemplate, containedInId);
       break;
     }
+    case VECTOR_TYPE:
+      //Fall through
     case VOID_TYPE:
       //Fall through
     case REAL_TYPE:
@@ -2937,7 +2933,7 @@ long KdmTripleWriter::getNextElementId()
 long KdmTripleWriter::getReferenceId(tree const node)
 {
 #if 1 //BBBB - TMP
-	if ((long unsigned int)node == 0xb79231a0) {
+	if ((long unsigned int)node == 0x7ffff3f6b1f8) {
 		int junk = 123;
 //		std::cerr  << nodeName(node) << std::endl;
 	}
@@ -3116,11 +3112,27 @@ long KdmTripleWriter::getSharedUnitReferenceId(tree const identifierNode)
   return retValue;
 }
 
-void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
+void KdmTripleWriter::writeKdmPrimitiveType(tree const type0)
 {
-  long typeKdmElementId = getReferenceId(type);
+  int treeCode = TREE_CODE(type0);
+  long typeKdmElementId = getReferenceId(type0);
 
-  std::string name = nodeName(type);
+  tree type;
+  std::string name;
+  if (treeCode == VECTOR_TYPE) {
+    tree type1 = TREE_TYPE(type0);
+#if 1 //BBBB-7777
+    type = TYPE_MAIN_VARIANT(type1);
+#else
+    type = getTypeNode(type1);
+#endif
+    unsigned int nunits = TYPE_VECTOR_SUBPARTS (type0);
+    std::string nunits_str = boost::str(boost::format(HOST_WIDE_INT_PRINT_DEC) % nunits);
+    name = nodeName(type) + " : vector_size(" + nunits_str + ")";
+  } else {
+    type = type0;
+    name = nodeName(type);
+  }
 
   KdmType kdmType = KdmType::PrimitiveType();
   if (name.find("int") != std::string::npos ||
@@ -3161,7 +3173,6 @@ void KdmTripleWriter::writeKdmPrimitiveType(tree const type)
   writeLanguageUnitContains(typeKdmElementId);
 }
 
-
 tree KdmTripleWriter::getTypeNode(tree type)
 {
   tree type2 = type;
@@ -3194,7 +3205,6 @@ tree KdmTripleWriter::getTypeNode(tree type)
   }
   return type2;
 }
-
 
 long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelationPolicy const containPolicy, bool isTemplate,
     const long containedInId)

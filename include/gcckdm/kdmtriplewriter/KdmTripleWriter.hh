@@ -677,8 +677,7 @@ private:
    */
   long writeKdmMemberUnit(tree const item);
   long writeKdmItemUnit(tree const item);
-  void writeKdmArrayType(tree const array);
-
+  void writeKdmArrayType(tree const arrayType);
 
   long writeKdmSignature(tree const function);
   long writeKdmSignatureDeclaration(tree const functionDecl);

@@ -1205,8 +1205,28 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
   tree rhsNode = gimple_assign_rhs1(gs);
   switch (gimpleRhsCode)
   {
+#if 1 //BBBB
+    case VIEW_CONVERT_EXPR:
+      {
+        //Simple cast
+#if 0 //BBBBB
+        mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
+#endif
+
+        tree lhs(gimple_assign_lhs(gs));
+        tree rhs(gimple_assign_rhs1(gs));
+
+        tree op0 = TREE_OPERAND (rhs, 0);
+        op0 = skipAllNOPsEtc(op0);
+
+        actionData = writeKdmUnaryOperation(KdmKind::Assign(), lhs, op0 /*rhs*/);
+//        actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
+      }
+      break;
+#else
     case VIEW_CONVERT_EXPR:
       //Fall Through
+#endif
     case ASSERT_EXPR:
     {
       std::string msg(
@@ -1228,9 +1248,9 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       //Fall Through
     case CONVERT_EXPR:
     {
-      //Casting a pointer
       if (TREE_CODE(rhsNode) == ADDR_EXPR)
       {
+        //Casting a pointer
 #if 0 //BBBBB
         mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
 #endif

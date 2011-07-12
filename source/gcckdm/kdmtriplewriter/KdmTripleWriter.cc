@@ -3213,9 +3213,6 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
 
   writeTripleKdmType(pointerKdmElementId, KdmType::PointerType());
 
-  if (!isTemplate)
-    writeTripleLinkId(pointerKdmElementId, getLinkIdForType(pointerType));
-
   tree type = TREE_TYPE(pointerType);
 #if 1 //BBBB-7777
 #if 0 //BBBB - TMP
@@ -3233,13 +3230,18 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
 
   writeTriple(pointerKdmElementId, KdmPredicate::Type(), pointerTypeKdmElementId);
 
-  if (containPolicy == WriteKdmContainsRelation)
-  {
+//  if (!isTemplate) {
+//    std::string name = nodeName(t2);
+////    std::string linkId = "ptr:" + name;
+//    writeTripleLinkId(pointerKdmElementId, name.empty() ? getLinkIdForType(pointerType) : ("ptr: " + name));
+////    writeTripleLinkId(pointerKdmElementId, getLinkIdForType(pointerType));
+//  }
+
+  if (containPolicy == WriteKdmContainsRelation) {
     writeLanguageUnitContains(pointerKdmElementId);
   }
 
-  if (containedInId != invalidId)
-  {
+  if (containedInId != invalidId) {
     assert(containedInId >= 0);
     writeTripleContains(containedInId, pointerKdmElementId);
   }
@@ -3266,7 +3268,20 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
 #endif
   long arrayTypeKdmElementId = getReferenceId(t2);
   writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
-  writeTripleLinkId(arrayKdmElementId, getLinkIdForType(arrayType));
+
+
+//  std::string name = nodeName(t2);
+////    std::string linkId = "array:" + name;
+
+////writeTripleLinkId(arrayKdmElementId, name.empty() ? getLinkIdForType(arrayType) : ("array: " + name));
+
+//writeTripleLinkId(arrayKdmElementId, getLinkIdForType(arrayType));
+//    writeTripleLinkId(arrayKdmElementId, getLinkIdForType(type));
+//    writeTripleLinkId(arrayKdmElementId, getLinkIdForType(t2));
+//        tree typeName = TYPE_NAME(type);
+//    writeTripleLinkId(arrayKdmElementId, getLinkIdForType(typeName));
+
+
 
   tree domain = TYPE_DOMAIN(arrayType);
   if (domain)
@@ -3347,11 +3362,7 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
   }
   else if (global_namespace && TYPE_LANG_SPECIFIC (mainRecordType) && CLASSTYPE_DECLARED_CLASS (mainRecordType))
   {
-#if 1 //BBBB-7-2
     return writeKdmClassType(mainRecordType, containPolicy, isTemplate);
-#else
-    return writeKdmClassType(recordType, containPolicy, isTemplate);
-#endif
   }
   else //Record or Union
   {

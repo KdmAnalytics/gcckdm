@@ -456,7 +456,9 @@ public:
     KdmElementId_CodeAssembly,
     KdmElementId_LanguageUnit,
     KdmElementId_DerivedSharedUnit,
+#if 0 //BBBB
     KdmElementId_ClassSharedUnit,
+#endif
     KdmElementId_InventoryModel,
     KdmElementId_CompilationUnit,
     KdmElementId_DefaultStart

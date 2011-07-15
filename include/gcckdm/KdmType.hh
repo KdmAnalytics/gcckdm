@@ -87,6 +87,7 @@ private:
     KdmType_Invokes,
     KdmType_Writes,
     KdmType_Reads,
+    KdmType_UsesType,
     KdmType_BlockUnit,
     KdmType_Flow,
     KdmType_TrueFlow,
@@ -161,6 +162,7 @@ public:
   static const KdmType Invokes()          { return KdmType(KdmType_Invokes, "action/Invokes");  }
   static const KdmType Writes()           { return KdmType(KdmType_Writes, "action/Writes");  }
   static const KdmType Reads()            { return KdmType(KdmType_Reads, "action/Reads");  }
+  static const KdmType UsesType()         { return KdmType(KdmType_UsesType, "action/UsesType");  }
   static const KdmType BlockUnit()        { return KdmType(KdmType_BlockUnit, "action/BlockUnit");  }
   static const KdmType Flow()             { return KdmType(KdmType_Flow, "action/Flow");  }
   static const KdmType TrueFlow()         { return KdmType(KdmType_TrueFlow, "action/TrueFlow");  }

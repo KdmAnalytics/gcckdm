@@ -52,16 +52,19 @@ std::string const commentPrefix("# ");
 std::string const unsupportedPrefix("UNSUPPORTED: ");
 
 std::string const unnamedStructNode("<unnamed struct>");
+std::string const unnamedClassNode("<unnamed class>");
 
 std::string const linkCallablePrefix("c.function/");
 
 std::string const linkVariablePrefix("c.variable/");
 
+long unnamedStructNumber = 1;
+
 /**
- * True if the given AST node is an annoymous struct
+ * True if the given AST node is an anonymous struct
  *
  * @param t the node to test
- * @return true if t is an annoymous struct
+ * @return true if t is an anonymous struct
  */
 bool isAnonymousStruct(tree const t)
 {
@@ -2134,6 +2137,7 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::LinkId(), ":derived");
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_DerivedSharedUnit);
 
+#if 0 //BBBB
   if (isFrontendCxx())
   {
     writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
@@ -2141,6 +2145,7 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
     writeTriple(KdmElementId_ClassSharedUnit, KdmPredicate::LinkId(), ":class");
     writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_ClassSharedUnit);
   }
+#endif
 
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::KdmType(), KdmType::InventoryModel());
   writeTriple(KdmElementId_InventoryModel, KdmPredicate::Name(), KdmType::InventoryModel());
@@ -2923,7 +2928,7 @@ long KdmTripleWriter::getId_orInvalidIdForNULL(tree const node)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 76) {
+  if (mKdmElementId + 1 == 15997) {
 	int junk = 123;
   }
 #endif
@@ -2946,7 +2951,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 76) {
+      if (mKdmElementId + 1 == 15997) {
 		int junk = 123;
 	  }
 #endif
@@ -3384,7 +3389,13 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
       //        tree id (DECL_NAME (mainRecordType));
       //        const char* name2 (IDENTIFIER_POINTER (id));
       //        std::cerr << name2 << std::endl;
+
+#if 1 //BBBB
+      name = unnamedStructNode + " : " + boost::lexical_cast<std::string>(unnamedStructNumber++);
+#else
       name = unnamedStructNode;
+#endif
+
       linkId = getLinkIdForType(mainRecordType);
     }
     else
@@ -3532,66 +3543,38 @@ void KdmTripleWriter::writeKdmFriends(long const id, tree const befriending)
  */
 long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationPolicy const containPolicy, bool isTemplate)
 {
-#if 1 //BBBB-7777-3
   tree mainRecordType = recordType;
-#else
-#if 0 //BBBB-7777-2
-  tree type = recordType;
-  tree const typeMainVariant = TYPE_MAIN_VARIANT(type);
-  if (typeMainVariant != type) {
-    tree typeName = TYPE_NAME(type);
-    if (typeName) {
-      const expanded_location xloc = expand_location(locationOf(typeName));
-      if (xloc.file && strcmp("<built-in>", xloc.file)) {
-        type = typeName;
-      } else {
-        type = typeMainVariant;
-      }
-    } else {
-      type = typeMainVariant;
-    }
-  }
-  tree mainRecordType = type;
-#else
-  tree mainRecordType = TYPE_MAIN_VARIANT (recordType);
-#endif
-#endif
-#if 0 //BBBB-5555-2
-  markNodeAsProcessed(recordType);
-#if 0 //BBBB-5555
-  if (nodeIsMarkedAsProcessed(mainRecordType)) {
-    return getReferenceId(mainRecordType);
-  }
-#endif
-  markNodeAsProcessed(mainRecordType);
-#endif
 
   markNodeAsProcessed(mainRecordType);
 
   long compilationUnitId(getSourceFileReferenceId(mainRecordType));
-  //class
 
   long classId = getReferenceId(mainRecordType);
   writeTripleKdmType(classId, KdmType::ClassUnit());
+
   std::string name;
-  //check to see if we are an anonymous class
-  name = (isAnonymousStruct(mainRecordType)) ? gcckdm::constants::getUnamedNodeString() : nodeName(mainRecordType);
+  if (isAnonymousStruct(mainRecordType)) {
+#if 1 //BBBB
+    name = unnamedClassNode + " : " + boost::lexical_cast<std::string>(unnamedStructNumber++);
+#else
+    name = unnamedClassNode;
+#endif
+  } else {
+    name = nodeName(mainRecordType);
+  }
   writeTripleName(classId, name);
 
-  if (!isTemplate)
-  {
+  if (!isTemplate) {
     // link:id is the mangled name, hopefully
     writeTripleLinkId(classId, gcckdm::getLinkId(TYPE_NAME(recordType), name));
   }
 
   // Is this an abstract class?
-  if (CLASSTYPE_PURE_VIRTUALS (recordType) != 0)
-  {
+  if (CLASSTYPE_PURE_VIRTUALS (recordType) != 0) {
     writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_AbstractStereotype);
   }
 
-  if (!COMPLETE_TYPE_P (recordType))
-  {
+  if (!COMPLETE_TYPE_P (recordType)) {
     writeTriple(classId, KdmPredicate::Stereotype(), KdmElementId_IncompleteStereotype);
   }
   // Hide artificial classes
@@ -3600,14 +3583,14 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
 
   // Base class information
   // See http://codesynthesis.com/~boris/blog/2010/05/17/parsing-cxx-with-gcc-plugin-part-3/
-  tree biv(TYPE_BINFO (recordType));
-  size_t n(biv ? BINFO_N_BASE_BINFOS (biv) : 0);
+  tree biv = TYPE_BINFO (recordType);
+  size_t n = biv ? BINFO_N_BASE_BINFOS (biv) : 0;
 
-  for (size_t i(0); i < n; i++)
-  {
-    tree bi(BINFO_BASE_BINFO (biv, i));
+  for (size_t i(0); i < n; i++) {
 
-    tree b_type(TYPE_MAIN_VARIANT (BINFO_TYPE (bi)));
+    tree bi = BINFO_BASE_BINFO (biv, i);
+
+    tree b_type = TYPE_MAIN_VARIANT (BINFO_TYPE (bi));
     //    tree b_decl (TYPE_NAME (b_type));
     //    tree b_id (DECL_NAME (b_decl));
 
@@ -3617,16 +3600,14 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
 
     // Add some Stereotypes to the relationship
     // Virtual subclass?
-    bool virt(BINFO_VIRTUAL_P (bi));
-    if (virt)
-    {
+    bool virt = BINFO_VIRTUAL_P (bi);
+    if (virt) {
       writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereotype);
     }
 
     // Access specifier.
-    if (BINFO_BASE_ACCESSES (biv))
-    {
-      tree ac(BINFO_BASE_ACCESS (biv, i));
+    if (BINFO_BASE_ACCESSES (biv)) {
+      tree ac = BINFO_BASE_ACCESS (biv, i);
 
       if (ac == 0 || ac == access_public_node)
         writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereotype);
@@ -3635,9 +3616,7 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
       else
         writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PrivateStereotype);
 
-    }
-    else
-    {
+    } else {
       writeTriple(extendsId, KdmPredicate::Stereotype(), KdmElementId_PublicStereotype);
     }
     // Write the containment
@@ -3652,22 +3631,18 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
 #endif
 
   // Traverse members.
-  for (tree d(TYPE_FIELDS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
-  {
-    switch (TREE_CODE (d))
-    {
+  for (tree d = TYPE_FIELDS(mainRecordType); d != 0; d = TREE_CHAIN(d)) {
+    switch (TREE_CODE (d)) {
       case TYPE_DECL:
       {
-        if (!DECL_SELF_REFERENCE_P (d))
-        {
+        if (!DECL_SELF_REFERENCE_P (d) && !DECL_IMPLICIT_TYPEDEF_P (d)) {
           processAstNodeInternal(d);
         }
         break;
       }
       case FIELD_DECL:
       {
-        if (!DECL_ARTIFICIAL (d))
-        {
+        if (!DECL_ARTIFICIAL (d)) {
           getReferenceId(d);
           processAstNode(d);
           //BBBB          writeTripleContains(classId, itemId);
@@ -3682,18 +3657,15 @@ long KdmTripleWriter::writeKdmClassType(tree const recordType, ContainsRelationP
     }
   }
 
-  for (tree d(TYPE_METHODS (mainRecordType)); d != 0; d = TREE_CHAIN (d))
-  {
-    if (!DECL_ARTIFICIAL (d))
-    {
+  for (tree d = TYPE_METHODS (mainRecordType); d != 0; d = TREE_CHAIN (d)) {
+    if (!DECL_ARTIFICIAL (d)) {
       processAstNodeInternal(d, WriteKdmContainsRelation, isTemplate);
     }
   }
 
   writeKdmSourceRef(classId, mainRecordType);
 
-  if (containPolicy == WriteKdmContainsRelation)
-  {
+  if (containPolicy == WriteKdmContainsRelation) {
     writeTripleContains(compilationUnitId, classId);
   }
 

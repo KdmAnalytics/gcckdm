@@ -1205,28 +1205,25 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
   tree rhsNode = gimple_assign_rhs1(gs);
   switch (gimpleRhsCode)
   {
-#if 1 //BBBB
     case VIEW_CONVERT_EXPR:
-      {
-        //Simple cast
-#if 0 //BBBBB
-        mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
-#endif
+    {
+      //Simple cast
 
-        tree lhs(gimple_assign_lhs(gs));
-        tree rhs(gimple_assign_rhs1(gs));
+      tree lhs = gimple_assign_lhs(gs);
+      tree rhs = gimple_assign_rhs1(gs);
 
-        tree op0 = TREE_OPERAND (rhs, 0);
-        op0 = skipAllNOPsEtc(op0);
+      tree op0 = TREE_OPERAND (rhs, 0);
+      op0 = skipAllNOPsEtc(op0);
 
-        actionData = writeKdmUnaryOperation(KdmKind::Assign(), lhs, op0 /*rhs*/);
-//        actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
-      }
+      actionData = writeKdmUnaryOperation(KdmKind::Assign(), lhs, op0 /*rhs*/);
+
+      tree t1 = TREE_TYPE(gimple_assign_lhs(gs) /*rhsNode*/);
+      tree t2 = mKdmWriter.getTypeNode(t1);
+      long t2Id = getReferenceId(t2);
+      writeKdmActionRelation(KdmType::UsesType(), actionData->actionId(), RelationTarget(t2, t2Id));
+
       break;
-#else
-    case VIEW_CONVERT_EXPR:
-      //Fall Through
-#endif
+    }
     case ASSERT_EXPR:
     {
       std::string msg(
@@ -1248,22 +1245,26 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleUnaryAs
       //Fall Through
     case CONVERT_EXPR:
     {
-      if (TREE_CODE(rhsNode) == ADDR_EXPR)
-      {
+      if (TREE_CODE(rhsNode) == ADDR_EXPR) {
         //Casting a pointer
-#if 0 //BBBBB
-        mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
-#endif
+
         actionData = writeKdmPtr(gs);
-        break;
-      }
-      else
-      {
+
+        tree t1 = TREE_TYPE(gimple_assign_lhs(gs) /*rhsNode*/);
+        tree t2 = mKdmWriter.getTypeNode(t1);
+        long t2Id = getReferenceId(t2);
+        writeKdmActionRelation(KdmType::UsesType(), actionData->actionId(), RelationTarget(t2, t2Id));
+
+      } else {
         //Simple cast, no pointers or references
-#if 0 //BBBBB
-        mKdmWriter.writeComment("FIXME: This Assign is really a cast, but we do not support casts");
-#endif
+
         actionData = writeKdmUnaryOperation(KdmKind::Assign(), gs);
+
+        tree t1 = TREE_TYPE(gimple_assign_lhs(gs) /*rhsNode*/);
+        tree t2 = mKdmWriter.getTypeNode(t1);
+        long t2Id = getReferenceId(t2);
+        writeKdmActionRelation(KdmType::UsesType(), actionData->actionId(), RelationTarget(t2, t2Id));
+
       }
       break;
     }
@@ -2885,7 +2886,14 @@ GimpleKdmTripleWriter::writeKdmStorableUnit(
   tree type = TYPE_MAIN_VARIANT(TREE_TYPE(node));
 #endif
   long typeId = mKdmWriter.getReferenceId(type);
-  return writeKdmStorableUnitInternal(typeId, loc, storableUnitsKind);
+  long id = writeKdmStorableUnitInternal(typeId, loc, storableUnitsKind);
+
+#if 0 //BBBB-SANDBOX
+  std::string name = nodeName(node);
+  mKdmWriter.writeTripleName(id, name);
+#endif
+
+  return id;
 }
 
 long

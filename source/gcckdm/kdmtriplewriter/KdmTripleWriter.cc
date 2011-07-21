@@ -286,6 +286,7 @@ KdmTripleWriter::KdmTripleWriter(KdmSinkPtr const & kdmSinkPtr, KdmTripleWriter:
   mUid(0),
   mUserTypes(),
   mContainment(),
+  mItemUnits(),
   mSettings(settings),
   mPackageMap(),
   mDirectoryMap(),
@@ -315,6 +316,7 @@ KdmTripleWriter::KdmTripleWriter(Path const & filename, KdmTripleWriter::Setting
   mUid(0),
   mUserTypes(),
   mContainment(),
+  mItemUnits(),
   mSettings(settings),
   mPackageMap(),
   mDirectoryMap(),
@@ -3254,13 +3256,28 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
   return pointerKdmElementId;
 }
 
+/*
+ * Check the item unit map for the given id, and return the array types item unit id,  
+ * if it's not there create an reference id for the item unit, add it to the item unit map
+ * and return newly created ItemUnit id
+ */
+long KdmTripleWriter::getItemUnitId(long arrayTypeId)
+{
+//  std::cerr << "getItemUnit" << arrayTypeId << std::endl;
+  ContainmentMap::const_iterator e = mItemUnits.find(arrayTypeId);
+  return (e != mItemUnits.end()) ? e->second : mItemUnits.insert(std::make_pair(arrayTypeId, getNextElementId())).first->second;
+}
+
+
 void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
 {
+//  std::cerr << "writeKdmArrayType" << std::endl;
   long arrayKdmElementId = getReferenceId(arrayType);
   writeTripleKdmType(arrayKdmElementId, KdmType::ArrayType());
 
   //create item unit that acts as a placeholder for elements written to or read from this array
-  long itemUnitElementId = getNextElementId();
+  //use the getItemUnitId method to ensure we use the proper id for relationships
+  long itemUnitElementId = getItemUnitId(arrayKdmElementId);
   writeTripleKdmType(itemUnitElementId, KdmType::ItemUnit());
   //contain the item unit within the arrayType...hope the importer is smart enough to 
   //use setItemUnit 
@@ -3285,6 +3302,10 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   //The type is set on the ItemUnit not the ArrayType itself
   writeTriple(itemUnitElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
 
+  //insert the id for our ItemUnit (if not already there)
+  mItemUnits.insert(std::make_pair(arrayTypeKdmElementId, itemUnitElementId));
+
+  
 //  std::string name = nodeName(t2);
 ////    std::string linkId = "array:" + name;
 

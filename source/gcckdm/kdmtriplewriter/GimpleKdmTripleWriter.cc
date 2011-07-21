@@ -1956,10 +1956,11 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstru
 			  writesTarget = lhs_var_DE;
 			  writesTargetId = getReferenceId(lhs_var_DE);
 		    } else {
-		      tree type = TYPE_MAIN_VARIANT(TREE_TYPE(lhs_var));
-		      long typeId = getReferenceId(type);
-		      writesTarget = type;
-		      writesTargetId = typeId;
+		      tree arrayType = TYPE_MAIN_VARIANT(TREE_TYPE(lhs_var));
+		      long arraytypeId = getReferenceId(arrayType);
+                        
+		      writesTarget = arrayType;
+		      writesTargetId = mKdmWriter.getItemUnitId(arraytypeId);
 		    }
 
 		    ActionDataPtr rhsData;

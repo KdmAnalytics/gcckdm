@@ -650,6 +650,16 @@ private:
 public:
   tree getTypeNode(tree type);
 
+  /**
+    * Returns the item unit contained within the array type with the given id.  If an 
+    * an array type with the given id does not exist creates a new id and adds it to the 
+    * lookup map
+    *
+    * @param arrayTypeId the id of an ArrayType
+    * @return the item unit from the array type with the given id
+    */
+  long getItemUnitId(long arrayTypeId);
+
 private:
   /**
    * Handles output of enums, and structs, pass through of class to writeKdmClassType
@@ -753,6 +763,9 @@ private:
 
   ///List of element elements.  Used for duplicate contains detection
   ContainmentMap mContainment;
+
+  ///Map of ArrayType ids to ItemUnit ids.  Used for relationships to array elements
+  ContainmentMap mItemUnits;
 
   ///User configuration settings
   Settings mSettings;

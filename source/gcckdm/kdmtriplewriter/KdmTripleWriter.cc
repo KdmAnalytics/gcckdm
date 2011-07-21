@@ -3259,6 +3259,14 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   long arrayKdmElementId = getReferenceId(arrayType);
   writeTripleKdmType(arrayKdmElementId, KdmType::ArrayType());
 
+  //create item unit that acts as a placeholder for elements written to or read from this array
+  long itemUnitElementId = getNextElementId();
+  writeTripleKdmType(itemUnitElementId, KdmType::ItemUnit());
+  //contain the item unit within the arrayType...hope the importer is smart enough to 
+  //use setItemUnit 
+  writeTripleContains(arrayKdmElementId, itemUnitElementId);
+  
+
   tree type = TREE_TYPE(arrayType);
 
 #if 0 //BBBB-TMP-DEL
@@ -3272,8 +3280,10 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   tree t2(TYPE_MAIN_VARIANT(type));
 #endif
   long arrayTypeKdmElementId = getReferenceId(t2);
-  writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
+  //writeTriple(arrayKdmElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
 
+  //The type is set on the ItemUnit not the ArrayType itself
+  writeTriple(itemUnitElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
 
 //  std::string name = nodeName(t2);
 ////    std::string linkId = "array:" + name;

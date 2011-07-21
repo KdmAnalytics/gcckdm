@@ -25,11 +25,11 @@ AX_BOOST_FILESYSTEM
 # Checks for header files.
 
 if test "x$GCC_SRC_ROOT" = "x"; then
-  plugin_includes=-I`$CXX -print-file-name=plugin`/include
+  plugin_includes="-I`$CXX -print-file-name=plugin`/include -I`$CXX -print-file-name=plugin`/include/c-family"
   AC_SUBST(GCC_PLUGIN_INCLUDES, $plugin_includes)
 else
   AC_SUBST(GCC_PLUGIN_INCLUDES, $plugin_includes)
-  plugin_includes="-I$GCC_SRC_ROOT/include -I$GCC_SRC_ROOT/gcc  -I$GCC_SRC_ROOT/libcpp"
+  plugin_includes="-I$GCC_SRC_ROOT/include -I$GCC_SRC_ROOT/include/c-family -I$GCC_SRC_ROOT/gcc  -I$GCC_SRC_ROOT/libcpp"
 fi
 
 

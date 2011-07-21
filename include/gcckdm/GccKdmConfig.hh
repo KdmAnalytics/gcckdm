@@ -40,15 +40,15 @@ extern "C"
 #include <tm.h>
 #include <langhooks.h>
 #include <plugin-version.h>
-#include <diagnostic.h>
+#include <cp/cp-tree.h>
 #include <c-common.h>
 #include <c-pragma.h>
 #include <cgraph.h>
-#include <cp/cp-tree.h>
 #include <tree-iterator.h>
 #include <tree-flow.h>
 #include <gimple.h>
 #include <real.h>
+#include <diagnostic.h>
 }
 
 

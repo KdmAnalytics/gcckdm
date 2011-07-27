@@ -1746,6 +1746,13 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
 
   lockUid(true);
 
+  /* When a file has NO functions in it, gcc seems to consider the file completely empty
+   * and we can NOT get to extract anything at all from that file.
+   * To work around this, we have our pre-processing phase add a dummy/empty function
+   * with a fixed name. Then we mark that function hidden here. */
+  if (name == "KDM_7222aa80eacbe6ed1bab6665910fb059")
+    writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
+
   if (signaturePolicy == WriteSignatureUnit)
   {
     long signatureId = writeKdmSignature(functionDecl);
@@ -2134,10 +2141,13 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Name(), ":language");
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::LinkId(), ":language");
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_LanguageUnit);
+
+#if 0 //BBBB
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::KdmType(), KdmType::SharedUnit());
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::Name(), ":derived");
   writeTriple(KdmElementId_DerivedSharedUnit, KdmPredicate::LinkId(), ":derived");
   writeTripleContains(KdmElementId_CodeAssembly, KdmElementId_DerivedSharedUnit);
+#endif
 
 #if 0 //BBBB
   if (isFrontendCxx())
@@ -2832,8 +2842,8 @@ tree KdmTripleWriter::typedefTypeCheck2(tree const node)
 long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy)
 {
   long unitId = getReferenceId(var);
-#if 0 //BBBB
-  if (unitId == 53)
+#if 1 //BBBB - TMP
+  if (unitId == 68675)
   {
     int junk = 123;
   }
@@ -2858,6 +2868,11 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   {
     writeRelation(KdmType::HasType(), unitId, ref);
   }
+
+#if 1 //BBBB
+  if (DECL_ARTIFICIAL (var /*functionDecl*/))
+    writeTriple(unitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
+#endif
 
   writeKdmSourceRef(unitId, var);
 
@@ -2930,7 +2945,7 @@ long KdmTripleWriter::getId_orInvalidIdForNULL(tree const node)
 long KdmTripleWriter::getNextElementId()
 {
 #if 1 //BBBB - TMP
-  if (mKdmElementId + 1 == 15997) {
+  if (mKdmElementId + 1 == 68675) {
 	int junk = 123;
   }
 #endif
@@ -2953,7 +2968,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 15997) {
+      if (mKdmElementId + 1 == 68675) {
 		int junk = 123;
 	  }
 #endif
@@ -3263,9 +3278,23 @@ long KdmTripleWriter::writeKdmPointerType(tree const pointerType, ContainsRelati
  */
 long KdmTripleWriter::getItemUnitId(long arrayTypeId)
 {
+#if 1 //BBBB - TMP
+  if (arrayTypeId == 11554) {
+    int junk = 123;
+  }
+#endif
+
 //  std::cerr << "getItemUnit" << arrayTypeId << std::endl;
   ContainmentMap::const_iterator e = mItemUnits.find(arrayTypeId);
+#if 1 //BBBB
+  if (e != mItemUnits.end()) {
+    return e->second;
+  } else {
+    return mItemUnits.insert(std::make_pair(arrayTypeId, getNextElementId())).first->second;
+  }
+#else
   return (e != mItemUnits.end()) ? e->second : mItemUnits.insert(std::make_pair(arrayTypeId, getNextElementId())).first->second;
+#endif
 }
 
 
@@ -3273,6 +3302,11 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
 {
 //  std::cerr << "writeKdmArrayType" << std::endl;
   long arrayKdmElementId = getReferenceId(arrayType);
+#if 1 //BBBB - TMP
+  if (arrayKdmElementId == 11554) {
+    int junk = 123;
+  }
+#endif
   writeTripleKdmType(arrayKdmElementId, KdmType::ArrayType());
 
   //create item unit that acts as a placeholder for elements written to or read from this array
@@ -3302,8 +3336,10 @@ void KdmTripleWriter::writeKdmArrayType(tree const arrayType)
   //The type is set on the ItemUnit not the ArrayType itself
   writeTriple(itemUnitElementId, KdmPredicate::Type(), arrayTypeKdmElementId);
 
+#if 0 //BBBB-9999
   //insert the id for our ItemUnit (if not already there)
   mItemUnits.insert(std::make_pair(arrayTypeKdmElementId, itemUnitElementId));
+#endif
 
   
 //  std::string name = nodeName(t2);

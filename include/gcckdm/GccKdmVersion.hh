@@ -25,7 +25,7 @@
 
 namespace gcckdm {
 
-std::string const GccKdmVersion = "0.0.19";
+std::string const GccKdmVersion = "0.0.20";
 
 }  // namespace gcckdm
 

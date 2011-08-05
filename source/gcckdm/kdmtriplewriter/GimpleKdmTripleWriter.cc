@@ -2869,7 +2869,42 @@ void GimpleKdmTripleWriter::writeKdmStorableUnitKindLocal(tree const var)
 	if (TREE_STATIC (var)) {
       //user defined static variable within the function
 	  mKdmWriter.writeTripleKind(unitId, KdmKind::Static());
-	} else {
+
+#if 1 //BBBB-99999
+#if 1
+      mKdmWriter.writeKdmStorableUnitInitialization(var);
+#else
+      if (!DECL_EXTERNAL(var)) {
+        //We now check to see if this variable is initialized
+        //  example int e[] = { 1, 2, 3 }
+        //  MyFunctionPtrType  f[] = { foo, bar }
+        tree declInitial = DECL_INITIAL(var);
+
+        if (declInitial) {
+          long blockId = mKdmWriter.getNextElementId();
+          mKdmWriter.writeTripleKdmType(blockId, KdmType::BlockUnit());
+          mKdmWriter.writeTripleKind(blockId, KdmKind::Init());
+          mKdmWriter.writeKdmSourceRef(blockId, var);
+          mKdmWriter.writeTripleContains(unitId, blockId);
+
+          mKdmWriter.lockUid(true);
+
+          if (TREE_CODE(declInitial) == CONSTRUCTOR) {
+            GimpleKdmTripleWriter::ActionDataPtr declInitialActionDataPtr =
+        		mGimpleWriter->writeKdmUnaryConstructor(NULL_TREE /*lhs*/, declInitial /*rhs*/, gcckdm::locationOf(declInitial), var /*lhs_var*/, NULL_TREE /*lhs_var_DE*/, blockId /*containingId*/);
+          } else {
+    	    declInitial = mGimpleWriter->skipAllNOPsEtc(declInitial);
+            GimpleKdmTripleWriter::ActionDataPtr declInitialActionDataPtr =
+          		mGimpleWriter->writeKdmUnaryConstructor(var /*lhs*/, declInitial /*rhs*/, gcckdm::locationOf(declInitial), var /*lhs_var*/, NULL_TREE /*lhs_var_DE*/, blockId /*containingId*/);
+          }
+
+          mKdmWriter.lockUid(false);
+        }
+      }
+#endif
+#endif
+
+    } else {
       //user defined local variable
       mKdmWriter.writeTripleKind(unitId, KdmKind::Local());
 	}
@@ -2903,6 +2938,12 @@ GimpleKdmTripleWriter::writeKdmStorableUnitInternal(
 {
   expanded_location const & xloc = expand_location(loc);
   long unitId = mKdmWriter.getNextElementId();
+#if 1 //BBBB - TMP
+  if (unitId == 115) {
+	int junk = 123;
+  }
+#endif
+
   mKdmWriter.writeTripleKdmType(unitId, KdmType::StorableUnit());
   if (mSettings.outputRegVarNames)
   {
@@ -2923,6 +2964,7 @@ GimpleKdmTripleWriter::writeKdmStorableUnitInternal(
   }
   mKdmWriter.writeTriple(unitId, KdmPredicate::Type(), typeId);
   mKdmWriter.writeKdmSourceRef(unitId, xloc);
+
   return unitId;
 }
 

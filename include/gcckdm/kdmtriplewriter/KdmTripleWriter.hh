@@ -269,6 +269,7 @@ public:
   long writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy);
 
   void writeKdmStorableUnitKindGlobal(tree const var);
+  void writeKdmStorableUnitInitialization(tree const var);
 
   tree typedefTypeCheck2(tree const node);
 
@@ -300,7 +301,6 @@ public:
    */
   long writeKdmFriend(long const subclass, long const superclass);
 
-
   /**
    * Writes a KDM Source ref using the information contained in the expanded_location
    *
@@ -314,7 +314,6 @@ public:
    * @return the id that was passed into the metho
    */
   long writeKdmSourceRef(long id, expanded_location const & xloc);
-
 
   /**
    * Add the built-in stereotype to the given subject id

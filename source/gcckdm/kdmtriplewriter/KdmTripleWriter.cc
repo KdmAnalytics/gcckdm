@@ -2674,32 +2674,71 @@ long KdmTripleWriter::writeKdmItemUnit(tree const item)
 void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
 {
   long unitId = getReferenceId(var);
+#if 1 //BBBB - TMP
+  if (unitId == 115) {
+	int junk = 123;
+  }
+#endif
   std::string name = nodeName(var);
 
-  if (DECL_EXTERNAL(var))
-  {
+  if (DECL_EXTERNAL(var)) {
     writeTripleKind(unitId, KdmKind::External());
-  }
-  else
-  {
+  } else {
     writeTripleKind(unitId, KdmKind::Global());
-
     if (TREE_PUBLIC (var)) {
       std::string linkSnkStr = linkVariablePrefix + gcckdm::getLinkId(var, name);
       writeTriple(unitId, KdmPredicate::LinkSnk(), linkSnkStr);
     }
+  }
 
+#if 1 //BBBB
+  writeKdmStorableUnitInitialization(var);
+#else
+  if (!DECL_EXTERNAL(var)) {
     //We now check to see if this variable is initialized
     //  example int e[] = { 1, 2, 3 }
     //  MyFunctionPtrType  f[] = { foo, bar }
     tree declInitial = DECL_INITIAL(var);
 
-    if (declInitial)
-    {
+    if (declInitial) {
       long blockId = getNextElementId();
       writeTripleKdmType(blockId, KdmType::BlockUnit());
       writeTripleKind(blockId, KdmKind::Init());
       writeKdmSourceRef(blockId, var);
+      writeTripleContains(unitId, blockId);
+
+      lockUid(true);
+
+      if (TREE_CODE(declInitial) == CONSTRUCTOR) {
+          GimpleKdmTripleWriter::ActionDataPtr declInitialActionDataPtr =
+        		mGimpleWriter->writeKdmUnaryConstructor(NULL_TREE /*lhs*/, declInitial /*rhs*/, gcckdm::locationOf(declInitial), var /*lhs_var*/, NULL_TREE /*lhs_var_DE*/, blockId /*containingId*/);
+      } else {
+    	  declInitial = mGimpleWriter->skipAllNOPsEtc(declInitial);
+          GimpleKdmTripleWriter::ActionDataPtr declInitialActionDataPtr =
+          		mGimpleWriter->writeKdmUnaryConstructor(var /*lhs*/, declInitial /*rhs*/, gcckdm::locationOf(declInitial), var /*lhs_var*/, NULL_TREE /*lhs_var_DE*/, blockId /*containingId*/);
+      }
+
+      lockUid(false);
+    }
+  }
+#endif
+}
+
+void KdmTripleWriter::writeKdmStorableUnitInitialization(tree const var)
+{
+  if (!DECL_EXTERNAL(var)) {
+    //We now check to see if this variable is initialized
+    //  example int e[] = { 1, 2, 3 }
+    //  MyFunctionPtrType  f[] = { foo, bar }
+    tree declInitial = DECL_INITIAL(var);
+
+    if (declInitial) {
+      long blockId = getNextElementId();
+      writeTripleKdmType(blockId, KdmType::BlockUnit());
+      writeTripleKind(blockId, KdmKind::Init());
+      writeKdmSourceRef(blockId, var);
+
+      long unitId = getReferenceId(var);
       writeTripleContains(unitId, blockId);
 
       lockUid(true);
@@ -2843,8 +2882,7 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
 {
   long unitId = getReferenceId(var);
 #if 1 //BBBB - TMP
-  if (unitId == 68675)
-  {
+  if (unitId == 68675) {
     int junk = 123;
   }
 #endif
@@ -2864,25 +2902,23 @@ long KdmTripleWriter::writeKdmStorableUnit(tree const var, ContainsRelationPolic
   writeTriple(unitId, KdmPredicate::Type(), ref);
 
   //For the moment we only want structures to have hasType relationship
-  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE)
-  {
+  if (TREE_CODE(TYPE_MAIN_VARIANT(TREE_TYPE(var))) == RECORD_TYPE) {
     writeRelation(KdmType::HasType(), unitId, ref);
   }
 
 #if 1 //BBBB
-  if (DECL_ARTIFICIAL (var /*functionDecl*/))
+  if (DECL_ARTIFICIAL (var /*functionDecl*/)) {
     writeTriple(unitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
+  }
 #endif
 
   writeKdmSourceRef(unitId, var);
 
-  if (containPolicy == WriteKdmContainsRelation)
-  {
+  if (containPolicy == WriteKdmContainsRelation) {
     writeTripleContains(getSourceFileReferenceId(var), unitId);
   }
 
-  if (TREE_PUBLIC (var))
-  {
+  if (TREE_PUBLIC (var)) {
     std::string linkIdStr = gcckdm::getLinkId(var, name);
     writeTripleLinkId(unitId, linkIdStr);
   }
@@ -2968,7 +3004,7 @@ long KdmTripleWriter::getReferenceId(tree const node)
     if (mProcessedNodes.find(node) == mProcessedNodes.end())
     {
 #if 1 //BBBB - TMP
-      if (mKdmElementId + 1 == 68675) {
+      if (mKdmElementId + 1 == 115) {
 		int junk = 123;
 	  }
 #endif

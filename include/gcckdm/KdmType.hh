@@ -34,6 +34,9 @@ private:
   {
     //Kdm Group
     KdmType_Segment,
+#if 1 //BBBB
+    KdmType_Audit,
+#endif
     KdmType_ExtensionFamily,
     KdmType_StereoType,
 
@@ -106,6 +109,9 @@ private:
 public:
   //Kdm Group
   static const KdmType Segment()          { return KdmType(KdmType_Segment, "kdm/Segment");  }
+#if 1 //BBBB
+  static const KdmType Audit()            { return KdmType(KdmType_Audit, "kdm/Audit");  }
+#endif
   static const KdmType ExtensionFamily()  { return KdmType(KdmType_ExtensionFamily, "kdm/ExtensionFamily"); }
   static const KdmType Stereotype()       { return KdmType(KdmType_StereoType, "kdm/Stereotype"); }
 

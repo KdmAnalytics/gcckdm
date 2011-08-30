@@ -1933,6 +1933,18 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   // Segment and CodeModel definitions
   writeTriple(KdmElementId_Segment, KdmPredicate::KdmType(), KdmType::Segment());
   writeTriple(KdmElementId_Segment, KdmPredicate::LinkId(), "root");
+
+#if 1 //BBBB
+  writeTriple(KdmElementId_Audit, KdmPredicate::KdmType(), KdmType::Audit());
+  {
+    std::string linkIdStr = (KdmType::Audit()).name() + ":" + gcckdm::GccKdmVersion;
+    writeTriple(KdmElementId_Audit, KdmPredicate::Name(), linkIdStr /*KdmType::Audit()*/);
+    writeTriple(KdmElementId_Audit, KdmPredicate::Version(), gcckdm::GccKdmVersion);
+    writeTriple(KdmElementId_Audit, KdmPredicate::LinkId(), linkIdStr);
+  }
+  writeTripleContains(KdmElementId_Segment, KdmElementId_Audit);
+#endif
+
   writeTriple(KdmElementId_CodeModel, KdmPredicate::KdmType(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::Name(), KdmType::CodeModel());
   writeTriple(KdmElementId_CodeModel, KdmPredicate::LinkId(), KdmType::CodeModel());
@@ -1943,6 +1955,7 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::Name(), "__WORKBENCH__");
   writeTriple(KdmElementId_WorkbenchExtensionFamily, KdmPredicate::LinkId(), "__WORKBENCH__");
   writeTripleContains(KdmElementId_Segment, KdmElementId_WorkbenchExtensionFamily);
+
   writeTriple(KdmElementId_HiddenStereotype, KdmPredicate::KdmType(), KdmType::Stereotype());
   writeTriple(KdmElementId_HiddenStereotype, KdmPredicate::Name(), "__HIDDEN__");
   writeTriple(KdmElementId_HiddenStereotype, KdmPredicate::LinkId(), "__HIDDEN__");
@@ -2039,6 +2052,7 @@ void KdmTripleWriter::writeDefaultKdmModelElements()
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::Name(), ":code");
   writeTriple(KdmElementId_CodeAssembly, KdmPredicate::LinkId(), ":code");
   writeTripleContains(KdmElementId_CodeModel, KdmElementId_CodeAssembly);
+
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::KdmType(), KdmType::LanguageUnit());
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::Name(), ":language");
   writeTriple(KdmElementId_LanguageUnit, KdmPredicate::LinkId(), ":language");

@@ -52,7 +52,8 @@ private:
     KdmPredicate_Size,
     KdmPredicate_EnumName,
     KdmPredicate_Pos,
-    KdmPredicate_NoNaturalInFlow
+    KdmPredicate_NoNaturalInFlow,
+    KdmPredicate_Version
   };
 
 public:
@@ -76,6 +77,7 @@ public:
   static const KdmPredicate EnumName()   { return KdmPredicate(KdmPredicate_EnumName, "enumName"); }
   static const KdmPredicate Pos()        { return KdmPredicate(KdmPredicate_Pos, "pos"); }
   static const KdmPredicate NoNaturalInFlow()  { return KdmPredicate(KdmPredicate_NoNaturalInFlow, "noNaturalInFlow"); }
+  static const KdmPredicate Version()    { return KdmPredicate(KdmPredicate_Version, "version"); }
 
   int const id() const
   {

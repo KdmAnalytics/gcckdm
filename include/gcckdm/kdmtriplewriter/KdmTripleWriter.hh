@@ -430,6 +430,9 @@ public:
   enum ReservedElementId
   {
     KdmElementId_Segment = 0,
+#if 1 //BBBB
+    KdmElementId_Audit,
+#endif
     KdmElementId_CodeModel,
     KdmElementId_WorkbenchExtensionFamily,
     KdmElementId_HiddenStereotype,

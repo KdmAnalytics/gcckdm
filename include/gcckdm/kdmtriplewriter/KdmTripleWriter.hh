@@ -271,8 +271,6 @@ public:
   void writeKdmStorableUnitKindGlobal(tree const var);
   void writeKdmStorableUnitInitialization(tree const var);
 
-  tree typedefTypeCheck2(tree const node);
-
   /**
    * Write the common "extends" relationship
    *

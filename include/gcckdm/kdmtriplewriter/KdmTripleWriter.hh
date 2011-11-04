@@ -43,8 +43,8 @@
 #include "gcckdm/GccAstListener.hh"
 #include "gcckdm/GccKdmUtilities.hh"
 #include "gcckdm/KdmPredicate.hh"
-#include "gcckdm/KdmType.hh"
-#include "gcckdm/IKdmKind.hh"
+#include "gcckdm/kdm/Type.hh"
+#include "gcckdm/kdm/IKind.hh"
 #include "gcckdm/kdmtriplewriter/PathHash.hh"
 #include "gcckdm/kdmtriplewriter/TripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/UidNode.hh"
@@ -197,7 +197,7 @@ public:
   /**
    * @see TripleWriter::writerTriple
    */
-  virtual void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object);
+  virtual void writeTriple(long const subject, KdmPredicate const & predicate, kdm::Type const & object);
 
   /**
    * @see TripleWriter::writerTriple
@@ -212,7 +212,7 @@ public:
    * @param subject the subject id
    * @param type
    */
-  void writeTripleKdmType(long const subject, KdmType const & type);
+  void writeTripleKdmType(long const subject, kdm::Type const & type);
 
   /**
    * Convenience method to write the common "name" triple
@@ -246,7 +246,7 @@ public:
    * @param subject
    * @param kind
    */
-  void writeTripleKind(long const subject, IKdmKind const & kind);
+  void writeTripleKind(long const subject, kdm::IKind const & kind);
 
 
   /**
@@ -375,7 +375,7 @@ public:
    * @param type
    * @return the refId for the given type
    */
-  long getUserTypeId(KdmType const & type);
+  long getUserTypeId(kdm::Type const & type);
 
   /**
    * In certain cases some nodes are processed outside the regular
@@ -409,7 +409,7 @@ public:
    * @param fromId the id of the origin of the relation
    * @param toId the id of the target of the relation
    */
-  long writeRelation(KdmType const & type, const long fromId, const long toId);
+  long writeRelation(kdm::Type const & type, const long fromId, const long toId);
 
   long writeKdmParameterUnit(tree const param, bool forceNewElementId = false);
 
@@ -468,14 +468,14 @@ public:
 private:
 
   /**
-   * Functor for hashing KdmType's in a unordered_map
+   * Functor for hashing kdm::Type's in a unordered_map
    *
-   * Currently uses the integer that represents the KdmType and
+   * Currently uses the integer that represents the kdm::Type and
    * the standard hash
    */
   struct KdmTypeHash
   {
-    size_t operator()(KdmType const & v) const
+    size_t operator()(kdm::Type const & v) const
     {
       std::tr1::hash<int> h;
       return h(v.id());
@@ -491,7 +491,7 @@ private:
   typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, UidNode> UidGraph;
   typedef boost::graph_traits<UidGraph>::vertex_descriptor Vertex;
   typedef std::tr1::unordered_map<long, long> ContainmentMap;
-  typedef std::tr1::unordered_map<KdmType, long, KdmTypeHash> TypeMap;
+  typedef std::tr1::unordered_map<kdm::Type, long, KdmTypeHash> TypeMap;
 
   /**
    * Returns the id for source file containing the given node
@@ -713,7 +713,7 @@ private:
 
   long getPackageId(Path const & path);
   long getDirectoryId(Path const & path);
-  long getLocationContextId(Path const & path, long const rootId, FileMap & fMap, KdmType const & type);
+  long getLocationContextId(Path const & path, long const rootId, FileMap & fMap, kdm::Type const & type);
 
   int find_template_parm (tree t);
   /**

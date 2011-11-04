@@ -19,17 +19,23 @@
 // along with libGccKdm.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-#include "gcckdm/KdmType.hh"
+#include "gcckdm/kdm/Type.hh"
 
 #include <iostream>
 
 namespace gcckdm
 {
 
-std::ostream & operator<<(std::ostream & sink, KdmType const & pred)
+namespace kdm
+{
+
+
+std::ostream & operator<<(std::ostream & sink, Type const & pred)
 {
   sink << pred.name();
   return sink;
 }
+
+} //namespace kdm
 
 } // namespace gcckdm

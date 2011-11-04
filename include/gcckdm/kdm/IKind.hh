@@ -5,20 +5,23 @@
  *      Author: kgirard
  */
 
-#ifndef GCCKDM_IKIND_HH_
-#define GCCKDM_IKIND_HH_
+#ifndef GCCKDM_KDM_IKIND_HH_
+#define GCCKDM_KDM_IKIND_HH_
 
 #include <string>
 
 namespace gcckdm
 {
+namespace kdm
+{
 
-class IKdmKind
+class IKind
 {
 public:
 	virtual std::string const & name() const = 0;
 };
 
+} //namespac kdm
 } //namespace gcckdm
 
-#endif /* GCCKDM_IKIND_HH_ */
+#endif /* GCCKDM_KDM_IKIND_HH_ */

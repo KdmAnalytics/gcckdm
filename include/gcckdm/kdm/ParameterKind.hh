@@ -9,50 +9,53 @@
 #define GCCKDM_PARAMETERKIND_HH_
 
 #include <string>
-#include <gcckdm/IKdmKind.hh>
+#include <gcckdm/kdm/IKind.hh>
 
 namespace gcckdm
+{
+
+namespace kdm
 {
 
 /**
  * Typesafe enum of Parameter kind enumeration datatype
  */
-class KdmParameterKind : public IKdmKind
+class ParameterKind : public gcckdm::kdm::IKind
 {
 private:
   enum
   {
-	  KdmParameterKind_ByValue,
-	  KdmParameterKind_ByName,
-	  KdmParameterKind_ByReference,
-	  KdmParameterKind_Variadic,
-	  KdmParameterKind_Return,
-	  KdmParameterKind_Throws,
-	  KdmParameterKind_Exception,
-	  KdmParameterKind_CatchAll,
-	  KdmParameterKind_Unknown
+	  ParameterKind_ByValue,
+	  ParameterKind_ByName,
+	  ParameterKind_ByReference,
+	  ParameterKind_Variadic,
+	  ParameterKind_Return,
+	  ParameterKind_Throws,
+	  ParameterKind_Exception,
+	  ParameterKind_CatchAll,
+	  ParameterKind_Unknown
   };
 
 public:
 
   ///Returns a KdmParameterKind object that represents the "byValue" literal
-  static const KdmParameterKind ByValue() { return KdmParameterKind(KdmParameterKind_ByValue, "byValue"); }
+  static const ParameterKind ByValue() { return ParameterKind(ParameterKind_ByValue, "byValue"); }
   ///Returns a KdmParameterKind object that represents the "byName" literal
-  static const KdmParameterKind ByName() { return KdmParameterKind(KdmParameterKind_ByName, "byName" ); }
+  static const ParameterKind ByName() { return ParameterKind(ParameterKind_ByName, "byName" ); }
   ///Returns a KdmParameterKind object that represents the "byReference" literal
-  static const KdmParameterKind ByReference() { return KdmParameterKind(KdmParameterKind_ByReference, "byReference");}
+  static const ParameterKind ByReference() { return ParameterKind(ParameterKind_ByReference, "byReference");}
   ///Returns a KdmParameterKind object that represents the "variadic" literal
-  static const KdmParameterKind Variadic() { return KdmParameterKind(KdmParameterKind_ByReference, "variadic");}
+  static const ParameterKind Variadic() { return ParameterKind(ParameterKind_ByReference, "variadic");}
   ///Returns a KdmParameterKind object that represents the "return" literal
-  static const KdmParameterKind Return() { return KdmParameterKind(KdmParameterKind_Return, "return");}
+  static const ParameterKind Return() { return ParameterKind(ParameterKind_Return, "return");}
   ///Returns a KdmParameterKind object that represents the "throws" literal
-  static const KdmParameterKind Throws() { return KdmParameterKind(KdmParameterKind_Throws, "throws");}
+  static const ParameterKind Throws() { return ParameterKind(ParameterKind_Throws, "throws");}
   ///Returns a KdmParameterKind object that represents the "exception" literal
-  static const KdmParameterKind Exception() { return KdmParameterKind(KdmParameterKind_Exception, "exception");}
+  static const ParameterKind Exception() { return ParameterKind(ParameterKind_Exception, "exception");}
   ///Returns a KdmParameterKind object that represents the "catchall" literal
-  static const KdmParameterKind CatchAll() { return KdmParameterKind(KdmParameterKind_CatchAll, "catchall");}
+  static const ParameterKind CatchAll() { return ParameterKind(ParameterKind_CatchAll, "catchall");}
   ///Returns a KdmParameterKind object that represents the "unknown" literal
-  static const KdmParameterKind Unknown() { return KdmParameterKind(KdmParameterKind_Unknown, "unknown");}
+  static const ParameterKind Unknown() { return ParameterKind(ParameterKind_Unknown, "unknown");}
 
 
   /**
@@ -84,17 +87,19 @@ private:
   /**
    * Private constructor to precent user construction
    */
-  KdmParameterKind(int const & id, std::string name) :
+  ParameterKind(int const & id, std::string name) :
 	mId(id), mName(name)
   {
   }
 
   /// a value from the enum of all parameter kind possible values
   int mId;
-  /// a string representing the literal of this KdmParameterKind datatype
+  /// a string representing the literal of this ParameterKind datatype
   std::string mName;
 
 };
+
+} // namespace kdm
 
 } // namespace gcckdm
 

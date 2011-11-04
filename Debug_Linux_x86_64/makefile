@@ -9,6 +9,7 @@ RM := rm -rf
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include source/gcckdm/kdmtriplewriter/subdir.mk
+-include source/gcckdm/kdm/subdir.mk
 -include source/gcckdm/subdir.mk
 -include build/source/.libs/subdir.mk
 -include build/source/subdir.mk

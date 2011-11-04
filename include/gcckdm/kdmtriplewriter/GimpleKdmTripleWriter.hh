@@ -221,11 +221,11 @@ private:
   long processGimpleAstNode(long const actionId, gimple const gs, tree const ast);
 
   ActionDataPtr writeKdmNopForLabel(tree const label);
-  long writeKdmActionRelation(KdmType const & type, long const fromId, long const toId);
+  long writeKdmActionRelation(kdm::Type const & type, long const fromId, long const toId);
 
-  long writeKdmActionRelation(KdmType const & type, long const fromId, RelationTarget const & target);
+  long writeKdmActionRelation(kdm::Type const & type, long const fromId, RelationTarget const & target);
 
-  long writeKdmFlow(KdmType const & flow, long const fromId, long const toId);
+  long writeKdmFlow(kdm::Type const & flow, long const fromId, long const toId);
   long writeKdmFlow(long const fromId, long const toId);
   long writeKdmExceptionFlow(long const fromId, long const toId);
   long writeKdmExitFlow(long const fromId, long const toId);
@@ -233,15 +233,15 @@ private:
   void writeKdmUnaryRelationships(long const actionId, RelationTarget const & lhsTarget, RelationTarget const & rhsTarget);
   void writeKdmBinaryRelationships(long const actionId, RelationTarget const & lhsDataElementTarget, RelationTarget const & lhsStorableUnitTarget, RelationTarget const & rhs1Target, RelationTarget const & rhs2Target);
 
-  ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, tree const lhs, tree const rhs);
-  ActionDataPtr writeKdmUnaryOperation(KdmKind const & kind, gimple const gs);
+  ActionDataPtr writeKdmUnaryOperation(kdm::Kind const & kind, tree const lhs, tree const rhs);
+  ActionDataPtr writeKdmUnaryOperation(kdm::Kind const & kind, gimple const gs);
   ActionDataPtr writeKdmUnaryConstructor(gimple const gs);
 public:
   tree skipAllNOPsEtc(tree value);
   ActionDataPtr writeKdmUnaryConstructor(tree const lhs, tree const rhs, location_t const loc, tree lhs_var = NULL_TREE, tree lhs_var_DE = NULL_TREE, long containingId = invalidId);
 private:
-  ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, gimple const gs);
-  ActionDataPtr writeKdmBinaryOperation(KdmKind const & kind, tree const lhsDataElement, tree const lhsStorableUnit, tree const rhs1, tree const rhs2);
+  ActionDataPtr writeKdmBinaryOperation(kdm::Kind const & kind, gimple const gs);
+  ActionDataPtr writeKdmBinaryOperation(kdm::Kind const & kind, tree const lhsDataElement, tree const lhsStorableUnit, tree const rhs1, tree const rhs2);
   ActionDataPtr writeKdmArraySelect(gimple const gs);
   ActionDataPtr writeKdmArraySelect(tree const lhs, tree const rhs, location_t const loc);
   ActionDataPtr writeKdmArrayReplace(gimple const gs);
@@ -269,7 +269,7 @@ public:
 private:
   ActionDataPtr writeKdmPtr(gimple const gs);
 
-  ActionDataPtr writeKdmActionElement(KdmKind const & kind, RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
+  ActionDataPtr writeKdmActionElement(kdm::Kind const & kind, RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
   /**
    *

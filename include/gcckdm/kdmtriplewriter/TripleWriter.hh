@@ -24,7 +24,7 @@
 
 #include <string>
 #include <gcckdm/KdmPredicate.hh>
-#include <gcckdm/KdmType.hh>
+#include <gcckdm/kdm/Type.hh>
 
 namespace gcckdm
 {
@@ -63,7 +63,7 @@ public:
    * @param predicate - the KDM predicate
    * @param object - a KdmType as defined by the KDM specification ie action/ActionElement
    */
-  virtual void writeTriple(long const subject, KdmPredicate const & predicate, KdmType const & object) = 0;
+  virtual void writeTriple(long const subject, KdmPredicate const & predicate, kdm::Type const & object) = 0;
 
   /**
    * Writes the given three values as a triple

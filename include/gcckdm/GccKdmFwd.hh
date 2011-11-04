@@ -24,11 +24,12 @@
 
 namespace gcckdm
 {
-
-class KdmType;
-class KdmPredicate;
-class KdmKind;
-
+ namespace kdm
+ {
+ 	 class Type;
+ 	 class Kind;
+ }
+ class KdmPredicate;
 } // namespace gcckdm
 
 #endif /* GCCKDMFWD_HH_ */

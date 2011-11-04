@@ -32,6 +32,8 @@
 
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
+#include "gcckdm/KdmKind.hh"
+#include "gcckdm/KdmParameterKind.hh"
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
 #include "gcckdm/GccKdmVersion.hh"
@@ -2204,7 +2206,7 @@ void KdmTripleWriter::writeTripleLinkId(long const subject, std::string const & 
   writeTriple(subject, KdmPredicate::LinkId(), name);
 }
 
-void KdmTripleWriter::writeTripleKind(long const subject, KdmKind const & type)
+void KdmTripleWriter::writeTripleKind(long const subject, IKdmKind const & type)
 {
   writeTriple(subject, KdmPredicate::Kind(), type.name());
 }
@@ -2322,7 +2324,7 @@ long KdmTripleWriter::writeKdmReturnParameterUnit(tree const param)
   long subjectId = getNextElementId();
   writeTripleKdmType(subjectId, KdmType::ParameterUnit());
   writeTripleName(subjectId, "__RESULT__");
-  writeTripleKind(subjectId, KdmKind::Return());
+  writeTripleKind(subjectId, KdmParameterKind::Return());
   writeTriple(subjectId, KdmPredicate::Type(), ref);
   // For the moment ensure that all parameters have the hasType relationship
   // this may result is a huge explosion of data that we eventually might

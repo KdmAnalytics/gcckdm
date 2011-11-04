@@ -25,4 +25,6 @@ C_UPPER_DEPS :=
 SUBDIRS := \
 source/gcckdm/kdmtriplewriter \
 source/gcckdm \
+build/source \
+build/source/.libs \
 

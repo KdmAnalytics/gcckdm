@@ -44,7 +44,7 @@
 #include "gcckdm/GccKdmUtilities.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/KdmType.hh"
-#include "gcckdm/KdmKind.hh"
+#include "gcckdm/IKdmKind.hh"
 #include "gcckdm/kdmtriplewriter/PathHash.hh"
 #include "gcckdm/kdmtriplewriter/TripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/UidNode.hh"
@@ -246,7 +246,7 @@ public:
    * @param subject
    * @param kind
    */
-  void writeTripleKind(long const subject, KdmKind const & kind);
+  void writeTripleKind(long const subject, IKdmKind const & kind);
 
 
   /**

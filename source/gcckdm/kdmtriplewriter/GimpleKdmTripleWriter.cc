@@ -764,7 +764,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleAsmStat
               prevData = currData;
             }
           }
-
+        break;
       }
       default:
       {
@@ -1873,6 +1873,7 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstru
   tree rhs(gimple_assign_rhs1(gs));
   return writeKdmUnaryConstructor(lhs, rhs, gimple_location(gs));
 }
+
 
 tree GimpleKdmTripleWriter::skipAllNOPsEtc(tree value)
 {

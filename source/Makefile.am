@@ -14,8 +14,10 @@ GCCKDMHEADERS = $(top_srcdir)/include/gcckdm/kdmtriplewriter/GimpleKdmTripleWrit
   $(top_srcdir)/include/gcckdm/utilities/unique_ptr.hpp\
   $(top_srcdir)/include/gcckdm/GccKdmUtilities.hh\
   $(top_srcdir)/include/gcckdm/KdmPredicate.hh\
-  $(top_srcdir)/include/gcckdm/KdmType.hh\
-  $(top_srcdir)/include/gcckdm/KdmKind.hh\
+  $(top_srcdir)/include/gcckdm/kdm/Type.hh\
+  $(top_srcdir)/include/gcckdm/kdm/IKind.hh\
+  $(top_srcdir)/include/gcckdm/kdm/Kind.hh\
+  $(top_srcdir)/include/gcckdm/kdm/ParameterKind.hh\
   $(top_srcdir)/include/gcckdm/GccKdmFwd.hh\
   $(top_srcdir)/include/gcckdm/GccAstListener.hh\
   $(top_srcdir)/include/gcckdm/GccKdmVersion.hh\
@@ -29,7 +31,7 @@ libGccKdm_la_SOURCES = gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.cc\
                        gcckdm/GccKdmUtilities.cc\
                        gcckdm/KdmPredicate.cc\
                        gcckdm/GccKdmPlugin.cc\
-                       gcckdm/KdmType.cc\
+                       gcckdm/kdm/Type.cc\
                        $(GCCKDMHEADERS)
                        
 libGccKdm_la_CPPFLAGS = @BOOST_CPPFLAGS@ -I$(top_srcdir)/include @GCC_PLUGIN_INCLUDES@

@@ -76,7 +76,7 @@ am__objects_1 =
 am_libGccKdm_la_OBJECTS = libGccKdm_la-GimpleKdmTripleWriter.lo \
 	libGccKdm_la-KdmTripleWriter.lo \
 	libGccKdm_la-GccKdmUtilities.lo libGccKdm_la-KdmPredicate.lo \
-	libGccKdm_la-GccKdmPlugin.lo libGccKdm_la-KdmType.lo \
+	libGccKdm_la-GccKdmPlugin.lo libGccKdm_la-Type.lo \
 	$(am__objects_1)
 libGccKdm_la_OBJECTS = $(am_libGccKdm_la_OBJECTS)
 libGccKdm_la_LINK = $(LIBTOOL) --tag=CXX $(AM_LIBTOOLFLAGS) \
@@ -244,8 +244,10 @@ GCCKDMHEADERS = $(top_srcdir)/include/gcckdm/kdmtriplewriter/GimpleKdmTripleWrit
   $(top_srcdir)/include/gcckdm/utilities/unique_ptr.hpp\
   $(top_srcdir)/include/gcckdm/GccKdmUtilities.hh\
   $(top_srcdir)/include/gcckdm/KdmPredicate.hh\
-  $(top_srcdir)/include/gcckdm/KdmType.hh\
-  $(top_srcdir)/include/gcckdm/KdmKind.hh\
+  $(top_srcdir)/include/gcckdm/kdm/Type.hh\
+  $(top_srcdir)/include/gcckdm/kdm/IKind.hh\
+  $(top_srcdir)/include/gcckdm/kdm/Kind.hh\
+  $(top_srcdir)/include/gcckdm/kdm/ParameterKind.hh\
   $(top_srcdir)/include/gcckdm/GccKdmFwd.hh\
   $(top_srcdir)/include/gcckdm/GccAstListener.hh\
   $(top_srcdir)/include/gcckdm/GccKdmVersion.hh\
@@ -257,7 +259,7 @@ libGccKdm_la_SOURCES = gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.cc\
                        gcckdm/GccKdmUtilities.cc\
                        gcckdm/KdmPredicate.cc\
                        gcckdm/GccKdmPlugin.cc\
-                       gcckdm/KdmType.cc\
+                       gcckdm/kdm/Type.cc\
                        $(GCCKDMHEADERS)
 
 libGccKdm_la_CPPFLAGS = @BOOST_CPPFLAGS@ -I$(top_srcdir)/include @GCC_PLUGIN_INCLUDES@
@@ -343,7 +345,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libGccKdm_la-GimpleKdmTripleWriter.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libGccKdm_la-KdmPredicate.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libGccKdm_la-KdmTripleWriter.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libGccKdm_la-KdmType.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libGccKdm_la-Type.Plo@am__quote@
 
 .cc.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -401,12 +403,12 @@ libGccKdm_la-GccKdmPlugin.lo: gcckdm/GccKdmPlugin.cc
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libGccKdm_la_CPPFLAGS) $(CPPFLAGS) $(libGccKdm_la_CXXFLAGS) $(CXXFLAGS) -c -o libGccKdm_la-GccKdmPlugin.lo `test -f 'gcckdm/GccKdmPlugin.cc' || echo '$(srcdir)/'`gcckdm/GccKdmPlugin.cc
 
-libGccKdm_la-KdmType.lo: gcckdm/KdmType.cc
-@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libGccKdm_la_CPPFLAGS) $(CPPFLAGS) $(libGccKdm_la_CXXFLAGS) $(CXXFLAGS) -MT libGccKdm_la-KdmType.lo -MD -MP -MF $(DEPDIR)/libGccKdm_la-KdmType.Tpo -c -o libGccKdm_la-KdmType.lo `test -f 'gcckdm/KdmType.cc' || echo '$(srcdir)/'`gcckdm/KdmType.cc
-@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libGccKdm_la-KdmType.Tpo $(DEPDIR)/libGccKdm_la-KdmType.Plo
-@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='gcckdm/KdmType.cc' object='libGccKdm_la-KdmType.lo' libtool=yes @AMDEPBACKSLASH@
+libGccKdm_la-Type.lo: gcckdm/kdm/Type.cc
+@am__fastdepCXX_TRUE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libGccKdm_la_CPPFLAGS) $(CPPFLAGS) $(libGccKdm_la_CXXFLAGS) $(CXXFLAGS) -MT libGccKdm_la-Type.lo -MD -MP -MF $(DEPDIR)/libGccKdm_la-Type.Tpo -c -o libGccKdm_la-Type.lo `test -f 'gcckdm/kdm/Type.cc' || echo '$(srcdir)/'`gcckdm/kdm/Type.cc
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/libGccKdm_la-Type.Tpo $(DEPDIR)/libGccKdm_la-Type.Plo
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='gcckdm/kdm/Type.cc' object='libGccKdm_la-Type.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libGccKdm_la_CPPFLAGS) $(CPPFLAGS) $(libGccKdm_la_CXXFLAGS) $(CXXFLAGS) -c -o libGccKdm_la-KdmType.lo `test -f 'gcckdm/KdmType.cc' || echo '$(srcdir)/'`gcckdm/KdmType.cc
+@am__fastdepCXX_FALSE@	$(LIBTOOL)  --tag=CXX $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libGccKdm_la_CPPFLAGS) $(CPPFLAGS) $(libGccKdm_la_CXXFLAGS) $(CXXFLAGS) -c -o libGccKdm_la-Type.lo `test -f 'gcckdm/kdm/Type.cc' || echo '$(srcdir)/'`gcckdm/kdm/Type.cc
 
 mostlyclean-libtool:
 	-rm -f *.lo

@@ -43,7 +43,7 @@ public:
   ///Returns a ExportKind object that represents the "final" literal
   static const ExportKind Unknown()              { return ExportKind(ExportKind_Final, "final"); }
   ///Returns a ExportKind object that represents the "abstract" literal
-  static const ExportKind Unknown()              { return ExportKind(ExportKind_Unknown, "abstract"); }
+  static const ExportKind Unknown()              { return ExportKind(ExportKind_Unknown, "unknown"); }
 
   /**
    * Return the id of this ExportKind object as an int

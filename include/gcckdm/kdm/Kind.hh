@@ -96,13 +96,6 @@ private:
     Kind_CatchAll,
     Kind_Init,
 
-    // Method kinds
-    Kind_Method,
-    Kind_Constructor,
-    Kind_Destructor,
-    Kind_Virtual,
-    Kind_Abstract,
-
     // Library Kinds
     Kind_Asm, //Not in KdmSpec
     Kind_BitAssign, //Not in KdmSpec
@@ -174,13 +167,6 @@ public:
   static const Kind Exception()            { return Kind(Kind_Exception, "Exception"); }
   static const Kind CatchAll()             { return Kind(Kind_CatchAll, "CatchAll"); }
   static const Kind Init()                 { return Kind(Kind_Init, "Init");  }
-
-  // Method Kind
-  static const Kind Method()               { return Kind(Kind_Method, "method"); }
-  static const Kind Constructor()          { return Kind(Kind_Constructor, "constructor"); }
-  static const Kind Destructor()           { return Kind(Kind_Destructor, "destructor"); }
-  static const Kind Virtual()              { return Kind(Kind_Virtual, "virtual"); }
-  static const Kind Abstract()             { return Kind(Kind_Abstract, "abstract"); }
 
   // Library Kinds
   static const Kind Asm()                  { return Kind(Kind_Asm, "Asm");  } //Not in KdmSpec

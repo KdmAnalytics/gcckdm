@@ -35,6 +35,7 @@
 #include "gcckdm/kdm/Kind.hh"
 #include "gcckdm/kdm/CallableKind.hh"
 #include "gcckdm/kdm/ParameterKind.hh"
+#include "gcckdm/kdm/MethodKind.hh"
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
 #include "gcckdm/GccKdmVersion.hh"
@@ -1481,7 +1482,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     if (DECL_CONSTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
-      writeTripleKind(callableUnitId, kdm::Kind::Constructor());
+      writeTripleKind(callableUnitId, kdm::MethodKind::Constructor());
       //Identify this as a sink
       if (!isTemplate)
       {
@@ -1491,7 +1492,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     else if (DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
-      writeTripleKind(callableUnitId, kdm::Kind::Destructor());
+      writeTripleKind(callableUnitId, kdm::MethodKind::Destructor());
       //Identify this as a sink
       if (!isTemplate)
       {
@@ -1511,7 +1512,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     else if (DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
-      writeTripleKind(callableUnitId, kdm::Kind::Method());
+      writeTripleKind(callableUnitId, kdm::MethodKind::Method());
       //Identify this as a sink
       if (!isTemplate)
       {

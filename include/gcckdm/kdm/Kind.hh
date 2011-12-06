@@ -96,13 +96,6 @@ private:
     Kind_CatchAll,
     Kind_Init,
 
-    // CallableKinds
-    Kind_External,
-    Kind_Regular,
-    Kind_Operator,
-    Kind_Unknown,
-
-
     // Method kinds
     Kind_Method,
     Kind_Constructor,
@@ -181,12 +174,6 @@ public:
   static const Kind Exception()            { return Kind(Kind_Exception, "Exception"); }
   static const Kind CatchAll()             { return Kind(Kind_CatchAll, "CatchAll"); }
   static const Kind Init()                 { return Kind(Kind_Init, "Init");  }
-
-  // CallableKind
-  static const Kind External()             { return Kind(Kind_External, "external"); }
-  static const Kind Regular()              { return Kind(Kind_Regular, "regular");  }
-  static const Kind Operator()             { return Kind(Kind_Operator, "operator"); }
-  static const Kind Unknown()              { return Kind(Kind_Unknown, "unknown"); }
 
   // Method Kind
   static const Kind Method()               { return Kind(Kind_Method, "method"); }

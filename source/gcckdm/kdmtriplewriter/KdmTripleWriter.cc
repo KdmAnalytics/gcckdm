@@ -33,6 +33,7 @@
 #include "gcckdm/GccKdmConfig.hh"
 #include "gcckdm/KdmPredicate.hh"
 #include "gcckdm/kdm/Kind.hh"
+#include "gcckdm/kdm/CallableKind.hh"
 #include "gcckdm/kdm/ParameterKind.hh"
 #include "gcckdm/kdmtriplewriter/GimpleKdmTripleWriter.hh"
 #include "gcckdm/kdmtriplewriter/Exception.hh"
@@ -1500,7 +1501,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     else if (DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
-      writeTripleKind(callableUnitId, kdm::Kind::Operator());
+      writeTripleKind(callableUnitId, kdm::CallableKind::Operator());
       //Identify this as a sink
       if (!isTemplate)
       {
@@ -1522,11 +1523,11 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTripleKdmType(callableUnitId, kdm::Type::CallableUnit());
       if (DECL_REALLY_EXTERN(functionDecl))
       {
-        writeTripleKind(callableUnitId, kdm::Kind::External());
+        writeTripleKind(callableUnitId, kdm::CallableKind::External());
       }
       else
       {
-        writeTripleKind(callableUnitId, kdm::Kind::Regular());
+        writeTripleKind(callableUnitId, kdm::CallableKind::Regular());
         //Identify this as a sink
         if (!isTemplate)
         {
@@ -1556,11 +1557,11 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     writeTripleKdmType(callableUnitId, kdm::Type::CallableUnit());
     if (DECL_EXTERNAL(functionDecl))
     {
-      writeTripleKind(callableUnitId, kdm::Kind::External());
+      writeTripleKind(callableUnitId, kdm::CallableKind::External());
     }
     else
     {
-      writeTripleKind(callableUnitId, kdm::Kind::Regular());
+      writeTripleKind(callableUnitId, kdm::CallableKind::Regular());
       if (!isTemplate)
       {
         //Identify this as a sink
@@ -2453,7 +2454,7 @@ void KdmTripleWriter::writeKdmStorableUnitKindGlobal(tree const var)
   std::string name = nodeName(var);
 
   if (DECL_EXTERNAL(var)) {
-    writeTripleKind(unitId, kdm::Kind::External());
+    writeTripleKind(unitId, kdm::CallableKind::External());
   } else {
     writeTripleKind(unitId, kdm::Kind::Global());
     if (TREE_PUBLIC (var)) {

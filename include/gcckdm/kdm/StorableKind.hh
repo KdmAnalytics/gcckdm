@@ -5,8 +5,8 @@
  *      Author: kgirard
  */
 
-#ifndef GCCKDM_KDM_EXPORTKIND_HH_
-#define GCCKDM_KDM_EXPORTKIND_HH_
+#ifndef GCCKDM_KDM_STORABLEKIND_HH_
+#define GCCKDM_KDM_STORABLEKIND_HH_
 
 #include <string>
 #include <gcckdm/kdm/IKind.hh>
@@ -94,4 +94,4 @@ private:
 } // gcckdm
 
 
-#endif /* GCCKDM_KDM_EXPORTKIND_HH_ */
+#endif /* GCCKDM_KDM_STORABLEKIND_HH_ */

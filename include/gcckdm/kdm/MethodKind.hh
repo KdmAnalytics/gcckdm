@@ -45,11 +45,11 @@ public:
   ///Returns a MethodKind object that represents the "operator" literal
   static const MethodKind Operator()             { return MethodKind(MethodKind_Operator, "operator"); }
   ///Returns a MethodKind object that represents the "operator" literal
-  static const MethodKind Virtual()              { return MethodKind(MethodKind_Virtual, "operator"); }
+  static const MethodKind Virtual()              { return MethodKind(MethodKind_Virtual, "virtual"); }
   ///Returns a MethodKind object that represents the "abstract" literal
   static const MethodKind Abstract()             { return MethodKind(MethodKind_Abstract, "abstract"); }
   ///Returns a MethodKind object that represents the "abstract" literal
-  static const MethodKind Unknown()              { return MethodKind(MethodKind_Unknown, "abstract"); }
+  static const MethodKind Unknown()              { return MethodKind(MethodKind_Unknown, "unknown"); }
 
   /**
    * Return the id of this MethodKind object as an int

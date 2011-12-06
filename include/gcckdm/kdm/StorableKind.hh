@@ -42,9 +42,9 @@ public:
   ///Returns a StorableKind object that represents the "static" literal
   static const StorableKind Static()               { return StorableKind(StorableKind_Static, "static"); }
   ///Returns a StorableKind object that represents the "external" literal
-  static const StorableKind External()              { return StorableKind(StorableKind_External, "external"); }
+  static const StorableKind External()             { return StorableKind(StorableKind_External, "external"); }
   ///Returns a StorableKind object that represents the "register" literal
-  static const StorableKind Register()              { return StorableKind(StorableKind_Register, "register"); }
+  static const StorableKind Register()             { return StorableKind(StorableKind_Register, "register"); }
   ///Returns a StorableKind object that represents the "unknown" literal
   static const StorableKind Unknown()              { return StorableKind(StorableKind_Unknown, "unknown"); }
 

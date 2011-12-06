@@ -48,7 +48,7 @@ public:
   static const MethodKind Virtual()              { return MethodKind(MethodKind_Virtual, "virtual"); }
   ///Returns a MethodKind object that represents the "abstract" literal
   static const MethodKind Abstract()             { return MethodKind(MethodKind_Abstract, "abstract"); }
-  ///Returns a MethodKind object that represents the "abstract" literal
+  ///Returns a MethodKind object that represents the "unknown" literal
   static const MethodKind Unknown()              { return MethodKind(MethodKind_Unknown, "unknown"); }
 
   /**

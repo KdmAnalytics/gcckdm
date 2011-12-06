@@ -35,11 +35,11 @@ private:
 public:
 
   ///Returns a ExportKind object that represents the "private" literal
-  static const ExportKind Public()              { return ExportKind(ExportKind_Public, "public"); }
+  static const ExportKind Public()               { return ExportKind(ExportKind_Public, "public"); }
   ///Returns a ExportKind object that represents the "private" literal
   static const ExportKind Private()              { return ExportKind(ExportKind_Private, "private"); }
   ///Returns a ExportKind object that represents the "protected" literal
-  static const ExportKind Protected()              { return ExportKind(ExportKind_Protected, "protected"); }
+  static const ExportKind Protected()            { return ExportKind(ExportKind_Protected, "protected"); }
   ///Returns a ExportKind object that represents the "final" literal
   static const ExportKind Unknown()              { return ExportKind(ExportKind_Final, "final"); }
   ///Returns a ExportKind object that represents the "abstract" literal

@@ -145,15 +145,76 @@ std::string getDomainString(tree domain)
 namespace gcckdm
 {
 
+/**
+ * Return the location stored in a node, regardless if the node is a
+ * type or a decl.  if useStub is true then consider the type
+ * stub as the actual location  (ignored in struct/unions/enums)
+ */
+expanded_location locationOf(tree node, bool useStub)
+{
+  expanded_location location = { NULL, 0 };
+
+  if (node == NULL_TREE)
+  {
+    return location;
+  }
+
+  tree name = NULL;
+
+  if (DECL_P(node))
+  {
+    name = DECL_NAME(node);
+  }
+  else if (TYPE_P(node))
+  {
+    name = TYPE_NAME(node);
+  }
+
+  if (name)
+  {
+    if (TYPE_STUB_DECL(name))
+    {
+      tree stub = TYPE_STUB_DECL(name);
+      location = expand_location(DECL_SOURCE_LOCATION(stub));
+    }
+    else if (DECL_P(name))
+    {
+      location = expand_location(DECL_SOURCE_LOCATION(name));
+    }
+  }
+
+  if (!location.line)
+  {
+    if (useStub && TYPE_STUB_DECL(node))
+    {
+      tree stub = TYPE_STUB_DECL(node);
+      location = expand_location(DECL_SOURCE_LOCATION(stub));
+    }
+    else
+    {
+      location = expand_location(DECL_SOURCE_LOCATION(node));
+    }
+  }
+
+  return location;
+}
+
+
 location_t locationOf(tree t)
 {
-  if (TREE_CODE(t) == PARM_DECL && DECL_CONTEXT(t)) {
+  if (TREE_CODE(t) == PARM_DECL && DECL_CONTEXT(t))
+  {
     t = DECL_CONTEXT(t);
-  } else if (TYPE_P(t)) {
-    if (TYPE_MAIN_DECL(t)) {
+  }
+  else if (TYPE_P(t))
+  {
+    if (TYPE_MAIN_DECL(t))
+    {
       t = TYPE_MAIN_DECL(t);
     }
-  } else if (TREE_CODE(t) == OVERLOAD) {
+  }
+  else if (TREE_CODE(t) == OVERLOAD)
+  {
     t = OVL_FUNCTION(t);
   }
 
@@ -168,11 +229,13 @@ location_t locationOf(tree t)
     return UNKNOWN_LOCATION;
 }
 
+
 bool locationIsUnknown(location_t loc)
 {
   location_t unk = UNKNOWN_LOCATION;
   return !memcmp(&loc, &unk, sizeof(location_t));
 }
+
 
 std::string const locationString(location_t loc)
 {

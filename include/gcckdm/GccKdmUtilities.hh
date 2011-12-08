@@ -51,12 +51,26 @@ std::string nodeName(tree const node);
  */
 bool locationIsUnknown(location_t loc);
 
+
 /**
  * Returns the location_t for the given AST tree node
  *
  * @param t the AST node to use to retrieve the location
  */
 location_t locationOf(tree t);
+
+
+/** Return the location stored in a node, regardless if the node is a
+ * type or a decl.  if useStub is true then consider the type
+ * stub as the actual location  (ignored in struct/unions/enums)
+ *
+ * @NOTE : this is an untested function
+ *
+ * @param node node to get the location of
+ * @param useStub true to consider the stub as the actual location
+ * @return the location of the node or the null location
+ */
+expanded_location locationOf(tree node, bool useStub);
 
 /**
  * Returns a string representation of the location <code>loc</code>

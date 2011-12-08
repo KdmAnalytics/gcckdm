@@ -635,7 +635,10 @@ long KdmTripleWriter::processAstDeclarationNode(tree const decl, ContainsRelatio
     }
     case FUNCTION_DECL:
     {
-      processAstFunctionDeclarationNode(decl, containPolicy, isTemplate);
+      CallableUnitPolicy pol;
+      pol.containRelationPolicy = WriteKdmContainsRelation;
+      pol.templatePolicy = (isTemplate) ? IsTemplate : IsNotTemplate;
+      processAstFunctionDeclarationNode(decl, pol);
       break;
     }
     case FIELD_DECL:
@@ -1145,8 +1148,8 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         case FUNCTION_DECL:
         {
           // Write CallableUnit
-          long callableUnitId =
-              writeKdmCallableUnit(templateResultDecl /*tree const functionDecl*/, SkipKdmContainsRelation, true /*bool isTemplate*/);
+          CallableUnitPolicy policies = { SkipKdmContainsRelation, WriteSignatureUnit, UseDeclLocation, IsTemplate };
+          long callableUnitId = writeKdmCallableUnit(templateResultDecl, policies);
           writeTripleContains(templateUnitId, callableUnitId);
           break;
         }
@@ -1370,9 +1373,10 @@ void KdmTripleWriter::processAstVariableDeclarationNode(tree const varDeclaratio
   writeKdmStorableUnitKindGlobal(varDeclaration);
 }
 
-void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate)
+
+void KdmTripleWriter::processAstFunctionDeclarationNode(tree const functionDecl, CallableUnitPolicy & policies)
 {
-  writeKdmCallableUnit(functionDecl, containPolicy, isTemplate);
+  writeKdmCallableUnit(functionDecl, policies);
 }
 
 /**
@@ -1470,8 +1474,9 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
-long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate,
-    SignatureUnitPolicy signaturePolicy)
+//long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate,
+//    SignatureUnitPolicy signaturePolicy)
+long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, CallableUnitPolicy & policies)
 {
   std::string name = nodeName(functionDecl);
 
@@ -1484,7 +1489,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::MethodKind::Constructor());
       //Identify this as a sink
-      if (!isTemplate)
+      if (policies.templatePolicy == IsNotTemplate)
       {
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
       }
@@ -1494,7 +1499,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::MethodKind::Destructor());
       //Identify this as a sink
-      if (!isTemplate)
+      if (policies.templatePolicy == IsNotTemplate)
       {
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
       }
@@ -1504,7 +1509,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::CallableKind::Operator());
       //Identify this as a sink
-      if (!isTemplate)
+      if (policies.templatePolicy == IsNotTemplate)
       {
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
       }
@@ -1514,7 +1519,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::MethodKind::Method());
       //Identify this as a sink
-      if (!isTemplate)
+      if (policies.templatePolicy == IsNotTemplate)
       {
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
       }
@@ -1530,7 +1535,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       {
         writeTripleKind(callableUnitId, kdm::CallableKind::Regular());
         //Identify this as a sink
-        if (!isTemplate)
+        if (policies.templatePolicy == IsNotTemplate)
         {
           writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
         }
@@ -1548,7 +1553,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_VirtualStereotype);
     }
     // C++ uses the mangled name for link:id, if possible
-    if (!isTemplate)
+    if (policies.templatePolicy == IsNotTemplate)
     {
       writeTripleLinkId(callableUnitId, gcckdm::getLinkId(functionDecl, name));
     }
@@ -1563,13 +1568,13 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     else
     {
       writeTripleKind(callableUnitId, kdm::CallableKind::Regular());
-      if (!isTemplate)
+      if (policies.templatePolicy == IsNotTemplate)
       {
         //Identify this as a sink
         writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
       }
     }
-    if (!isTemplate)
+    if (policies.templatePolicy == IsNotTemplate)
     {
       // Standard C does not require mangled names for link:id
       writeTripleLinkId(callableUnitId, name);
@@ -1592,14 +1597,29 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     // Static keyword
     writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_StaticStereotype);
   }
+//
+//  if (TYPE_STUB_DECL(functionDecl))
+//  {
+//    std::cout << "STUB" << std::endl;
+//  }
 
-  // Source reference
-  writeKdmSourceRef(callableUnitId, functionDecl);
+//
+//  expanded_location loc = gcckdm::locationOf(functionDecl, true);
+//  std::cout << "************************" << loc.file << std::endl;
+//
+//  expanded_location loc2 = expand_location(gcckdm::locationOf(functionDecl));
+//  std::cout << "************************" << loc2.file << std::endl;
+
+
 
   // If this is c++, the method/function is written in the class first, otherwise in the compilation unit
   if (isFrontendCxx())
   {
     tree context = CP_DECL_CONTEXT (functionDecl);
+
+    // Source reference
+    writeKdmSourceRef(callableUnitId, (policies.sourceRefPolicy == UseContextLocation) ? context :  functionDecl);
+
     // If the context is a type, then get the visibility
     if (context)
     {
@@ -1636,13 +1656,18 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
 #endif
 
     // Containment
-    if (containPolicy == WriteKdmContainsRelation)
+    if (policies.containRelationPolicy == WriteKdmContainsRelation)
+    {
       writeKdmCxxContains(callableUnitId, functionDecl);
+    }
   }
   else
   {
+    // Source reference
+    writeKdmSourceRef(callableUnitId, functionDecl);
+
     // Containment
-    if (containPolicy == WriteKdmContainsRelation)
+    if (policies.containRelationPolicy == WriteKdmContainsRelation)
     {
       // In straight C, it is always contained in the source file
       long unitId = getSourceFileReferenceId(functionDecl);
@@ -1661,7 +1686,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
   }
 
-  if (signaturePolicy == WriteSignatureUnit)
+  if (policies.signatureUnitPolicy == WriteSignatureUnit)
   {
     long signatureId = writeKdmSignature(functionDecl);
     writeTripleContains(callableUnitId, signatureId);
@@ -1669,7 +1694,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
   }
 
   //If we are skipping the signature
-  if (!isTemplate && signaturePolicy != SkipSignatureUnit)
+  if ((policies.templatePolicy == IsNotTemplate) && (policies.signatureUnitPolicy != SkipSignatureUnit))
   {
     if (mSettings.functionBodies)
     {
@@ -1686,9 +1711,11 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
 /**
  * Just get the reference of the functionDecl and pass it along
  */
-long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate)
+long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, CallableUnitPolicy & policies)
 {
-  return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, containPolicy, isTemplate, WriteSignatureUnit);
+  policies.signatureUnitPolicy = WriteSignatureUnit;
+  return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, policies);
+  //return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, containPolicy, isTemplate, WriteSignatureUnit);
 }
 
 
@@ -1729,6 +1756,9 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
         {
           //this decl is in the same file as the context... to make a prettier diagram
           //we stuff this decl in the class
+          std::cout << "Context Source ID: " << getSourceFileReferenceId(context) << std::endl;
+          std::cout << "Decl Source ID:    " << getSourceFileReferenceId(decl) << std::endl;
+
           if (getSourceFileReferenceId(context) == getSourceFileReferenceId(decl))
           {
             writeTripleContains(classUnitId, declId);
@@ -1742,7 +1772,13 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
             long fakeId = getNextElementId();
             //We skip writing a signature for this fake callable since at the moment it leads to
             //double containment problems.
-            writeKdmCallableUnit(fakeId, decl, SkipKdmContainsRelation, false, SkipSignatureUnit);
+//            writeKdmCallableUnit(fakeId, decl, SkipKdmContainsRelation, false, SkipSignatureUnit);
+            CallableUnitPolicy policy;
+            policy.containRelationPolicy = SkipKdmContainsRelation;
+            policy.templatePolicy = IsNotTemplate;
+            policy.signatureUnitPolicy = SkipSignatureUnit;
+            policy.sourceRefPolicy = UseContextLocation;
+            writeKdmCallableUnit(fakeId, decl, policy);
             writeTripleContains(classUnitId, fakeId);
           }
         }
@@ -1793,7 +1829,7 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
       writeTripleContains(signatureId, refId);
       arg = TREE_CHAIN (arg);
     }
-    if (argType)
+    if (refId != invalidId && argType)
     {
       //output the kind of the parameter
       if (TREE_CODE(TREE_VALUE(argType)) == REFERENCE_TYPE)
@@ -1804,6 +1840,9 @@ long KdmTripleWriter::writeKdmSignatureDeclaration(tree const functionDecl)
       {
         writeTripleKind(refId, kdm::ParameterKind::ByValue());
       }
+    }
+    if (argType)
+    {
       //move to next node in the tree_list
       argType = TREE_CHAIN (argType);
     }

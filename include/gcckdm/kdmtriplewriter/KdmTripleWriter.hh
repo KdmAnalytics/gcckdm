@@ -78,6 +78,28 @@ public:
     SkipSignatureUnit = 1
   };
 
+  enum SourceRefPolicy
+  {
+    UseContextLocation = 0,
+    UseDeclLocation = 1,
+  };
+
+
+  enum TemplatePolicy
+  {
+    IsTemplate = 0,
+    IsNotTemplate = 1,
+  };
+
+  struct CallableUnitPolicy
+  {
+    ContainsRelationPolicy containRelationPolicy;
+    SignatureUnitPolicy  signatureUnitPolicy;
+    SourceRefPolicy sourceRefPolicy;
+    TemplatePolicy templatePolicy;
+  };
+
+
   /**
    * User Configurable Writer Settings
    *
@@ -269,6 +291,7 @@ public:
   long writeKdmStorableUnit(tree const var, ContainsRelationPolicy const containPolicy);
 
   void writeKdmStorableUnitKindGlobal(tree const var);
+
   void writeKdmStorableUnitInitialization(tree const var);
 
   /**
@@ -530,7 +553,8 @@ private:
    * @see writeKdmCallableUnit
    * @param functionDecl a FUNCTION_DECL to convert to CallableUnit
    */
-  void processAstFunctionDeclarationNode(tree const functionDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+//  void processAstFunctionDeclarationNode(tree const functionDecl, const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+  void processAstFunctionDeclarationNode(tree const functionDecl, CallableUnitPolicy & policies);
 
   /**
    * Convert a FIELD_DECL into an KDM ItemUnit and write the result
@@ -618,7 +642,9 @@ private:
    *
    * @param callableDecl an ast node of a function or method
    */
-  long writeKdmCallableUnit(tree const callableDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+//  long writeKdmCallableUnit(tree const callableDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false);
+
+  long writeKdmCallableUnit(tree const callableDecl, CallableUnitPolicy & policies);
 
   /**
    * Write a CallableUnit kdm element to the KdmSink stream using the
@@ -634,7 +660,8 @@ private:
    *
    * @param callableDecl an ast node of a function or method
    */
-  long writeKdmCallableUnit(long const callableDeclId, tree const callableDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false, SignatureUnitPolicy const sigUnitPolicy = WriteSignatureUnit);
+//  long writeKdmCallableUnit(long const callableDeclId, tree const callableDecl, ContainsRelationPolicy const containPolicy = WriteKdmContainsRelation, bool isTemplate = false, SignatureUnitPolicy const sigUnitPolicy = WriteSignatureUnit);
+  long writeKdmCallableUnit(long const callableDeclId, tree const callableDecl, CallableUnitPolicy & policies);
 
   /**
    * In C++ containment of various elements depends on whether the definition's "context" is

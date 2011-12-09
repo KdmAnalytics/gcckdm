@@ -1756,8 +1756,8 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
         {
           //this decl is in the same file as the context... to make a prettier diagram
           //we stuff this decl in the class
-          std::cout << "Context Source ID: " << getSourceFileReferenceId(context) << std::endl;
-          std::cout << "Decl Source ID:    " << getSourceFileReferenceId(decl) << std::endl;
+//          std::cout << "Context Source ID: " << getSourceFileReferenceId(context) << std::endl;
+//          std::cout << "Decl Source ID:    " << getSourceFileReferenceId(decl) << std::endl;
 
           if (getSourceFileReferenceId(context) == getSourceFileReferenceId(decl))
           {

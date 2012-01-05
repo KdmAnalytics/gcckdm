@@ -1474,6 +1474,16 @@ void KdmTripleWriter::writeTriple(long const subject, KdmPredicate const & predi
   *mKdmSink << "<" << subject << "> <" << predicate << "> \"" << object << "\".\n";
 }
 
+
+void KdmTripleWriter::writeControlElementLinkSink(long const callableUnitId, std::string const & linkSnkStr, CallableUnitPolicy const & policies)
+{
+  //Identify this as a sink
+  if (policies.templatePolicy == IsNotTemplate && policies.linkSinkPolicy != DisableLinkSink)
+  {
+    writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
+  }
+}
+
 //long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, ContainsRelationPolicy const containPolicy, bool isTemplate,
 //    SignatureUnitPolicy signaturePolicy)
 long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree functionDecl, CallableUnitPolicy & policies)
@@ -1489,40 +1499,28 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::MethodKind::Constructor());
       //Identify this as a sink
-      if (policies.templatePolicy == IsNotTemplate)
-      {
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
-      }
+      writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
     }
     else if (DECL_DESTRUCTOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::MethodKind::Destructor());
       //Identify this as a sink
-      if (policies.templatePolicy == IsNotTemplate)
-      {
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
-      }
+      writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
     }
     else if (DECL_OVERLOADED_OPERATOR_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::CallableKind::Operator());
       //Identify this as a sink
-      if (policies.templatePolicy == IsNotTemplate)
-      {
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
-      }
+      writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
     }
     else if (DECL_FUNCTION_MEMBER_P(functionDecl))
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::MethodKind::Method());
       //Identify this as a sink
-      if (policies.templatePolicy == IsNotTemplate)
-      {
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
-      }
+      writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
     }
     else
     {
@@ -1535,10 +1533,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       {
         writeTripleKind(callableUnitId, kdm::CallableKind::Regular());
         //Identify this as a sink
-        if (policies.templatePolicy == IsNotTemplate)
-        {
-          writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkSnkStr);
-        }
+        writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
       }
     }
     // First check for pure virtual, then virtual. No need to mark pure virtual functions as both
@@ -1568,11 +1563,7 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
     else
     {
       writeTripleKind(callableUnitId, kdm::CallableKind::Regular());
-      if (policies.templatePolicy == IsNotTemplate)
-      {
-        //Identify this as a sink
-        writeTriple(callableUnitId, KdmPredicate::LinkSnk(), linkCallablePrefix + gcckdm::getLinkId(functionDecl, name));
-      }
+      writeControlElementLinkSink(callableUnitId,  linkCallablePrefix + gcckdm::getLinkId(functionDecl, name), policies);
     }
     if (policies.templatePolicy == IsNotTemplate)
     {
@@ -1778,6 +1769,7 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
             policy.templatePolicy = IsNotTemplate;
             policy.signatureUnitPolicy = SkipSignatureUnit;
             policy.sourceRefPolicy = UseContextLocation;
+            policy.linkSinkPolicy = DisableLinkSink;
             writeKdmCallableUnit(fakeId, decl, policy);
             writeTripleContains(classUnitId, fakeId);
           }

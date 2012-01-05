@@ -84,6 +84,11 @@ public:
     UseDeclLocation = 1,
   };
 
+  enum LinkSinkPolicy
+  {
+    EnableLinkSink = 1,
+    DisableLinkSink = 0,
+  };
 
   enum TemplatePolicy
   {
@@ -97,6 +102,7 @@ public:
     SignatureUnitPolicy  signatureUnitPolicy;
     SourceRefPolicy sourceRefPolicy;
     TemplatePolicy templatePolicy;
+    LinkSinkPolicy linkSinkPolicy;
   };
 
 
@@ -720,6 +726,12 @@ private:
 
   long writeKdmSignature(tree const function);
   long writeKdmSignatureDeclaration(tree const functionDecl);
+
+  /**
+   * Determines if the control element is a linkSink or not.  If it is, writes a linkSink triple
+   */
+  void writeControlElementLinkSink(long const callableUnitId, std::string const & linkSnkStr, CallableUnitPolicy const & policies);
+
 
   /**
    * Write a variable that represents a value that is thrown

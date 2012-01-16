@@ -1515,12 +1515,16 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
       //Identify this as a sink
       writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
     }
-    else if (DECL_FUNCTION_MEMBER_P(functionDecl))
+    else if (DECL_FUNCTION_MEMBER_P(functionDecl) )
     {
       writeTripleKdmType(callableUnitId, kdm::Type::MethodUnit());
       writeTripleKind(callableUnitId, kdm::MethodKind::Method());
       //Identify this as a sink
-      writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
+
+      if (DECL_INITIAL(functionDecl) != 0)
+      {
+        writeControlElementLinkSink(callableUnitId, linkSnkStr, policies);
+      }
     }
     else
     {

@@ -635,9 +635,7 @@ long KdmTripleWriter::processAstDeclarationNode(tree const decl, ContainsRelatio
     }
     case FUNCTION_DECL:
     {
-      CallableUnitPolicy pol;
-      pol.containRelationPolicy = WriteKdmContainsRelation;
-      pol.templatePolicy = (isTemplate) ? IsTemplate : IsNotTemplate;
+      CallableUnitPolicy pol = { WriteKdmContainsRelation, WriteSignatureUnit, UseDeclLocation, (isTemplate) ? IsTemplate : IsNotTemplate, EnableLinkSink };
       processAstFunctionDeclarationNode(decl, pol);
       break;
     }
@@ -1148,7 +1146,7 @@ void KdmTripleWriter::processAstTemplateDecl(tree const templateDecl)
         case FUNCTION_DECL:
         {
           // Write CallableUnit
-          CallableUnitPolicy policies = { SkipKdmContainsRelation, WriteSignatureUnit, UseDeclLocation, IsTemplate };
+          CallableUnitPolicy policies = { SkipKdmContainsRelation, WriteSignatureUnit, UseDeclLocation, IsTemplate, EnableLinkSink };
           long callableUnitId = writeKdmCallableUnit(templateResultDecl, policies);
           writeTripleContains(templateUnitId, callableUnitId);
           break;
@@ -1713,7 +1711,6 @@ long KdmTripleWriter::writeKdmCallableUnit(tree const functionDecl, CallableUnit
 {
   policies.signatureUnitPolicy = WriteSignatureUnit;
   return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, policies);
-  //return writeKdmCallableUnit(getReferenceId(functionDecl), functionDecl, containPolicy, isTemplate, WriteSignatureUnit);
 }
 
 
@@ -1770,7 +1767,6 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
             long fakeId = getNextElementId();
             //We skip writing a signature for this fake callable since at the moment it leads to
             //double containment problems.
-//            writeKdmCallableUnit(fakeId, decl, SkipKdmContainsRelation, false, SkipSignatureUnit);
             CallableUnitPolicy policy = { SkipKdmContainsRelation, SkipSignatureUnit, UseContextLocation, IsNotTemplate, DisableLinkSink };
             writeKdmCallableUnit(fakeId, decl, policy);
             writeTripleContains(classUnitId, fakeId);

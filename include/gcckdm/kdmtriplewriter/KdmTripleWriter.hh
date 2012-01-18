@@ -86,8 +86,8 @@ public:
 
   enum LinkSinkPolicy
   {
-    EnableLinkSink = 1,
     DisableLinkSink = 0,
+    EnableLinkSink = 1,
   };
 
   enum TemplatePolicy

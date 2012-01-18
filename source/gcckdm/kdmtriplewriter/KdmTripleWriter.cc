@@ -1637,12 +1637,15 @@ long KdmTripleWriter::writeKdmCallableUnit(long const callableUnitId, tree funct
 
     // Explicit keyword
     if (DECL_NONCONVERTING_P (functionDecl))
+    {
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_ExplicitStereotype);
-
+	}
+	
     // Explicit keyword
     if (DECL_ARTIFICIAL (functionDecl))
+    {
       writeTriple(callableUnitId, KdmPredicate::Stereotype(), KdmElementId_HiddenStereotype);
-
+	}
     // Friendship
 #if 1 //BBBBB
     writeKdmFriends(callableUnitId, functionDecl);
@@ -1768,12 +1771,7 @@ void KdmTripleWriter::writeKdmCxxContains(long declId, tree const decl)
             //We skip writing a signature for this fake callable since at the moment it leads to
             //double containment problems.
 //            writeKdmCallableUnit(fakeId, decl, SkipKdmContainsRelation, false, SkipSignatureUnit);
-            CallableUnitPolicy policy;
-            policy.containRelationPolicy = SkipKdmContainsRelation;
-            policy.templatePolicy = IsNotTemplate;
-            policy.signatureUnitPolicy = SkipSignatureUnit;
-            policy.sourceRefPolicy = UseContextLocation;
-            policy.linkSinkPolicy = DisableLinkSink;
+            CallableUnitPolicy policy = { SkipKdmContainsRelation, SkipSignatureUnit, UseContextLocation, IsNotTemplate, DisableLinkSink };
             writeKdmCallableUnit(fakeId, decl, policy);
             writeTripleContains(classUnitId, fakeId);
           }

@@ -985,10 +985,8 @@ GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::processGimpleCallSta
     {
       expanded_location e = expand_location(gcckdm::locationOf(op0));
 
-      if (!isCallVirtual)
-      {
-        mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getLinkId(op0, gcckdm::getAstNodeName(op0)));
-      }
+      mKdmWriter.writeTriple(actionData->actionId(), KdmPredicate::LinkSrc(), linkCallsPrefix + gcckdm::getLinkId(op0, gcckdm::getAstNodeName(op0)));
+
       if (DECL_P(op0) && DECL_IS_BUILTIN(op0))
       {
         mKdmWriter.writeKdmBuiltinStereotype(actionData->actionId());

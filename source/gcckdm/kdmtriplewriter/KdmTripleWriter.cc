@@ -3079,7 +3079,11 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
     //enum
     return invalidId;
   }
-  else if (global_namespace && TYPE_LANG_SPECIFIC (mainRecordType) && CLASSTYPE_DECLARED_CLASS (mainRecordType))
+  else if (isFrontendCxx() &&
+       TYPE_LANG_SPECIFIC (mainRecordType) &&
+       //if we have methods, regardless if we were declared a struct or not
+       //MethodUnits must be contained in a ClassUnit
+       TYPE_METHODS(mainRecordType))
   {
     return writeKdmClassType(mainRecordType, containPolicy, isTemplate);
   }

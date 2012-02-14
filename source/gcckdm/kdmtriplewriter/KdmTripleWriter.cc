@@ -3083,7 +3083,7 @@ long KdmTripleWriter::writeKdmRecordType(tree const recordType, ContainsRelation
        TYPE_LANG_SPECIFIC (mainRecordType) &&
        //if we have methods, regardless if we were declared a struct or not
        //MethodUnits must be contained in a ClassUnit
-       TYPE_METHODS(mainRecordType))
+       (TYPE_METHODS(mainRecordType) || CLASSTYPE_DECLARED_CLASS(mainRecordType)))
   {
     return writeKdmClassType(mainRecordType, containPolicy, isTemplate);
   }

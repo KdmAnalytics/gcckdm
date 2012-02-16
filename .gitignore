@@ -1,5 +1,7 @@
 Release_Linux_x86/source
 Release_Linux_x86/*.so
+Release_Linux_x86_64/source
+Release_Linux_x86_64/*.so
 Debug_Linux_x86/source
 Debug_Linux_x86/*.so
 Debug_Linux_x86_64/*.so

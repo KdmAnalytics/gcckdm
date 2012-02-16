@@ -417,4 +417,8 @@ private:
 
 } // namespace gcckdm
 
+//Gcc 4.6 moved this declaration from the diagnostic.h header we declare it here to still allow gimple output
+extern void print_gimple_stmt (FILE *, gimple, int, int);
+
+
 #endif /* GCCKDM_KDMTRIPLEWRITER_GIMPLEKDMTRIPLEWRITER_HH_ */

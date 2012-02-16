@@ -8,9 +8,12 @@ RM := rm -rf
 
 # All of the sources participating in the build are defined here
 -include sources.mk
--include subdir.mk
 -include source/gcckdm/kdmtriplewriter/subdir.mk
+-include source/gcckdm/kdm/subdir.mk
 -include source/gcckdm/subdir.mk
+-include build/source/.libs/subdir.mk
+-include build/source/subdir.mk
+-include subdir.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -45,7 +48,7 @@ all: libGccKdm.so
 libGccKdm.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	g++-4.5 -L/usr/local/lib -shared -o"libGccKdm.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	g++-4.5 -L/usr/local/lib -shared -o "libGccKdm.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

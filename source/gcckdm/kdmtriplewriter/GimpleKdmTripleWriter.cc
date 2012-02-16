@@ -1891,107 +1891,161 @@ tree GimpleKdmTripleWriter::skipAllNOPsEtc(tree value)
     return value;
 }
 
+/**
+ * Determine if the given array type is an array of primitive or not
+ *
+ * For use in determining if we should skip the contents of an array or not.
+ *
+ * @return true if the given array node is of type int, long, bool, float, double, char, unsigned char, signed char
+ */
+bool isPrimitiveArray(tree lhs_var)
+{
+  if (lhs_var != 0)
+  {
+    tree arrayType = TYPE_MAIN_VARIANT(TREE_TYPE(lhs_var));
+    std::string arrayTypeName = nodeName(TREE_TYPE(arrayType));
+    return (arrayTypeName == "int" ||
+               arrayTypeName == "long" ||
+               arrayTypeName == "bool" ||
+               arrayTypeName == "float" ||
+               arrayTypeName == "double" ||
+               arrayTypeName == "char" ||
+               arrayTypeName == "unsigned char" ||
+               arrayTypeName == "signed char");
+  }
+  return false;
+}
+
+
+
 GimpleKdmTripleWriter::ActionDataPtr GimpleKdmTripleWriter::writeKdmUnaryConstructor(tree const lhs, tree const rhs, location_t const loc, tree lhs_var, tree lhs_var_DE, long containingId)
 {
   if (not lhs)
   {
     ActionDataPtr data = ActionDataPtr(new ActionData());
-	if (TREE_CODE(rhs) == CONSTRUCTOR) {
+    if (TREE_CODE(rhs) == CONSTRUCTOR)
+    {
+      unsigned int elems_numof = 0;
 
-		const tree constructor = rhs;
-		unsigned int elems_numof = 0;
-		unsigned HOST_WIDE_INT cnt;
-		tree index, value;
-		VEC_length (constructor_elt, CONSTRUCTOR_ELTS (constructor));
-		FOR_EACH_CONSTRUCTOR_ELT (CONSTRUCTOR_ELTS (constructor), cnt, index, value)
-		{
-			value = skipAllNOPsEtc(value);
+      if (isPrimitiveArray(lhs_var))
+      {
+        //The current implementation while correct KDM causes huge speed problems when
+        //the source include a large static array.  As a workaround, if the array
+        //is of a primitive type we skip it's contents since it really isn't that
+        //useful at the moment anyway.
+        //So we just return an empty ActionDataPtr and carry on.
+        return data;
+      }
+      else
+      {
+        const tree constructor = rhs;
+        unsigned HOST_WIDE_INT cnt;
+        tree index, value;
+        //VEC_length(constructor_elt, CONSTRUCTOR_ELTS (constructor));
+        FOR_EACH_CONSTRUCTOR_ELT (CONSTRUCTOR_ELTS (constructor), cnt, index, value)
+        {
+            value = skipAllNOPsEtc(value);
+            tree writesTarget;
+            long writesTargetId;
+            if (index && TREE_CODE(index) == FIELD_DECL)
+            {
+              writesTarget = index;
+              writesTargetId = getReferenceId(index);
+            }
+            else if (lhs_var_DE && TREE_CODE(lhs_var_DE) == FIELD_DECL)
+            {
+              writesTarget = lhs_var_DE;
+              writesTargetId = getReferenceId(lhs_var_DE);
+            }
+            else
+            {
+              tree arrayType = TYPE_MAIN_VARIANT(TREE_TYPE(lhs_var));
+              long arraytypeId = getReferenceId(arrayType);
 
-		    tree writesTarget;
-		    long writesTargetId;
-		    if (index && TREE_CODE(index) == FIELD_DECL) {
-		      writesTarget = index;
-		      writesTargetId = getReferenceId(index);
-		    } else if (lhs_var_DE && TREE_CODE(lhs_var_DE) == FIELD_DECL) {
-			  writesTarget = lhs_var_DE;
-			  writesTargetId = getReferenceId(lhs_var_DE);
-		    } else {
-		      tree arrayType = TYPE_MAIN_VARIANT(TREE_TYPE(lhs_var));
-		      long arraytypeId = getReferenceId(arrayType);
-                        
-		      writesTarget = arrayType;
-		      writesTargetId = mKdmWriter.getItemUnitId(arraytypeId);
-		    }
+              writesTarget = arrayType;
+              writesTargetId = mKdmWriter.getItemUnitId(arraytypeId);
+            }
 
-		    ActionDataPtr rhsData;
-		    if (TREE_CODE(value) == POINTER_PLUS_EXPR) {
-              if (TREE_OPERAND_LENGTH(value) != 2) {
-				const long storableUnitId = getReferenceId(lhs_var);
-				std::string msg(str(boost::format("Storable unit <%3%>: CONSTRUCTOR element (%1%) has %5% operands (expected 2) in %2%:%4%") % tree_code_name[TREE_CODE(value)] % BOOST_CURRENT_FUNCTION % storableUnitId % __LINE__ % TREE_OPERAND_LENGTH(value)));
-				mKdmWriter.writeUnsupportedComment(msg);
-			  }
-			  rhsData = writeKdmBinaryOperation(
-					  treeCodeToKind.find(TREE_CODE(value))->second /*kind*/, NULL_TREE /*lhsDataElement*/, NULL_TREE /*lhsStorableUnit*/,
-					  skipAllNOPsEtc(TREE_OPERAND(value, 0)) /*rhs1*/, skipAllNOPsEtc(TREE_OPERAND(value, 1)) /*rhs2*/);
-		    }
-		    else
-		    {
+            ActionDataPtr rhsData;
+            if (TREE_CODE(value) == POINTER_PLUS_EXPR)
+            {
+              if (TREE_OPERAND_LENGTH(value) != 2)
+              {
+                const long storableUnitId = getReferenceId(lhs_var);
+                std::string msg(
+                    str(boost::format("Storable unit <%3%>: CONSTRUCTOR element (%1%) has %5% operands (expected 2) in %2%:%4%")
+                        % tree_code_name[TREE_CODE(value)] % BOOST_CURRENT_FUNCTION % storableUnitId % __LINE__ % TREE_OPERAND_LENGTH(value)));
+                mKdmWriter.writeUnsupportedComment(msg);
+              }
+              rhsData = writeKdmBinaryOperation(treeCodeToKind.find(TREE_CODE(value))->second /*kind*/, NULL_TREE /*lhsDataElement*/,
+                                                NULL_TREE /*lhsStorableUnit*/, skipAllNOPsEtc(TREE_OPERAND(value, 0)) /*rhs1*/,
+                                                skipAllNOPsEtc(TREE_OPERAND(value, 1)) /*rhs2*/);
+            }
+            else
+            {
               rhsData = getRhsReferenceId(value/*rhs*/, lhs_var, index, containingId);
-		    }
+            }
 
-		    if (rhsData->hasActionId() || (isValueOrConstructorNode(value/*rhs*/) && rhsData->hasOutputId())) {
+            if (rhsData->hasActionId() || (isValueOrConstructorNode(value/*rhs*/) && rhsData->hasOutputId()))
+            {
               const long storableUnitId = getReferenceId(lhs_var);
               ActionDataPtr memberReplaceData = writeKdmMemberReplace(
-		        RelationTarget(NULL_TREE /*writesTarget*/, writesTargetId) /*RelationTarget(member, memberId)*/,
-		        RelationTarget(NULL_TREE /*rhsData->output()?????*/, rhsData->outputId()),
-		        RelationTarget(lhs_var, storableUnitId));
-	          //ActionDataPtr writeKdmMemberReplace(
-		      //          RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
+                  RelationTarget(NULL_TREE /*writesTarget*/, writesTargetId) /*RelationTarget(member, memberId)*/,
+                  RelationTarget(NULL_TREE /*rhsData->output()?????*/, rhsData->outputId()), RelationTarget(lhs_var, storableUnitId));
+              //ActionDataPtr writeKdmMemberReplace(
+              //          RelationTarget const & writesTarget, RelationTarget const & readsTarget, RelationTarget const & addressesTarget);
 
-              if (rhsData->hasActionId()) {
+              if (rhsData->hasActionId())
+              {
                 mKdmWriter.writeTripleContains((containingId != invalidId) ? containingId : memberReplaceData->actionId(), rhsData->actionId());
-              } else {
-                if (isValueOrConstructorNode(value/*rhs*/) && rhsData->hasOutputId()) {
+              }
+              else
+              {
+                if (isValueOrConstructorNode(value/*rhs*/) && rhsData->hasOutputId())
+                {
                   mKdmWriter.writeTripleContains((containingId != invalidId) ? containingId : memberReplaceData->actionId(), rhsData->outputId());
                 }
               }
-              if (containingId != invalidId) {
-		        mKdmWriter.writeTripleContains(containingId, memberReplaceData->actionId());
+              if (containingId != invalidId)
+              {
+                mKdmWriter.writeTripleContains(containingId, memberReplaceData->actionId());
               }
             }
+          elems_numof++;
+        }
+      }
 
-		    elems_numof++;
-		}
+      if (elems_numof == 0)
+      {
+        tree type = TYPE_MAIN_VARIANT(TREE_TYPE(rhs));
+        long typeId = mKdmWriter.getReferenceId(type);
 
-		if (elems_numof == 0) {
-            tree type = TYPE_MAIN_VARIANT(TREE_TYPE(rhs));
-			long typeId = mKdmWriter.getReferenceId(type);
+        long valueId = mKdmWriter.getNextElementId();
 
-			long valueId = mKdmWriter.getNextElementId();
+        data->outputId(valueId);
+        data->value(true);
 
-			data->outputId(valueId);
-			data->value(true);
+        mKdmWriter.writeTripleKdmType(valueId, kdm::Type::Value());
 
-			mKdmWriter.writeTripleKdmType(valueId, kdm::Type::Value());
+        std::string name("{}");
+        mKdmWriter.writeTripleName(valueId, name);
+        mKdmWriter.writeTripleLinkId(valueId, name);
+        mKdmWriter.writeTriple(valueId, KdmPredicate::Type(), typeId);
 
-			std::string name("{}");
-			mKdmWriter.writeTripleName(valueId, name);
-			mKdmWriter.writeTripleLinkId(valueId, name);
-			mKdmWriter.writeTriple(valueId, KdmPredicate::Type(), typeId);
+        expanded_location const & xloc = expand_location(loc);
+        mKdmWriter.writeKdmSourceRef(valueId, xloc);
 
-			expanded_location const & xloc = expand_location(loc);
-			mKdmWriter.writeKdmSourceRef(valueId, xloc);
-
-			if (containingId != invalidId) {
-              const long storableUnitId = getReferenceId(lhs_var);
-			  long actionId = mKdmWriter.getNextElementId();
-              mKdmWriter.writeTripleKdmType(actionId, kdm::Type::ActionElement());
-			  mKdmWriter.writeTripleKind(actionId, kdm::Kind::Assign());
-			  writeKdmUnaryRelationships(actionId, RelationTarget(lhs_var, storableUnitId), RelationTarget(NULL_TREE /*rhs*/, valueId));
-		      mKdmWriter.writeTripleContains(containingId, actionId);
-		      mKdmWriter.writeTripleContains(actionId, valueId);
-            }
-		}
+        if (containingId != invalidId)
+        {
+          const long storableUnitId = getReferenceId(lhs_var);
+          long actionId = mKdmWriter.getNextElementId();
+          mKdmWriter.writeTripleKdmType(actionId, kdm::Type::ActionElement());
+          mKdmWriter.writeTripleKind(actionId, kdm::Kind::Assign());
+          writeKdmUnaryRelationships(actionId, RelationTarget(lhs_var, storableUnitId), RelationTarget(NULL_TREE /*rhs*/, valueId));
+          mKdmWriter.writeTripleContains(containingId, actionId);
+          mKdmWriter.writeTripleContains(actionId, valueId);
+        }
+      }
 
 	} else {
 		std::string msg(boost::str(boost::format("TREE_CODE(rhs) == %1% (expected CONSTRUCTOR) in %2%:%3%") % std::string(tree_code_name[TREE_CODE(rhs)]) % BOOST_CURRENT_FUNCTION % __LINE__));
